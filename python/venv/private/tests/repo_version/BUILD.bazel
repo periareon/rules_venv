@@ -1,0 +1,18 @@
+load("//python/venv:defs.bzl", "py_venv_test")
+
+py_venv_test(
+    name = "version_test",
+    srcs = ["version_test.py"],
+    data = [
+        "//:MODULE.bazel",
+        "//:version.bzl",
+    ],
+    # TODO: https://github.com/bazelbuild/rules_python/issues/2141
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//python/runfiles",
+    ],
+)

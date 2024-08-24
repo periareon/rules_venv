@@ -1,0 +1,10 @@
+load("//python/venv:defs.bzl", "py_venv_test")
+
+py_venv_test(
+    name = "charlie_test",
+    srcs = ["charlie_test.py"],
+    deps = [
+        "//python/venv/private/tests/imports/alpha",
+        "//python/venv/private/tests/imports/bravo",
+    ],
+)

@@ -1,0 +1,3 @@
+"""Bravo library"""
+
+BRAVO = "bravo"

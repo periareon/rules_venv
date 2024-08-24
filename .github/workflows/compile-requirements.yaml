@@ -1,0 +1,44 @@
+---
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: compile_requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "The py_reqs_compiler target to run"
+        default: "//python/venv/private/tests/external_deps:requirements.update"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            runs-on: ubuntu-latest
+          - os: macos
+            runs-on: macos-latest
+          - os: windows
+            runs-on: windows-latest
+
+    runs-on: ${{ matrix.runs-on }}
+    name: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile requirements
+        run: |
+          bazel run "${{ github.event.inputs.target }}" "--" "--upgrade" "--verbose"
+      - name: Display results
+        shell: bash
+        run: |
+          set -e
+          echo "<details>" >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo '```' >> "${GITHUB_STEP_SUMMARY}"
+          cat "python/venv/private/tests/external_deps/requirements_${{ matrix.os }}.txt" >> "${GITHUB_STEP_SUMMARY}"
+          echo '```' >> "${GITHUB_STEP_SUMMARY}"
+          echo "" >> "${GITHUB_STEP_SUMMARY}"
+          echo "</details>" >> "${GITHUB_STEP_SUMMARY}"

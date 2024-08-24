@@ -1,0 +1,8 @@
+load("//python/venv:defs.bzl", "py_venv_library")
+
+py_venv_library(
+    name = "bravo",
+    srcs = ["bravo/__init__.py"],
+    imports = ["."],
+    visibility = ["//python/venv/private/tests/imports:__subpackages__"],
+)

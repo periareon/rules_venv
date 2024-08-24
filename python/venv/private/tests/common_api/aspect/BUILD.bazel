@@ -1,0 +1,12 @@
+load("//python/venv:defs.bzl", "py_venv_binary")
+
+exports_files(["aspect_tester.py"])
+
+py_venv_binary(
+    name = "aspect_tester",
+    srcs = ["aspect_tester.py"],
+    visibility = ["//python/venv/private/tests/common_api:__subpackages__"],
+    deps = [
+        "//python/venv/private/tests/common_api/aspect_dep",
+    ],
+)

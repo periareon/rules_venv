@@ -1,0 +1,8 @@
+load("//python/venv:defs.bzl", "py_venv_library")
+
+py_venv_library(
+    name = "alpha",
+    srcs = ["alpha.py"],
+    imports = ["."],
+    visibility = ["//python/venv/private/tests/imports:__subpackages__"],
+)

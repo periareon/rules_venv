@@ -1,0 +1,12 @@
+load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
+
+py_venv_library(
+    name = "fibonacci",
+    srcs = ["fibonacci.py"],
+)
+
+py_venv_test(
+    name = "fibonacci_test",
+    srcs = ["fibonacci_test.py"],
+    deps = [":fibonacci"],
+)

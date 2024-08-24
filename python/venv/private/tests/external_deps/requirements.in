@@ -1,0 +1,11 @@
+# Python requirements
+
+numpy
+pytest
+pytest-cov
+
+# linters
+pylint
+isort
+black
+mypy

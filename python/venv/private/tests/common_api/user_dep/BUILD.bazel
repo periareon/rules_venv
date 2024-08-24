@@ -1,0 +1,30 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python/venv:defs.bzl", "py_venv_library")
+
+write_file(
+    name = "greeting",
+    out = "greeting.py",
+    content = """\
+\"\"\"A module for generating greeting messages.\"\"\"
+
+
+def greeting(name: str) -> str:
+    \"\"\"Generate a greeting message.
+
+    Args:
+        name: The name of the entity to greet.
+
+    Returns:
+        The greeting.
+    \"\"\"
+    return f"Hello, {name}"
+
+""".splitlines(),
+    newline = "unix",
+)
+
+py_venv_library(
+    name = "user_dep",
+    srcs = [":greeting.py"],
+    visibility = ["//python/venv/private/tests/common_api:__subpackages__"],
+)

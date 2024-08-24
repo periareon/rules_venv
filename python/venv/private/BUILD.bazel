@@ -1,0 +1,36 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":runfiles_enabled.bzl", "runfiles_enabled_build_setting")
+load(":utils.bzl", "venv_entrypoint")
+
+exports_files([
+    "global_venv.py",
+    "venv_process_wrapper.py",
+    "venv_runfiles.py",
+    "venv_zipapp_maker.py",
+    "venv_zipapp_main.py",
+])
+
+venv_entrypoint(
+    name = "venv_entrypoint",
+    entrypoint = select({
+        "@platforms//os:windows": "entrypoint.bat",
+        "//conditions:default": "entrypoint.sh",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/venv:__pkg__"],
+    deps = [
+        "@bazel_skylib//lib:selects",
+        "@bazel_skylib//rules:common_settings",
+        "@rules_python//python:defs_bzl",
+    ],
+)
+
+runfiles_enabled_build_setting(
+    name = "runfiles_enabled",
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,30 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
+
+write_file(
+    name = "generated_data",
+    out = "generated_data.txt",
+    content = [
+        "Big Boss",
+        "",
+    ],
+    newline = "unix",
+)
+
+py_venv_library(
+    name = "data",
+    srcs = ["data.py"],
+    data = [
+        "data.txt",
+        "generated_data.txt",
+    ],
+    deps = [
+        "//python/runfiles",
+    ],
+)
+
+py_venv_test(
+    name = "data_test",
+    srcs = ["data_test.py"],
+    deps = [":data"],
+)

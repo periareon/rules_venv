@@ -1,0 +1,42 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python/venv:defs.bzl", "py_venv_binary")
+load("//python/venv/private/tests/python_zip_file:python_zip_file_consumer.bzl", "python_zip_file_consumer")
+
+py_venv_binary(
+    name = "writer",
+    srcs = ["writer.py"],
+    data = [
+        "data.txt",
+    ],
+    deps = [
+        "//python/runfiles",
+    ],
+)
+
+filegroup(
+    name = "writer_pyz",
+    srcs = [":writer"],
+    output_group = "python_zip_file",
+)
+
+write_file(
+    name = "expected",
+    out = "expected.txt",
+    content = [
+        "La-Li-Lu-Le-Lo",
+        "",
+    ],
+    newline = "unix",
+)
+
+python_zip_file_consumer(
+    name = "python_zip_file_consumer",
+    zip_file = ":writer_pyz",
+)
+
+diff_test(
+    name = "python_zip_file_diff_test",
+    file1 = "expected.txt",
+    file2 = ":python_zip_file_consumer",
+)

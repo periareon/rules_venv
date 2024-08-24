@@ -1,0 +1,10 @@
+load("//python/venv:defs.bzl", "py_venv_test")
+
+py_venv_test(
+    name = "pytest_test",
+    srcs = ["pytest_test.py"],
+    deps = [
+        "@pip_deps//:pytest",
+        "@pip_deps//:pytest_cov",
+    ],
+)

@@ -1,0 +1,13 @@
+load("//python/venv:defs.bzl", "py_venv_library")
+
+py_venv_library(
+    name = "dependency",
+    srcs = [
+        "python/within_second_python/__init__.py",
+        "python/within_second_python/py_dep.py",
+    ],
+    # The `python` package here will conflict with the parent `python` package
+    # in this repo. The rules need to be able to handle this case.
+    imports = ["."],
+    visibility = ["//python/venv/private/tests/import_duplicates:__subpackages__"],
+)

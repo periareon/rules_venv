@@ -1,0 +1,12 @@
+load("//python/venv:defs.bzl", "py_venv_toolchain")
+
+py_venv_toolchain(
+    name = "py_venv_toolchain",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_venv_toolchain",
+    toolchain_type = "//python/venv:toolchain_type",
+    visibility = ["//visibility:public"],
+)
