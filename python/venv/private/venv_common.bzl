@@ -154,7 +154,16 @@ def _create_python_startup_args(*, ctx, version_info):
 
     return python_args
 
-def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, name = None):
+def _create_runfiles_collection(
+        *,
+        ctx,
+        venv_config_info,
+        venv_toolchain,
+        py_toolchain,
+        runfiles,
+        name = None,
+        zip_template = "{}.venv_runfiles.zip",
+        config_template = "{}.venv_config.json"):
     """Generate a runfiles directory
 
     This functionality exists due to the lack of native support for generating
@@ -162,10 +171,13 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
 
     Args:
         ctx (ctx): The rule's context object.
+        venv_config_info (struct): Config info about the associated venv target.
         venv_toolchain (ToolchainInfo): A `py_venv_toolchain` toolchain.
         py_toolchain (ToolchainInfo): A `py_toolchain` toolchain.
         runfiles (Runfiles): The runfiles to render into a directory
         name (str, optional): An alternate name to use in the output instead of `ctx.label.name`.
+        zip_template (str, optional): A format string used to determine the output name of the zip file.
+        config_template (str, optional): A format string used to determine the output name of the config file.
 
     Returns:
         File: The generated runfiles directory.
@@ -182,13 +194,16 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     if name == None:
         name = ctx.label.name
 
-    output = ctx.actions.declare_file("{}.venv_runfiles.zip".format(name))
+    output = ctx.actions.declare_file(zip_template.format(name))
+    out_config = ctx.actions.declare_file(config_template.format(name))
 
     python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
 
     python_args.add(venv_toolchain.runfiles_maker)
 
     python_args.add("--output", output)
+    python_args.add("--output_venv_config", out_config)
+    python_args.add("--venv_config_data", json.encode(venv_config_info))
 
     runfiles_args = ctx.actions.args()
     runfiles_args.use_param_file("@%s", use_always = True)
@@ -215,12 +230,12 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
                 py_runtime.files,
             ],
         ),
-        outputs = [output],
+        outputs = [output, out_config],
         inputs = runfiles.files,
         arguments = [python_args, runfiles_args],
     )
 
-    return output
+    return output, out_config
 
 def _create_venv_entrypoint(
         *,
@@ -283,36 +298,44 @@ def _create_venv_entrypoint(
         imports = py_info.imports.to_list(),
     )
 
-    venv_config = ctx.actions.declare_file("{}.venv_config.json".format(name))
-    ctx.actions.write(
-        output = venv_config,
-        content = json.encode_indent(
-            venv_config_info,
-            indent = " " * 4,
-        ),
-    )
-
     venv_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
         depset([
             venv_toolchain.process_wrapper,
-            venv_config,
         ]),
         py_runtime.files,
         py_info.transitive_sources,
     ])).merge(runfiles)
 
+    config_template = "{}.venv_config.json"
     runfiles_path = ""
     if force_runfiles or not venv_toolchain.runfiles_enabled:
-        runfiles_collection = _create_runfiles_collection(
+        runfiles_collection, venv_config = _create_runfiles_collection(
             ctx = ctx,
+            venv_config_info = venv_config_info,
             venv_toolchain = venv_toolchain,
             py_toolchain = py_toolchain,
             runfiles = venv_runfiles,
             name = name,
+            config_template = config_template,
         )
         runfiles_path = path_fn(runfiles_collection, workspace_name)
+
         venv_runfiles = venv_runfiles.merge(ctx.runfiles(files = [
+            venv_config,
             runfiles_collection,
+        ]))
+    else:
+        venv_config = ctx.actions.declare_file(config_template.format(name))
+        ctx.actions.write(
+            output = venv_config,
+            content = json.encode_indent(
+                venv_config_info,
+                indent = " " * 4,
+            ),
+        )
+
+        venv_runfiles = venv_runfiles.merge(ctx.runfiles(files = [
+            venv_config,
         ]))
 
     ctx.actions.expand_template(

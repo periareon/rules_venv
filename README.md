@@ -265,7 +265,8 @@ File: The generated zip file.
 ## py_venv_common.create_runfiles_collection
 
 <pre>
-py_venv_common.create_runfiles_collection(<a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>)
+py_venv_common.create_runfiles_collection(<a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_config_info">venv_config_info</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>,
+                                          <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-zip_template">zip_template</a>, <a href="#py_venv_common.create_runfiles_collection-config_template">config_template</a>)
 </pre>
 
 Generate a runfiles directory
@@ -280,10 +281,13 @@ runfiles in an action. For details see: https://github.com/bazelbuild/bazel/issu
 | Name  | Description | Default Value |
 | :------------- | :------------- | :------------- |
 | <a id="py_venv_common.create_runfiles_collection-ctx"></a>ctx |  The rule's context object.   |  none |
+| <a id="py_venv_common.create_runfiles_collection-venv_config_info"></a>venv_config_info |  Config info about the associated venv target.   |  none |
 | <a id="py_venv_common.create_runfiles_collection-venv_toolchain"></a>venv_toolchain |  A `py_venv_toolchain` toolchain.   |  none |
 | <a id="py_venv_common.create_runfiles_collection-py_toolchain"></a>py_toolchain |  A `py_toolchain` toolchain.   |  none |
 | <a id="py_venv_common.create_runfiles_collection-runfiles"></a>runfiles |  The runfiles to render into a directory   |  none |
 | <a id="py_venv_common.create_runfiles_collection-name"></a>name |  An alternate name to use in the output instead of `ctx.label.name`.   |  `None` |
+| <a id="py_venv_common.create_runfiles_collection-zip_template"></a>zip_template |  A format string used to determine the output name of the zip file.   |  `"{}.venv_runfiles.zip"` |
+| <a id="py_venv_common.create_runfiles_collection-config_template"></a>config_template |  A format string used to determine the output name of the config file.   |  `"{}.venv_config.json"` |
 
 **RETURNS**
 

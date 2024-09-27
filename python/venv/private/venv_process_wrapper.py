@@ -198,12 +198,19 @@ def main() -> None:
     # a Bazel test. Bazel will clean up the directory for us when the test
     # finishes.
     try:
+        config_pth = config["pth"]
+        external_dir = Path(sys.executable).parent.parent.parent
+        for repo_name in config.get("static_repos", []):
+            for idx, entry in enumerate(config_pth):
+                if ("{runfiles_dir}/" + repo_name) in entry:
+                    config_pth[idx] = entry.format(runfiles_dir=external_dir)
+
         # Create a new venv.
         logging.debug("Creating venv at: %s", venv_dir)
         venv_interpreter = create_venv(
             venv_name=config["label"],
             venv_dir=venv_dir,
-            pth=config["pth"],
+            pth=config_pth,
         )
 
         # Subprocess the entrypoint via the new venv.
