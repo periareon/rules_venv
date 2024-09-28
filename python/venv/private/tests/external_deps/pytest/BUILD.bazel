@@ -1,4 +1,4 @@
-load("//python/venv:defs.bzl", "py_venv_test")
+load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
 
 py_venv_test(
     name = "pytest_test",
@@ -7,4 +7,21 @@ py_venv_test(
         "@pip_deps//:pytest",
         "@pip_deps//:pytest_cov",
     ],
+)
+
+py_venv_library(
+    name = "pytest_wrapper",
+    deps = [
+        "@pip_deps//:pytest",
+        "@pip_deps//:pytest_cov",
+    ],
+)
+
+# Demonstrate that package metadata can be found in transitive
+# library targets.
+py_venv_test(
+    name = "wrapped_pytest_test",
+    srcs = ["pytest_test.py"],
+    main = "pytest_test.py",
+    deps = [":pytest_wrapper"],
 )
