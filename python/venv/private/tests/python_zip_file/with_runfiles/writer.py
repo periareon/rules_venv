@@ -27,7 +27,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
         The requested runifle.
     """
     runfile = runfiles.Rlocation(
-        rlocationpath, source_repo=os.getenv("REPOSITORY_NAME")
+        rlocationpath
     )
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")

@@ -6,6 +6,37 @@ module(
 )
 
 bazel_dep(name = "rules_python", version = "0.34.0")
-bazel_dep(name = "bazel_skylib", version = "1.6.1")
 
-bazel_dep(name = "rules_req_compile", version = "1.0.0rc23", dev_dependency = True)
+python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
+python.toolchain(
+    configure_coverage_tool = True,
+    # Working around a rules_python issue wiht docker
+    # https://github.com/bazelbuild/rules_python/pull/713
+    ignore_root_user_error = True,
+    is_default = True,
+    python_version = "3.11",
+)
+use_repo(
+    python,
+    "python_3_11",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+bazel_dep(name = "stardoc", version = "0.7.0", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.0.0rc29", dev_dependency = True)
+
+requirements = use_extension("@rules_req_compile//extensions:python.bzl", "requirements")
+requirements.parse(
+    name = "pip_deps",
+    requirements_locks = {
+        "@//python/venv/private/tests/external_deps:requirements_linux.txt": "@platforms//os:linux",
+        "@//python/venv/private/tests/external_deps:requirements_macos.txt": "@platforms//os:macos",
+        "@//python/venv/private/tests/external_deps:requirements_windows.txt": "@platforms//os:windows",
+    },
+)
+use_repo(requirements, "pip_deps")
+
+register_toolchains(
+    "//python/venv/toolchain",
+)

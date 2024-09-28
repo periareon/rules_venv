@@ -30,7 +30,6 @@ def load_data() -> str:
     )
     runfile = runfiles.Rlocation(
         rlocationpath,
-        source_repo=os.getenv("TEST_WORKSPACE", os.getenv("REPOSITORY_NAME")),
     )
     if not runfiles:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
