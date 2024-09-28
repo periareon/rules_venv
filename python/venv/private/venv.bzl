@@ -27,10 +27,14 @@ def _py_venv_library_impl(ctx):
         deps = ctx.attr.deps,
     )
 
+    runfiles = dep_info.runfiles.merge(
+        ctx.runfiles(files = ctx.files.srcs + ctx.files.data),
+    )
+
     return [
         DefaultInfo(
             files = depset(ctx.files.srcs),
-            runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data),
+            runfiles = runfiles,
         ),
         venv_common.create_py_info(
             ctx = ctx,
