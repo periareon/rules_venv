@@ -218,6 +218,7 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
         outputs = [output],
         inputs = runfiles.files,
         arguments = [python_args, runfiles_args],
+        env = ctx.configuration.default_shell_env,
     )
 
     return output
@@ -443,6 +444,7 @@ def _create_python_zip_file(
         outputs = [python_zip_file],
         inputs = depset([main, venv_toolchain.zipapp_main], transitive = [venv_runfiles.files]),
         tools = depset([venv_toolchain.zipapp_maker], transitive = [py_runtime.files]),
+        env = ctx.configuration.default_shell_env,
     )
 
     return python_zip_file

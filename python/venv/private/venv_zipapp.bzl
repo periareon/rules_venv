@@ -43,6 +43,7 @@ def _py_zipapp_impl(ctx):
         outputs = [zipapp],
         mnemonic = "PyZipapp",
         progress_message = "Creating python zipapp for {}".format(ctx.label),
+        env = ctx.configuration.default_shell_env,
     )
 
     return [DefaultInfo(

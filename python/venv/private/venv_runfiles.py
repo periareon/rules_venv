@@ -5,12 +5,16 @@ https://github.com/bazelbuild/bazel/issues/15486
 """
 
 import argparse
+import logging
+import os
+import stat
 import zipfile
 from pathlib import Path
 from typing import List, Tuple
 
+RlocationPath = str
 
-def _srcs_pair_arg_file(arg: str) -> List[Tuple[Path, Path]]:
+def _srcs_pair_arg_file(arg: str) -> List[Tuple[Path, RlocationPath]]:
     if not arg.startswith("@"):
         raise ValueError(f"Expected a params file. Got `{arg}`")
 
@@ -26,7 +30,7 @@ def _srcs_pair_arg_file(arg: str) -> List[Tuple[Path, Path]]:
         src, _, dest = text.partition("=")
         if not src or not dest:
             raise ValueError(f"Unexpected src pair: {line}")
-        pairs.append((Path(src), Path(dest)))
+        pairs.append((Path(src), dest))
 
     return pairs
 
@@ -53,16 +57,24 @@ def main() -> None:
     """The main entrypoint."""
     args = parse_args()
 
+    if "RULES_VENV_RUNFILES_DEBUG" in os.environ:
+        logging.basicConfig(level=logging.DEBUG)
+
     args.output.parent.mkdir(exist_ok=True, parents=True)
     with zipfile.ZipFile(str(args.output), "w") as zip_file:
         for pair in args.src_pairs:
             for src, dest in pair:
+                info = zipfile.ZipInfo(filename=dest, date_time=(1980, 1, 1, 0, 0, 0))
+                info.create_system = 3
+                st_mode = src.stat().st_mode
+                info.external_attr = st_mode << 16
 
-                # Ensure timestamps are ignored so outputs are reproducible.
-                info = zipfile.ZipInfo(
-                    filename=str(dest), date_time=(1980, 1, 1, 0, 0, 0)
+                logging.debug(
+                    "Writing runfile file to zip: %s -> %s (%s)",
+                    str(src),
+                    dest,
+                    stat.filemode(st_mode),
                 )
-
                 with src.open("rb") as f:
                     zip_file.writestr(info, f.read())
 

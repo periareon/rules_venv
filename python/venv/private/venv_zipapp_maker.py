@@ -170,7 +170,6 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
                 if child.is_dir():
                     arcname = f"{child.relative_to(zipapp_dir).as_posix()}/"
                     data = b""
-                    # external_attr = 0o755 << 16
                 else:
                     arcname = child.relative_to(zipapp_dir).as_posix()
                     data = child.read_bytes()
