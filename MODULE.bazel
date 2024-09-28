@@ -1,4 +1,4 @@
-"""abrisco/rules_venv"""
+"""periareon/rules_venv"""
 
 module(
     name = "rules_venv",
