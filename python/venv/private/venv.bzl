@@ -167,6 +167,7 @@ def _py_venv_binary_impl(ctx):
             main = ctx.file.main,
             srcs = ctx.files.srcs,
         ),
+        executable = executable,
         runfiles = direct_runfiles,
     )
 

@@ -366,6 +366,7 @@ def _create_python_zip_file(
         venv_toolchain,
         py_info,
         main,
+        executable,
         runfiles,
         py_toolchain = None,
         name = None):
@@ -426,6 +427,8 @@ def _create_python_zip_file(
         args.add("--shebang", venv_toolchain.zipapp_main)
     args.add("--output", python_zip_file)
     args.add("--venv_config_info", json.encode(venv_config_info))
+
+    print(DefaultInfo(executable=executable, runfiles = runfiles).files_to_run)
 
     workspace_name = ctx.workspace_name
 

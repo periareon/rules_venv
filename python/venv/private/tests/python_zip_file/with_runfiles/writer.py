@@ -24,7 +24,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
         rlocationpath: The runfile key
 
     Returns:
-        The requested runifle.
+        The requested runfile.
     """
     runfile = runfiles.Rlocation(
         rlocationpath
