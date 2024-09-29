@@ -40,8 +40,12 @@ def extract_zip(zip_file: Path, output_dir: Path) -> None:
 def main() -> None:
     """The main entrypoint."""
 
-    if "RULES_VENV_ZIPAPP_DEBUG" in os.environ:
-        logging.basicConfig(level=logging.DEBUG)
+    if "RULES_VENV_ZIPAPP_DEBUG" in os.environ or "RULES_VENV_DEBUG" in os.environ:
+        logging.basicConfig(
+            format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.DEBUG,
+        )
 
     assert PY_RUNTIME, "Failed to resolve template. PY_RUNTIME"
     assert VENV_PROCESS_WRAPPER, "Failed to resolve template. VENV_PROCESS_WRAPPER"
@@ -70,6 +74,7 @@ def main() -> None:
             check=False,
             capture_output=False,
         )
+        logging.debug("Process complete with exit code: %d", result.returncode)
         sys.exit(result.returncode)
 
     finally:
