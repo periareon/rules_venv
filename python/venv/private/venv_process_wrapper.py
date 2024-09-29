@@ -182,17 +182,20 @@ def main() -> None:
 
     # The new venv is only a couple of files and directories, cleaning
     # it up should be fast so it's written to a temp directory.
-    venv_dir = Path(
+    temp_dir = Path(
         tempfile.mkdtemp(
-            prefix=f".venv-{config['name']}-",
+            prefix=f"venv-{config['name']}-",
             dir=os.getenv("TEST_TMPDIR"),
         )
     )
 
+    venv_dir = temp_dir / "venv"
+    venv_dir.mkdir(exist_ok=True, parents=True)
+
     # If a runfiles collection was passed, always use it in place of any
     # pre-defined runfiles directories.
     if "VENV_RUNFILES_COLLECTION" in os.environ:
-        runfiles_dir = venv_dir / "runfiles"
+        runfiles_dir = temp_dir / "runfiles"
         runfiles_dir.mkdir(exist_ok=True, parents=True)
         os.environ["PY_VENV_RUNFILES_DIR"] = str(runfiles_dir)
         logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
@@ -235,10 +238,10 @@ def main() -> None:
         # TEST_TMPDIR: Is defined whenever running in under `bazel test`.
         if "TEST_TMPDIR" not in os.environ:
             try:
-                shutil.rmtree(venv_dir)
+                shutil.rmtree(temp_dir)
             except (PermissionError, OSError) as exc:
                 logging.warning(
-                    "Error encountered while cleaning up venv %s: %s", venv_dir, exc
+                    "Error encountered while cleaning up venv %s: %s", temp_dir, exc
                 )
 
 
