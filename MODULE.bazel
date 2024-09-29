@@ -2,10 +2,10 @@
 
 module(
     name = "rules_venv",
-    version = "0.0.1",
+    version = "0.0.2",
 )
 
 bazel_dep(name = "rules_python", version = "0.34.0")
-bazel_dep(name = "bazel_skylib", version = "1.6.1")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
 
-bazel_dep(name = "rules_req_compile", version = "1.0.0rc23", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.0.0rc29", dev_dependency = True)
