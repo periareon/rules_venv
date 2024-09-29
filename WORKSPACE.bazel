@@ -29,8 +29,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "rules_req_compile",
-    sha256 = "e82e9f7ab6ae37a16b60cfcac4c3d84085475e8cdd8c7f27c2193ce72bd57566",
-    urls = ["https://github.com/sputt/req-compile/releases/download/1.0.0rc24/rules_req_compile-v1.0.0rc24.tar.gz"],
+    sha256 = "7c1212e39cf85aa89c887c7bebab6f1b2ebae024a42ca2e3d707e0046cd65a60",
+    urls = ["https://github.com/periareon/req-compile/releases/download/1.0.0rc29/rules_req_compile-1.0.0rc29.tar.gz"],
 )
 
 load("@rules_req_compile//:repositories.bzl", "req_compile_dependencies")
