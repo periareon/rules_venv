@@ -168,8 +168,15 @@ def main() -> None:
     """The main entrypoint."""
     args = parse_args()
 
-    if "RULES_VENV_PROCESS_WRAPPER_DEBUG" in os.environ:
-        logging.basicConfig(level=logging.DEBUG)
+    if (
+        "RULES_VENV_PROCESS_WRAPPER_DEBUG" in os.environ
+        or "RULES_VENV_DEBUG" in os.environ
+    ):
+        logging.basicConfig(
+            format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.DEBUG,
+        )
 
     config = json.loads(args.venv_config.read_text(encoding="utf-8"))
 
@@ -221,6 +228,7 @@ def main() -> None:
 
         logging.debug("Spawning subprocess: %s", " ".join(main_args))
         result = subprocess.run(main_args, check=False, capture_output=False)
+        logging.debug("Process complete with exit code: %d", result.returncode)
         sys.exit(result.returncode)
     finally:
         # https://bazel.build/reference/test-encyclopedia#initial-conditions

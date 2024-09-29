@@ -196,8 +196,15 @@ def main() -> None:
     else:
         args = parse_args()
 
-    if "RULES_VENV_ZIPAPP_MAKER_DEBUG" in os.environ:
-        logging.basicConfig(level=logging.DEBUG)
+    if (
+        "RULES_VENV_ZIPAPP_MAKER_DEBUG" in os.environ
+        or "RULES_VENV_DEBUG" in os.environ
+    ):
+        logging.basicConfig(
+            format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.DEBUG,
+        )
 
     with tempfile.TemporaryDirectory(prefix="bzl-rvza-") as temp_dir:
         runfiles_dir = Path(temp_dir)
