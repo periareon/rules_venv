@@ -1,6 +1,7 @@
 """A tool for repackaging Bazel `python_zip_file` files to standard python zipapps."""
 
 import argparse
+import io
 import json
 import logging
 import os
@@ -154,37 +155,50 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
         zipapp_dir: The zipapp contents
     """
 
-    with output.open("wb") as fd:
+    zip_infos: List[Tuple[zipfile.ZipInfo, bytes]] = []
 
+    for child in sorted(zipapp_dir.rglob("*")):
+        if child.is_dir():
+            arcname = f"{child.relative_to(zipapp_dir).as_posix()}/"
+            data = b""
+        else:
+            arcname = child.relative_to(zipapp_dir).as_posix()
+            data = child.read_bytes()
+
+        info = zipfile.ZipInfo(filename=arcname, date_time=(1980, 1, 1, 0, 0, 0))
+        info.create_system = 3
+        st_mode = child.stat().st_mode
+        info.external_attr = st_mode << 16
+
+        zip_infos.append((info, data))
+
+        logging.debug(
+            "Writing file to zipapp: (%s) %s", stat.filemode(st_mode), arcname
+        )
+
+    ram_file = io.BytesIO()
+
+    with zipfile.ZipFile(
+        ram_file,
+        "w",
+        zipfile.ZIP_DEFLATED,
+        compresslevel=0,
+    ) as z:
+        for info, data in zip_infos:
+            logging.debug(
+                "Writing file to zipapp: (%s) %s",
+                stat.filemode(info.external_attr >> 16),
+                info.filename,
+            )
+            z.writestr(info, data)
+
+    with output.open("wb") as fd:
         if shebang:
             shebang_bytes = b"#!" + shebang.encode("utf-8")
             fd.write(shebang_bytes)
             logging.debug("Writing shebang to zipapp: #!%s", shebang_bytes)
 
-        with zipfile.ZipFile(
-            fd,
-            "w",
-            compression=zipfile.ZIP_STORED,
-        ) as z:
-            for child in sorted(zipapp_dir.rglob("*")):
-                if child.is_dir():
-                    arcname = f"{child.relative_to(zipapp_dir).as_posix()}/"
-                    data = b""
-                else:
-                    arcname = child.relative_to(zipapp_dir).as_posix()
-                    data = child.read_bytes()
-
-                info = zipfile.ZipInfo(
-                    filename=arcname, date_time=(1980, 1, 1, 0, 0, 0)
-                )
-                info.create_system = 3
-                st_mode = child.stat().st_mode
-                info.external_attr = st_mode << 16
-
-                logging.debug(
-                    "Writing file to zipapp: (%s) %s", stat.filemode(st_mode), arcname
-                )
-                z.writestr(info, data)
+        fd.write(ram_file.getvalue())
 
 
 def main() -> None:

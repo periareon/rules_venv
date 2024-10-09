@@ -154,6 +154,14 @@ def _create_python_startup_args(*, ctx, version_info):
 
     return python_args
 
+def _zip_resource_set(_os_name, inputs):
+    return {
+        # A somewhat arbitrary value but chosen to handle a 1GB zip
+        # with 37000 files in it. Some of which are C extensions
+        # some are simple python files.
+        "memory": 0.55 * inputs,
+    }
+
 def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, name = None):
     """Generate a runfiles directory
 
@@ -219,6 +227,7 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
         inputs = runfiles.files,
         arguments = [python_args, runfiles_args],
         env = ctx.configuration.default_shell_env,
+        resource_set = _zip_resource_set,
     )
 
     return output
@@ -445,6 +454,7 @@ def _create_python_zip_file(
         inputs = depset([main, venv_toolchain.zipapp_main], transitive = [venv_runfiles.files]),
         tools = depset([venv_toolchain.zipapp_maker], transitive = [py_runtime.files]),
         env = ctx.configuration.default_shell_env,
+        resource_set = _zip_resource_set,
     )
 
     return python_zip_file

@@ -5,14 +5,13 @@ https://github.com/bazelbuild/bazel/issues/15486
 """
 
 import argparse
-import logging
-import os
-import stat
+import io
 import zipfile
 from pathlib import Path
 from typing import List, Tuple
 
 RlocationPath = str
+
 
 def _srcs_pair_arg_file(arg: str) -> List[Tuple[Path, RlocationPath]]:
     if not arg.startswith("@"):
@@ -57,26 +56,27 @@ def main() -> None:
     """The main entrypoint."""
     args = parse_args()
 
-    if "RULES_VENV_RUNFILES_DEBUG" in os.environ:
-        logging.basicConfig(level=logging.DEBUG)
+    zip_infos: List[Tuple[zipfile.ZipInfo, bytes]] = []
+    for pair in args.src_pairs:
+        for src, dest in pair:
+
+            # Ensure timestamps are ignored so outputs are reproducible.
+            zip_infos.append(
+                (
+                    zipfile.ZipInfo(filename=dest, date_time=(1980, 1, 1, 0, 0, 0)),
+                    src.read_bytes(),
+                )
+            )
+
+    ram_file = io.BytesIO()
+    with zipfile.ZipFile(
+        ram_file, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=0
+    ) as zip_file:
+        for info, data in zip_infos:
+            zip_file.writestr(info, data)
 
     args.output.parent.mkdir(exist_ok=True, parents=True)
-    with zipfile.ZipFile(str(args.output), "w") as zip_file:
-        for pair in args.src_pairs:
-            for src, dest in pair:
-                info = zipfile.ZipInfo(filename=dest, date_time=(1980, 1, 1, 0, 0, 0))
-                info.create_system = 3
-                st_mode = src.stat().st_mode
-                info.external_attr = st_mode << 16
-
-                logging.debug(
-                    "Writing runfile file to zip: %s -> %s (%s)",
-                    str(src),
-                    dest,
-                    stat.filemode(st_mode),
-                )
-                with src.open("rb") as f:
-                    zip_file.writestr(info, f.read())
+    args.output.write_bytes(ram_file.getvalue())
 
 
 if __name__ == "__main__":
