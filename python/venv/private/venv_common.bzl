@@ -158,8 +158,8 @@ def _zip_resource_set(_os_name, inputs):
     return {
         # A somewhat arbitrary value but chosen to handle a 1GB zip
         # with 37000 files in it. Some of which are C extensions
-        # some are simple python files.
-        "memory": 0.55 * inputs,
+        # some are simple python files. Note that the value is in MB.
+        "memory": 0.055 * inputs,
     }
 
 def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, name = None):

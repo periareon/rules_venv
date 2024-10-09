@@ -2,7 +2,7 @@
 
 module(
     name = "rules_venv",
-    version = "0.0.4",
+    version = "0.0.5",
 )
 
 bazel_dep(name = "rules_python", version = "0.34.0")
