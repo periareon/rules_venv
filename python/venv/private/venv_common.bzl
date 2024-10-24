@@ -162,7 +162,7 @@ def _zip_resource_set(_os_name, inputs):
         "memory": 0.055 * inputs,
     }
 
-def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, name = None):
+def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, exclude_files = depset(), name = None, use_zip = False):
     """Generate a runfiles directory
 
     This functionality exists due to the lack of native support for generating
@@ -173,10 +173,13 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
         venv_toolchain (ToolchainInfo): A `py_venv_toolchain` toolchain.
         py_toolchain (ToolchainInfo): A `py_toolchain` toolchain.
         runfiles (Runfiles): The runfiles to render into a directory
+        exclude_files (depset): A collection of files to exclude from the collection despite them appearing
+            in `runfiles`.
         name (str, optional): An alternate name to use in the output instead of `ctx.label.name`.
+        use_zip (bool, optional): If True, a zip file will be generated instead of a json manifest.
 
     Returns:
-        File: The generated runfiles directory.
+        Tuple[File, Runfiles]: The generated runfiles collection and associated runfiles.
     """
 
     py_runtime = py_toolchain.py3_runtime
@@ -190,7 +193,20 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     if name == None:
         name = ctx.label.name
 
-    output = ctx.actions.declare_file("{}.venv_runfiles.zip".format(name))
+    if use_zip:
+        output = ctx.actions.declare_file("{}.venv_runfiles.zip".format(name))
+        resource_set = _zip_resource_set
+        inputs = runfiles.files
+
+        # When creating zips, the zip should be the only runfile required.
+        output_runfiles = ctx.runfiles()
+    else:
+        output = ctx.actions.declare_file("{}.venv_runfiles.json".format(name))
+        resource_set = None
+        inputs = depset()
+
+        # When creating json manifests, all other runfiles will be required.
+        output_runfiles = runfiles
 
     python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
 
@@ -201,12 +217,12 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     runfiles_args = ctx.actions.args()
     runfiles_args.use_param_file("@%s", use_always = True)
 
-    py_runtime_files = {file: None for file in py_runtime.files.to_list()}
+    exclude_files_set = {file: None for file in exclude_files.to_list()}
 
     workspace_name = ctx.workspace_name
 
     def _runfiles_filter_map(file):
-        if file in py_runtime_files:
+        if file in exclude_files_set:
             return None
         return "{}={}".format(file.path, _rlocationpath(file, workspace_name))
 
@@ -224,13 +240,13 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
             ],
         ),
         outputs = [output],
-        inputs = runfiles.files,
+        inputs = inputs,
         arguments = [python_args, runfiles_args],
         env = ctx.configuration.default_shell_env,
-        resource_set = _zip_resource_set,
+        resource_set = resource_set,
     )
 
-    return output
+    return output, output_runfiles
 
 def _create_venv_entrypoint(
         *,
@@ -302,28 +318,35 @@ def _create_venv_entrypoint(
         ),
     )
 
-    venv_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
+    interpreter_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
         depset([
             venv_toolchain.process_wrapper,
             venv_config,
         ]),
         py_runtime.files,
+    ]))
+
+    venv_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
         py_info.transitive_sources,
     ])).merge(runfiles)
 
     runfiles_path = ""
     if force_runfiles or not venv_toolchain.runfiles_enabled:
-        runfiles_collection = _create_runfiles_collection(
+        runfiles_collection, associated_runfiles = _create_runfiles_collection(
             ctx = ctx,
             venv_toolchain = venv_toolchain,
             py_toolchain = py_toolchain,
-            runfiles = venv_runfiles,
+            runfiles = ctx.runfiles(transitive_files = depset(transitive = [
+                py_info.transitive_sources,
+            ])).merge(runfiles),
+            exclude_files = interpreter_runfiles.files,
             name = name,
+            use_zip = False,
         )
         runfiles_path = path_fn(runfiles_collection, workspace_name)
-        venv_runfiles = venv_runfiles.merge(ctx.runfiles(files = [
-            runfiles_collection,
-        ]))
+
+        # Potentially update venv runfiles.
+        venv_runfiles = associated_runfiles.merge(ctx.runfiles(transitive_files = depset([runfiles_collection])))
 
     ctx.actions.expand_template(
         output = entrypoint,
@@ -339,9 +362,13 @@ def _create_venv_entrypoint(
         is_executable = True,
     )
 
-    venv_runfiles = venv_runfiles.merge(ctx.runfiles(files = [
-        main,
-    ]))
+    venv_runfiles = interpreter_runfiles.merge(
+        venv_runfiles.merge(
+            ctx.runfiles(files = [
+                main,
+            ]),
+        ),
+    )
 
     return entrypoint, venv_runfiles
 

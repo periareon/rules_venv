@@ -265,7 +265,8 @@ File: The generated zip file.
 ## py_venv_common.create_runfiles_collection
 
 <pre>
-py_venv_common.create_runfiles_collection(<a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>)
+py_venv_common.create_runfiles_collection(<a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
+                                          <a href="#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
 </pre>
 
 Generate a runfiles directory
@@ -283,11 +284,13 @@ runfiles in an action. For details see: https://github.com/bazelbuild/bazel/issu
 | <a id="py_venv_common.create_runfiles_collection-venv_toolchain"></a>venv_toolchain |  A `py_venv_toolchain` toolchain.   |  none |
 | <a id="py_venv_common.create_runfiles_collection-py_toolchain"></a>py_toolchain |  A `py_toolchain` toolchain.   |  none |
 | <a id="py_venv_common.create_runfiles_collection-runfiles"></a>runfiles |  The runfiles to render into a directory   |  none |
+| <a id="py_venv_common.create_runfiles_collection-exclude_files"></a>exclude_files |  A collection of files to exclude from the collection despite them appearing in `runfiles`.   |  `depset([])` |
 | <a id="py_venv_common.create_runfiles_collection-name"></a>name |  An alternate name to use in the output instead of `ctx.label.name`.   |  `None` |
+| <a id="py_venv_common.create_runfiles_collection-use_zip"></a>use_zip |  If True, a zip file will be generated instead of a json manifest.   |  `False` |
 
 **RETURNS**
 
-File: The generated runfiles directory.
+Tuple[File, Runfiles]: The generated runfiles collection and associated runfiles.
 
 
 <a id="py_venv_common.create_venv_attrs"></a>

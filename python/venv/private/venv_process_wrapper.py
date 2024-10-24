@@ -150,8 +150,8 @@ def extract_zip(zip_file: Path, output_dir: Path) -> None:
     """A helper for extracting a zip file and maintaining file permissions
 
     Args:
-        zip_file (Path): The zip file to extract
-        output_dir (Path): The output location
+        zip_file: The zip file to extract
+        output_dir: The output location
     """
     with zipfile.ZipFile(zip_file, "r") as zip_ref:
         for info in zip_ref.infolist():
@@ -162,6 +162,70 @@ def extract_zip(zip_file: Path, output_dir: Path) -> None:
                 unix_attributes = info.external_attr >> 16
                 if unix_attributes:
                     os.chmod(extracted_path, unix_attributes)
+
+
+def install_files(
+    manifest: Path, output_dir: Path, src_root: Optional[Path] = None
+) -> None:
+    """A helper for installing files in a directory.
+
+    Args:
+        manifest: The manifest to use for installing files. Expected to be a json
+            encoded map of source paths to rlocationpaths
+        output_dir: The output directory in which to install files.
+        src_root: The root from which all source files in `manifest` are relative to.
+    """
+
+    def link(src: Path, dest: Path) -> None:
+        """Symlink `dest` to `src`."""
+        dest.symlink_to(src)
+
+    def copy(src: Path, dest: Path) -> None:
+        """Copy `src` to `dest`."""
+        shutil.copy2(src, dest)
+
+    install_fn = link
+
+    # Using symlinks on windows is both not guaranteed and can have
+    # significant performance impacts at runtime. Some profiling
+    # observed the time it takes to copy files is over all less than
+    # the time lost in runtime with symlinks.
+    if platform.system() == "Windows":
+        install_fn = copy
+
+    pairs = json.loads(manifest.read_text(encoding="utf-8"))
+
+    if "BAZEL_TEST" in os.environ:
+        if "RUNFILES_MANIFEST_FILE" in os.environ:
+            runfiles = {}
+            for line in (
+                Path(os.environ["RUNFILES_MANIFEST_FILE"])
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ):
+                rlocation, _, real_path = line.partition(" ")
+                runfiles[rlocation] = real_path
+
+            for dest in pairs.values():
+                abs_src = Path(runfiles[dest])
+                abs_dest = output_dir / dest
+                abs_dest.parent.mkdir(exist_ok=True, parents=True)
+                install_fn(abs_src, abs_dest)
+
+            return
+
+        if "RUNFILES_DIR" in os.environ:
+            pairs = {value: value for value in pairs.values()}
+
+    if src_root is None:
+        src_root = Path.cwd()
+
+    for src, dest in pairs.items():
+
+        abs_src = src_root / src
+        abs_dest = output_dir / dest
+        abs_dest.parent.mkdir(exist_ok=True, parents=True)
+        install_fn(abs_src, abs_dest)
 
 
 def main() -> None:
@@ -198,11 +262,24 @@ def main() -> None:
         runfiles_dir = temp_dir / "runfiles"
         runfiles_dir.mkdir(exist_ok=True, parents=True)
         os.environ["PY_VENV_RUNFILES_DIR"] = str(runfiles_dir)
-        logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
-        extract_zip(
-            zip_file=Path(os.environ["VENV_RUNFILES_COLLECTION"]),
-            output_dir=runfiles_dir,
-        )
+
+        runfiles_collection = os.environ["VENV_RUNFILES_COLLECTION"]
+        if runfiles_collection.endswith(".zip"):
+            logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
+            runfiles_dir.mkdir(exist_ok=True, parents=True)
+            extract_zip(
+                zip_file=Path(runfiles_collection),
+                output_dir=runfiles_dir,
+            )
+        elif runfiles_collection.endswith(".json"):
+            logging.debug("Linking runfiles collection to: %s", runfiles_dir)
+            install_files(manifest=Path(runfiles_collection), output_dir=runfiles_dir)
+        else:
+            raise EnvironmentError(
+                f"Unexpected `VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
+            )
+
+        logging.debug("Runfiles ready!")
 
     # The venv dir is only cleaned up if the target is not running under
     # a Bazel test. Bazel will clean up the directory for us when the test
