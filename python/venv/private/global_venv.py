@@ -73,11 +73,13 @@ def get_bazel_info(bazel: Path | str, workspace_dir: Path | str) -> BazelInfo:
         Deserialized Bazel info.
     """
     logging.debug("Bazel info...")
+    args = [
+        bazel,
+        "info",
+    ]
+    logging.debug(" ".join(args))
     result = subprocess.run(
-        [
-            bazel,
-            "info",
-        ],
+        args,
         env=_bazel_env(),
         check=True,
         encoding="utf-8",
@@ -117,14 +119,15 @@ def generate_global_venv_specs(
         targets: Targets to generate specs for.
     """
     logging.debug("Building specs...")
+    args = [
+        bazel,
+        "build",
+        rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
+        "--output_groups=py_global_venv_info",
+    ] + targets
+    logging.debug(" ".join(args))
     subprocess.run(
-        [
-            bazel,
-            "build",
-            rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
-            "--output_groups=py_global_venv_info",
-        ]
-        + targets,
+        args,
         env=_bazel_env(),
         check=True,
         encoding="utf-8",
@@ -317,17 +320,18 @@ def query_global_venv_specs(
             del env[remove]
 
     logging.debug("Querying specs...")
+    args = [
+        bazel,
+        "aquery",
+        "--include_aspects",
+        "--include_artifacts",
+        rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
+        "--output_groups=py_global_venv_info",
+        "--output=jsonproto",
+    ] + targets
+    logging.debug(" ".join(args))
     result = subprocess.run(
-        [
-            bazel,
-            "aquery",
-            "--include_aspects",
-            "--include_artifacts",
-            rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
-            "--output_groups=py_global_venv_info",
-            "--output=jsonproto",
-        ]
-        + targets,
+        args,
         env=_bazel_env(),
         check=True,
         encoding="utf-8",
@@ -418,7 +422,10 @@ def main() -> None:
 
     args = parse_args()
 
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
+    )
 
     workspace = Path(os.environ["BUILD_WORKSPACE_DIRECTORY"])
     bazel = args.bazel
@@ -475,9 +482,8 @@ def main() -> None:
         ),
     )
 
-    logging.info("Done")
     logging.info(
-        "source %s/%s",
+        "Generation complete, to activate run: `source %s/%s`",
         venv_interpreter.parent,
         ("activate.bat" if platform.system() == "Windows" else "activate"),
     )
