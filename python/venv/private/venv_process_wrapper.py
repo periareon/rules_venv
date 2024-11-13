@@ -195,37 +195,31 @@ def install_files(
 
     pairs = json.loads(manifest.read_text(encoding="utf-8"))
 
-    if "BAZEL_TEST" in os.environ:
-        if "RUNFILES_MANIFEST_FILE" in os.environ:
-            runfiles = {}
-            for line in (
-                Path(os.environ["RUNFILES_MANIFEST_FILE"])
-                .read_text(encoding="utf-8")
-                .splitlines()
-            ):
-                rlocation, _, real_path = line.partition(" ")
-                runfiles[rlocation] = real_path
+    if "RUNFILES_MANIFEST_FILE" in os.environ:
+        runfiles = {}
+        for line in (
+            Path(os.environ["RUNFILES_MANIFEST_FILE"])
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ):
+            rlocation, _, real_path = line.partition(" ")
+            runfiles[rlocation] = real_path
 
-            for dest in pairs.values():
-                abs_src = Path(runfiles[dest])
-                abs_dest = output_dir / dest
-                abs_dest.parent.mkdir(exist_ok=True, parents=True)
-                install_fn(abs_src, abs_dest)
+        for dest in pairs.values():
+            abs_src = Path(runfiles[dest])
+            abs_dest = output_dir / dest
+            abs_dest.parent.mkdir(exist_ok=True, parents=True)
+            install_fn(abs_src, abs_dest)
 
-            return
+    else:
+        if src_root is None:
+            src_root = Path.cwd()
 
-        if "RUNFILES_DIR" in os.environ:
-            pairs = {value: value for value in pairs.values()}
-
-    if src_root is None:
-        src_root = Path.cwd()
-
-    for src, dest in pairs.items():
-
-        abs_src = src_root / src
-        abs_dest = output_dir / dest
-        abs_dest.parent.mkdir(exist_ok=True, parents=True)
-        install_fn(abs_src, abs_dest)
+        for src, dest in pairs.items():
+            abs_src = src_root / src
+            abs_dest = output_dir / dest
+            abs_dest.parent.mkdir(exist_ok=True, parents=True)
+            install_fn(abs_src, abs_dest)
 
 
 def main() -> None:
