@@ -74,7 +74,7 @@ def get_bazel_info(bazel: Path | str, workspace_dir: Path | str) -> BazelInfo:
     """
     logging.debug("Bazel info...")
     args = [
-        bazel,
+        str(bazel),
         "info",
     ]
     logging.debug(" ".join(args))
@@ -120,7 +120,7 @@ def generate_global_venv_specs(
     """
     logging.debug("Building specs...")
     args = [
-        bazel,
+        str(bazel),
         "build",
         rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
         "--output_groups=py_global_venv_info",
@@ -321,7 +321,7 @@ def query_global_venv_specs(
 
     logging.debug("Querying specs...")
     args = [
-        bazel,
+        str(bazel),
         "aquery",
         "--include_aspects",
         "--include_artifacts",
