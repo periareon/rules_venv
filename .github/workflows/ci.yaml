@@ -53,13 +53,15 @@ jobs:
         with:
           path: |
             ~/.cache/bazelisk
-            C:/bzl
+            D:/bzl
           key: ${{ runner.os }}-${{ env.cache-name }}
         if: startswith(runner.os, 'Windows')
 
       - name: Setup Bazelrc (Windows)
         run: |
-          echo "startup --output_user_root=C:/bzl" > ./user.bazelrc
+          echo "TEMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "TMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "startup --output_user_root=D:/bzl" > ./user.bazelrc
         if: startswith(runner.os, 'Windows')
       - name: Setup Bazelrc
         run: |
@@ -73,6 +75,37 @@ jobs:
       - name: Test (Windows)
         run: bazel $env:BAZEL_STARTUP_FLAGS test //...
         if: startswith(runner.os, 'Windows')
+
+  ci-bazel-run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+          - os: ubuntu-20.04
+          - os: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+      - name: Test (Unix)
+        if: startswith(runner.os, 'Windows') != true
+        run: |
+          bazel ${BAZEL_STARTUP_FLAGS} run //python/venv/private/tests/bazel_free:greeter -- world --output=$(pwd)/data.txt
+
+          if [[ "$(cat data.txt)" != "Hello, world"* ]]; then
+            cat data.txt
+            exit 1
+          fi
+      - name: Test (Windows)
+        if: startswith(runner.os, 'Windows')
+        run: |
+          # Run the command and redirect output to data.txt
+          & bazel $BAZEL_STARTUP_FLAGS run //python/venv/private/tests/bazel_free:greeter "--" world --output=$(pwd)/data.txt
+
+          # Check if the contents of data.txt start with "Hello, world."
+          if ((Get-Content data.txt) -notmatch "^Hello, world.*") {
+              Get-Content data.txt
+              exit 1
+          }
 
   ci-buildifier:
     runs-on: ubuntu-20.04

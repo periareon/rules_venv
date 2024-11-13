@@ -16,10 +16,6 @@ if "%~2" equ "" (
     echo>&2 ERROR: Expected two arguments for rlocation function.
     exit 1
 )
-if "%RUNFILES_MANIFEST_ONLY%" neq "1" (
-    set %~2=%~1
-    exit /b 0
-)
 if exist "%RUNFILES_DIR%" (
     set RUNFILES_MANIFEST_FILE=%RUNFILES_DIR%_manifest
 )

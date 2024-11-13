@@ -7,11 +7,6 @@ py_venv_test(
         "//:MODULE.bazel",
         "//:version.bzl",
     ],
-    # TODO: https://github.com/bazelbuild/rules_python/issues/2141
-    target_compatible_with = select({
-        "@platforms//os:windows": ["@platforms//:incompatible"],
-        "//conditions:default": [],
-    }),
     deps = [
         "//python/runfiles",
     ],

@@ -1,0 +1,17 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python/venv:defs.bzl", "py_venv_binary")
+
+write_file(
+    name = "prefix",
+    out = "prefix.txt",
+    content = ["Hello, "],
+    newline = "unix",
+)
+
+py_venv_binary(
+    name = "greeter",
+    srcs = ["greeter.py"],
+    data = [":prefix.txt"],
+    env = {"PREFIX_RLOCATIONPATH": "$(rlocationpath :prefix.txt)"},
+    deps = ["//python/runfiles"],
+)

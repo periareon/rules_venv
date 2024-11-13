@@ -30,3 +30,26 @@ diff_test(
     file1 = ":writer_expected.txt",
     file2 = ":writer_output.txt",
 )
+
+py_venv_binary(
+    name = "copier",
+    srcs = ["copier.py"],
+    data = [":writer_output.txt"],
+    env = {"WRITER_OUTPUT_RLOCATIONPATH": "$(rlocationpath :writer_output.txt)"},
+    deps = ["//python/runfiles"],
+)
+
+run_binary(
+    name = "copier_output",
+    srcs = [":writer_expected.txt"],
+    outs = ["copier_output.txt"],
+    args = ["--output=$(execpath :copier_output.txt)"],
+    env = {"WRITER_OUTPUT_RLOCATIONPATH": "$(rlocationpath :writer_expected.txt)"},
+    tool = ":copier",
+)
+
+diff_test(
+    name = "copier_diff_test",
+    file1 = ":writer_expected.txt",
+    file2 = ":copier_output.txt",
+)
