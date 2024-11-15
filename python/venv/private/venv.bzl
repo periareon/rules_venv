@@ -27,8 +27,15 @@ def _py_venv_library_impl(ctx):
         deps = ctx.attr.deps,
     )
 
-    runfiles = dep_info.runfiles.merge(
-        ctx.runfiles(files = ctx.files.srcs + ctx.files.data),
+    runfiles = ctx.runfiles(
+        files = ctx.files.srcs + ctx.files.data,
+    ).merge_all(
+        [
+            dep_info.runfiles,
+        ] + [
+            target[DefaultInfo].default_runfiles
+            for target in ctx.attr.data
+        ],
     )
 
     return [
@@ -155,7 +162,14 @@ def _py_venv_binary_impl(ctx):
         dep_info = dep_info,
     )
 
-    direct_runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data).merge(dep_info.runfiles)
+    direct_runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data).merge_all(
+        [
+            dep_info.runfiles,
+        ] + [
+            target[DefaultInfo].default_runfiles
+            for target in ctx.attr.data
+        ],
+    )
 
     executable, runfiles = venv_common.create_venv_entrypoint(
         ctx = ctx,
@@ -263,6 +277,15 @@ def _py_venv_test_impl(ctx):
         dep_info = dep_info,
     )
 
+    direct_runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.data).merge_all(
+        [
+            dep_info.runfiles,
+        ] + [
+            target[DefaultInfo].default_runfiles
+            for target in ctx.attr.data
+        ],
+    )
+
     executable, runfiles = venv_common.create_venv_entrypoint(
         ctx = ctx,
         venv_toolchain = venv_toolchain,
@@ -272,7 +295,7 @@ def _py_venv_test_impl(ctx):
             main = ctx.file.main,
             srcs = ctx.files.srcs,
         ),
-        runfiles = dep_info.runfiles,
+        runfiles = direct_runfiles,
     )
 
     coverage_files_direct = []
@@ -287,12 +310,7 @@ def _py_venv_test_impl(ctx):
     return [
         DefaultInfo(
             files = depset([executable] + ctx.files.srcs + ctx.files.data),
-            runfiles = runfiles.merge(
-                ctx.runfiles(
-                    files = ctx.files.srcs + ctx.files.data,
-                    transitive_files = depset(coverage_files_direct, transitive = coverage_files_transitive),
-                ),
-            ),
+            runfiles = runfiles,
             executable = executable,
         ),
         py_info,
