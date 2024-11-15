@@ -74,9 +74,20 @@ def _create_run_environment_info(ctx, env, env_inherit, targets):
     Returns:
         RunEnvironmentInfo: The provider.
     """
+
+    known_variables = {}
+    for target in ctx.attr.toolchains:
+        if platform_common.TemplateVariableInfo in target:
+            variables = getattr(target[platform_common.TemplateVariableInfo], "variables", {})
+            known_variables.update(variables)
+
     expanded_env = {}
     for key, value in env.items():
-        expanded_env[key] = ctx.expand_location(value, targets)
+        expanded_env[key] = ctx.expand_make_variables(
+            key,
+            ctx.expand_location(value, targets),
+            known_variables,
+        )
 
     workspace_name = ctx.label.workspace_name
     if not workspace_name:
