@@ -70,7 +70,7 @@ jobs:
 
       # Build and Test the code
       - name: Test (Unix)
-        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //...
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //... && bazel ${BAZEL_STARTUP_FLAGS[@]} run buildifier_check
         if: startswith(runner.os, 'Windows') != true
       - name: Test (Windows)
         run: bazel $env:BAZEL_STARTUP_FLAGS test //...
@@ -106,18 +106,6 @@ jobs:
               Get-Content data.txt
               exit 1
           }
-
-  ci-buildifier:
-    runs-on: ubuntu-20.04
-    steps:
-      # Checkout the code
-      - uses: actions/checkout@v2
-      - name: Download Buildifier
-        run: |
-          wget "https://github.com/bazelbuild/buildtools/releases/download/v7.3.1/buildifier-linux-amd64" -O buildifier
-          chmod +x buildifier
-      - name: Buildifier
-        run: ./buildifier -lint=warn -mode=check -warnings=all -r ${{ github.workspace }}
 
   ci-lint-and-format:
     runs-on: ubuntu-20.04

@@ -3,6 +3,14 @@
 load("@rules_python//python:defs.bzl", "PyInfo")
 load(":venv_common.bzl", venv_common = "py_venv_common")
 
+PyMainInfo = provider(
+    "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
+    fields = {
+        "main": "(File) The main entrypoint for the target.",
+        "srcs": "(list[File]) The list of source files that directly belong to the binary.",
+    },
+)
+
 _COMMON_ATTRS = {
     "data": attr.label_list(
         doc = "Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.",
@@ -183,18 +191,6 @@ def _py_venv_binary_impl(ctx):
         runfiles = direct_runfiles,
     )
 
-    python_zip_file = venv_common.create_python_zip_file(
-        ctx = ctx,
-        venv_toolchain = venv_toolchain,
-        py_info = py_info,
-        main = _compute_main(
-            ctx = ctx,
-            main = ctx.file.main,
-            srcs = ctx.files.srcs,
-        ),
-        runfiles = direct_runfiles,
-    )
-
     return [
         DefaultInfo(
             files = depset([executable] + ctx.files.srcs + ctx.files.data),
@@ -214,10 +210,64 @@ def _py_venv_binary_impl(ctx):
             env_inherit = [],
             targets = ctx.attr.data,
         ),
-        OutputGroupInfo(
-            python_zip_file = depset([python_zip_file]),
+        PyMainInfo(
+            main = ctx.file.main,
+            srcs = ctx.files.srcs,
         ),
     ]
+
+def _py_venv_zipapp_impl(ctx):
+    venv_toolchain = ctx.toolchains[venv_common.TOOLCHAIN_TYPE]
+    py_info = ctx.attr.binary[PyInfo]
+    main_info = ctx.attr.binary[PyMainInfo]
+
+    python_zip_file = venv_common._create_python_zip_file(
+        ctx = ctx,
+        venv_toolchain = venv_toolchain,
+        py_info = py_info,
+        main = _compute_main(
+            ctx = ctx,
+            main = main_info.main,
+            srcs = main_info.srcs,
+        ),
+        runfiles = ctx.attr.binary[DefaultInfo].default_runfiles,
+        files_to_run = ctx.attr.binary[DefaultInfo].files_to_run,
+    )
+
+    return DefaultInfo(
+        files = depset([python_zip_file]),
+    )
+
+py_venv_zipapp = rule(
+    doc = """\
+A `py_venv_zipapp` is an executable Python zipapp which contains all of the
+dependencies and runfiles for a given executable.
+
+```python
+load("@rules_venv//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+
+py_venv_binary(
+    name = "foo",
+    srcs = ["foo.py"],
+)
+
+py_venv_zipapp(
+    name = "foo_pyz",
+    binary = ":foo",
+)
+```
+""",
+    implementation = _py_venv_zipapp_impl,
+    attrs = {
+        "binary": attr.label(
+            doc = "The binary to package as a zipapp.",
+            providers = [PyInfo],
+            executable = True,
+            cfg = "target",
+        ),
+    },
+    toolchains = [venv_common.TOOLCHAIN_TYPE],
+)
 
 _EXECUTABLE_ATTRS = _COMMON_ATTRS | {
     "env": attr.string_dict(
