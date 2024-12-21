@@ -3,3 +3,13 @@ exports_files([
     "README.md",
     "version.bzl",
 ])
+
+alias(
+    name = "buildifier",
+    actual = "//tools/buildifier:buildifier",
+)
+
+alias(
+    name = "buildifier_check",
+    actual = "//tools/buildifier:buildifier_check",
+)

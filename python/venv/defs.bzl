@@ -58,7 +58,6 @@ An experimental API for creating python executables within user author rules.
 
 - [create_dep_info](#create_dep_info)
 - [create_py_info](#create_py_info)
-- [create_python_zip_file](#create_python_zip_file)
 - [create_runfiles_collection](#create_runfiles_collection)
 - [create_venv_attrs](#create_venv_attrs)
 - [create_venv_entrypoint](#create_venv_entrypoint)
@@ -67,6 +66,7 @@ An experimental API for creating python executables within user author rules.
 ## Rules
 
 - [py_venv_binary](#py_venv_binary)
+- [py_venv_zipapp](#py_venv_zipapp)
 - [py_venv_library](#py_venv_library)
 - [py_venv_test](#py_venv_test)
 - [py_venv_toolchain](#py_venv_toolchain)
@@ -80,6 +80,7 @@ load(
     _py_venv_binary = "py_venv_binary",
     _py_venv_library = "py_venv_library",
     _py_venv_test = "py_venv_test",
+    _py_venv_zipapp = "py_venv_zipapp",
 )
 load(
     "//python/venv/private:venv_common.bzl",
@@ -95,6 +96,7 @@ load(
 )
 
 py_venv_binary = _py_venv_binary
+py_venv_zipapp = _py_venv_zipapp
 py_venv_library = _py_venv_library
 py_venv_test = _py_venv_test
 py_venv_toolchain = _py_venv_toolchain
