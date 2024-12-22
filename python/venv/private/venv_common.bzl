@@ -396,7 +396,7 @@ def _get_py_venv_toolchain(ctx, *, cfg = "target"):
         cfg,
     ))
 
-def _create_python_zip_file(
+def create_python_zip_file(
         *,
         ctx,
         venv_toolchain,
@@ -405,7 +405,7 @@ def _create_python_zip_file(
         runfiles,
         files_to_run,
         py_toolchain = None,
-        name = None):
+        shebang = None):
     """Create a zipapp.
 
     Args:
@@ -417,8 +417,7 @@ def _create_python_zip_file(
         files_to_run (FilesToRunProvider): Files to run associated with the executable.
         py_toolchain (ToolchainInfo, optional): A `py_toolchain` toolchain. If one is not
             provided one will be acquired via `py_venv_toolchain`.
-        name (str, optional): An alternate name to use in the output instead of `ctx.label.name`.
-
+        shebang (str, optional): Optional shebang contents to include, overriding the toolchain.
     Returns:
         File: The generated zip file.
     """
@@ -433,12 +432,9 @@ def _create_python_zip_file(
     if not interpreter:
         fail("Unable to locate interpreter from py_toolchain: {}".format(py_toolchain))
 
-    if name == None:
-        name = ctx.label.name
-
     venv_config_info = _create_venv_config_info(
         label = ctx.label,
-        name = name.replace("/", "_"),
+        name = ctx.label.name.replace("/", "_"),
         imports = py_info.imports.to_list(),
     )
 
@@ -454,7 +450,7 @@ def _create_python_zip_file(
         runfiles.files,
     ])
 
-    python_zip_file = ctx.actions.declare_file("{}.pyz".format(name))
+    python_zip_file = ctx.actions.declare_file("{}.pyz".format(ctx.label.name))
 
     python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
     python_args.add(venv_toolchain.zipapp_maker)
@@ -463,8 +459,9 @@ def _create_python_zip_file(
     args.add("--main", _rlocationpath(main, ctx.workspace_name))
     args.add("--py_runtime", _rlocationpath(interpreter, ctx.workspace_name))
     args.add("--venv_process_wrapper", _rlocationpath(venv_toolchain.process_wrapper, ctx.workspace_name))
-    if venv_toolchain.zipapp_shebang:
-        args.add("--shebang", venv_toolchain.zipapp_main)
+    optional_shebang = shebang or venv_toolchain.zipapp_shebang
+    if optional_shebang:
+        args.add("--shebang", optional_shebang)
     args.add("--output", python_zip_file)
     args.add("--venv_config_info", json.encode(venv_config_info))
     args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
@@ -491,6 +488,4 @@ py_venv_common = struct(
     create_venv_entrypoint = _create_venv_entrypoint,
     get_toolchain = _get_py_venv_toolchain,
     TOOLCHAIN_TYPE = _TOOLCHAIN_TYPE,
-    # Not a public API member, but useful to access through this struct.
-    _create_python_zip_file = _create_python_zip_file,
 )

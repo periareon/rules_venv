@@ -1,7 +1,7 @@
 """Bazel rules for Python venvs"""
 
 load("@rules_python//python:defs.bzl", "PyInfo")
-load(":venv_common.bzl", venv_common = "py_venv_common")
+load(":venv_common.bzl", venv_common = "py_venv_common", "create_python_zip_file")
 
 PyMainInfo = provider(
     doc = "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
@@ -221,7 +221,7 @@ def _py_venv_zipapp_impl(ctx):
     py_info = ctx.attr.binary[PyInfo]
     main_info = ctx.attr.binary[PyMainInfo]
 
-    python_zip_file = venv_common._create_python_zip_file(
+    python_zip_file = create_python_zip_file(
         ctx = ctx,
         venv_toolchain = venv_toolchain,
         py_info = py_info,
@@ -230,13 +230,14 @@ def _py_venv_zipapp_impl(ctx):
             main = main_info.main,
             srcs = main_info.srcs,
         ),
+        shebang = ctx.attr.shebang,
         runfiles = ctx.attr.binary[DefaultInfo].default_runfiles,
         files_to_run = ctx.attr.binary[DefaultInfo].files_to_run,
     )
 
-    return DefaultInfo(
+    return [DefaultInfo(
         files = depset([python_zip_file]),
-    )
+    )]
 
 py_venv_zipapp = rule(
     doc = """\
@@ -265,6 +266,9 @@ py_venv_zipapp(
             executable = True,
             cfg = "target",
         ),
+        "shebang": attr.string(
+            doc = "Optional shebang line to prepend to the zip (provided as content after #!).",
+        )
     },
     toolchains = [venv_common.TOOLCHAIN_TYPE],
 )

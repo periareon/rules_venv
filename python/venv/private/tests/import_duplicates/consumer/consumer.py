@@ -5,7 +5,6 @@ All tests in `rules_venv` live under `python.venv.private.tests` and the
 expose this module at that location.
 """
 
-import os
 from pathlib import Path
 
 from python.runfiles import Runfiles  # type: ignore

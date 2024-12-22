@@ -1,6 +1,5 @@
 """A suite of tests ensuring version strings are all in sync."""
 
-import os
 import re
 import unittest
 from pathlib import Path

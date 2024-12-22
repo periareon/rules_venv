@@ -53,7 +53,9 @@ def main() -> None:
     # file is added to at runtime via the `run_binary` target so `rlocationpath` can be used
     # to identify a sibling file from which we can get the correct `rlocationpath` without
     # having it as a direct input to the action.
-    rlocationpath = os.environ["WRITER_OUTPUT_RLOCATIONPATH"].replace("writer_expected.txt", "writer_output.txt")
+    rlocationpath = os.environ["WRITER_OUTPUT_RLOCATIONPATH"].replace(
+        "writer_expected.txt", "writer_output.txt"
+    )
 
     src = _rlocation(runfiles, rlocationpath)
 

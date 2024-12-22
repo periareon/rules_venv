@@ -37,12 +37,6 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="The runfiles manifest for the py binary.",
     )
     parser.add_argument(
-        "--repo_mapping_manifest",
-        type=Path,
-        required=True,
-        help="The runfiles repo mapping manifest for the py binary.",
-    )
-    parser.add_argument(
         "--venv_config_info",
         type=json.loads,
         required=True,
@@ -85,13 +79,12 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def install_runfiles(
-    files_manifest:Path, repo_mapping_manifest:Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
+    files_manifest: Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
 ) -> RlocationPath:
     """Create a runfiles directory for creating zipapps.
 
     Args:
         files_manifest: The manifest of files to install.
-        repo_mapping_manifest: The manifest of repo mappings from (repo, apparent name) to canonical name.
         venv_config_info: Configuration info needed to construct a venv for the given runfiles.
         runfiles_dir: The output location to write into.
 
@@ -198,7 +191,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
 
     with output.open("wb") as fd:
         if shebang:
-            shebang_bytes = b"#!" + shebang.encode("utf-8")
+            shebang_bytes = b"#!" + shebang.rstrip().encode("utf-8") + b"\n"
             fd.write(shebang_bytes)
             logging.debug("Writing shebang to zipapp: #!%s", shebang_bytes)
 
@@ -231,7 +224,6 @@ def main() -> None:
         logging.debug("Installing runfiles to: %s", runfiles_dir)
         config_file = install_runfiles(
             files_manifest=args.runfiles_manifest,
-            repo_mapping_manifest=args.repo_mapping_manifest,
             venv_config_info=args.venv_config_info,
             runfiles_dir=runfiles_dir,
         )

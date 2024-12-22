@@ -1,6 +1,5 @@
 """Make data files available to external consumers"""
 
-import os
 from pathlib import Path
 
 from python.runfiles import Runfiles  # type: ignore
