@@ -465,7 +465,6 @@ def create_python_zip_file(
     args.add("--output", python_zip_file)
     args.add("--venv_config_info", json.encode(venv_config_info))
     args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
-    args.add("--repo_mapping_manifest", files_to_run.repo_mapping_manifest)
 
     ctx.actions.run(
         mnemonic = "PyVenvZipapp",

@@ -198,7 +198,7 @@ Declare a toolchain for `rules_venv` rules.
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_zipapp")
 
-py_venv_zipapp(<a href="#py_venv_zipapp-name">name</a>, <a href="#py_venv_zipapp-binary">binary</a>)
+py_venv_zipapp(<a href="#py_venv_zipapp-name">name</a>, <a href="#py_venv_zipapp-binary">binary</a>, <a href="#py_venv_zipapp-shebang">shebang</a>)
 </pre>
 
 A `py_venv_zipapp` is an executable Python zipapp which contains all of the
@@ -225,6 +225,7 @@ py_venv_zipapp(
 | :------------- | :------------- | :------------- | :------------- | :------------- |
 | <a id="py_venv_zipapp-name"></a>name |  A unique name for this target.   | <a href="https://bazel.build/concepts/labels#target-names">Name</a> | required |  |
 | <a id="py_venv_zipapp-binary"></a>binary |  The binary to package as a zipapp.   | <a href="https://bazel.build/concepts/labels">Label</a> | optional |  `None`  |
+| <a id="py_venv_zipapp-shebang"></a>shebang |  Optional shebang line to prepend to the zip (provided as content after #!).   | String | optional |  `""`  |
 
 
 <a id="py_venv_common.create_dep_info"></a>
