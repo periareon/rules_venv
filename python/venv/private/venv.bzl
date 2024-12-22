@@ -4,7 +4,7 @@ load("@rules_python//python:defs.bzl", "PyInfo")
 load(":venv_common.bzl", venv_common = "py_venv_common")
 
 PyMainInfo = provider(
-    "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
+    doc = "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
     fields = {
         "main": "(File) The main entrypoint for the target.",
         "srcs": "(list[File]) The list of source files that directly belong to the binary.",
