@@ -1,7 +1,7 @@
 """Bazel rules for Python venvs"""
 
 load("@rules_python//python:defs.bzl", "PyInfo")
-load(":venv_common.bzl", venv_common = "py_venv_common", "create_python_zip_file")
+load(":venv_common.bzl", "create_python_zip_file", venv_common = "py_venv_common")
 
 PyMainInfo = provider(
     doc = "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
@@ -268,7 +268,7 @@ py_venv_zipapp(
         ),
         "shebang": attr.string(
             doc = "Optional shebang line to prepend to the zip (provided as content after #!).",
-        )
+        ),
     },
     toolchains = [venv_common.TOOLCHAIN_TYPE],
 )
