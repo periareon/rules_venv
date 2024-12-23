@@ -18,7 +18,8 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     Returns:
         The requested runifle.
     """
-    runfile = runfiles.Rlocation(rlocationpath)
+    # TODO: Remove the main repo reference "". This is currently required for Windows.
+    runfile = runfiles.Rlocation(rlocationpath, "")
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
     path = Path(runfile)
