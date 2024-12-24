@@ -108,7 +108,6 @@ def _aspect_user_impl(ctx):
         RunEnvironmentInfo(
             environment = {
                 "ASPECT_ACTION_OUTPUT": _rlocationpath(aspect_output, ctx.workspace_name),
-                "REPOSITORY_NAME": ctx.workspace_name,
             },
         ),
     ]

@@ -65,7 +65,6 @@ def create_zip(args: argparse.Namespace) -> None:
     zip_infos: List[Tuple[zipfile.ZipInfo, bytes]] = []
     for pair in args.src_pairs:
         for src, dest in pair:
-
             # Ensure timestamps are ignored so outputs are reproducible.
             zip_infos.append(
                 (

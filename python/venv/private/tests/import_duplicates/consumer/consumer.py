@@ -5,7 +5,6 @@ All tests in `rules_venv` live under `python.venv.private.tests` and the
 expose this module at that location.
 """
 
-import os
 from pathlib import Path
 
 from python.runfiles import Runfiles  # type: ignore
@@ -28,10 +27,7 @@ def load_data() -> str:
     rlocationpath = (
         "rules_venv/python/venv/private/tests/import_duplicates/consumer/data.txt"
     )
-    runfile = runfiles.Rlocation(
-        rlocationpath,
-        source_repo=os.getenv("TEST_WORKSPACE", os.getenv("REPOSITORY_NAME")),
-    )
+    runfile = runfiles.Rlocation(rlocationpath)
     if not runfiles:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
 

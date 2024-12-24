@@ -18,9 +18,8 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     Returns:
         The requested runifle.
     """
-    runfile = runfiles.Rlocation(
-        rlocationpath, source_repo=os.getenv("REPOSITORY_NAME", "rules_venv")
-    )
+    # TODO: Remove the main repo reference "". This is currently required for Windows.
+    runfile = runfiles.Rlocation(rlocationpath, "")
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
     path = Path(runfile)
@@ -55,7 +54,9 @@ def main() -> None:
     # file is added to at runtime via the `run_binary` target so `rlocationpath` can be used
     # to identify a sibling file from which we can get the correct `rlocationpath` without
     # having it as a direct input to the action.
-    rlocationpath = os.environ["WRITER_OUTPUT_RLOCATIONPATH"].replace("writer_expected.txt", "writer_output.txt")
+    rlocationpath = os.environ["WRITER_OUTPUT_RLOCATIONPATH"].replace(
+        "writer_expected.txt", "writer_output.txt"
+    )
 
     src = _rlocation(runfiles, rlocationpath)
 

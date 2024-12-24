@@ -60,7 +60,6 @@ An experimental API for creating python executables within user author rules.
 
 - [create_dep_info](#create_dep_info)
 - [create_py_info](#create_py_info)
-- [create_python_zip_file](#create_python_zip_file)
 - [create_runfiles_collection](#create_runfiles_collection)
 - [create_venv_attrs](#create_venv_attrs)
 - [create_venv_entrypoint](#create_venv_entrypoint)
@@ -69,6 +68,7 @@ An experimental API for creating python executables within user author rules.
 ## Rules
 
 - [py_venv_binary](#py_venv_binary)
+- [py_venv_zipapp](#py_venv_zipapp)
 - [py_venv_library](#py_venv_library)
 - [py_venv_test](#py_venv_test)
 - [py_venv_toolchain](#py_venv_toolchain)
@@ -81,6 +81,8 @@ An experimental API for creating python executables within user author rules.
 ## py_venv_binary
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+
 py_venv_binary(<a href="#py_venv_binary-name">name</a>, <a href="#py_venv_binary-deps">deps</a>, <a href="#py_venv_binary-srcs">srcs</a>, <a href="#py_venv_binary-data">data</a>, <a href="#py_venv_binary-env">env</a>, <a href="#py_venv_binary-imports">imports</a>, <a href="#py_venv_binary-main">main</a>)
 </pre>
 
@@ -122,6 +124,8 @@ py_venv_binary(
 ## py_venv_library
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_library")
+
 py_venv_library(<a href="#py_venv_library-name">name</a>, <a href="#py_venv_library-deps">deps</a>, <a href="#py_venv_library-srcs">srcs</a>, <a href="#py_venv_library-data">data</a>, <a href="#py_venv_library-imports">imports</a>)
 </pre>
 
@@ -144,6 +148,8 @@ A library of Python code that can be depended upon.
 ## py_venv_test
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_test")
+
 py_venv_test(<a href="#py_venv_test-name">name</a>, <a href="#py_venv_test-deps">deps</a>, <a href="#py_venv_test-srcs">srcs</a>, <a href="#py_venv_test-data">data</a>, <a href="#py_venv_test-env">env</a>, <a href="#py_venv_test-env_inherit">env_inherit</a>, <a href="#py_venv_test-imports">imports</a>, <a href="#py_venv_test-main">main</a>)
 </pre>
 
@@ -169,6 +175,8 @@ A `py_venv_test` rule compiles a test. A test is a binary wrapper around some te
 ## py_venv_toolchain
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_toolchain")
+
 py_venv_toolchain(<a href="#py_venv_toolchain-name">name</a>, <a href="#py_venv_toolchain-zipapp_shebang">zipapp_shebang</a>)
 </pre>
 
@@ -183,12 +191,51 @@ Declare a toolchain for `rules_venv` rules.
 | <a id="py_venv_toolchain-zipapp_shebang"></a>zipapp_shebang |  The shebang to use when creating zipapps (`OutputGroupInfo.python_zip_file`).   | String | optional |  `""`  |
 
 
+<a id="py_venv_zipapp"></a>
+
+## py_venv_zipapp
+
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_zipapp")
+
+py_venv_zipapp(<a href="#py_venv_zipapp-name">name</a>, <a href="#py_venv_zipapp-binary">binary</a>, <a href="#py_venv_zipapp-shebang">shebang</a>)
+</pre>
+
+A `py_venv_zipapp` is an executable Python zipapp which contains all of the
+dependencies and runfiles for a given executable.
+
+```python
+load("@rules_venv//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+
+py_venv_binary(
+    name = "foo",
+    srcs = ["foo.py"],
+)
+
+py_venv_zipapp(
+    name = "foo_pyz",
+    binary = ":foo",
+)
+```
+
+**ATTRIBUTES**
+
+
+| Name  | Description | Type | Mandatory | Default |
+| :------------- | :------------- | :------------- | :------------- | :------------- |
+| <a id="py_venv_zipapp-name"></a>name |  A unique name for this target.   | <a href="https://bazel.build/concepts/labels#target-names">Name</a> | required |  |
+| <a id="py_venv_zipapp-binary"></a>binary |  The binary to package as a zipapp.   | <a href="https://bazel.build/concepts/labels">Label</a> | optional |  `None`  |
+| <a id="py_venv_zipapp-shebang"></a>shebang |  Optional shebang line to prepend to the zip (provided as content after #!).   | String | optional |  `""`  |
+
+
 <a id="py_venv_common.create_dep_info"></a>
 
 ## py_venv_common.create_dep_info
 
 <pre>
-py_venv_common.create_dep_info(<a href="#py_venv_common.create_dep_info-ctx">ctx</a>, <a href="#py_venv_common.create_dep_info-deps">deps</a>)
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_dep_info(*, <a href="#py_venv_common.create_dep_info-ctx">ctx</a>, <a href="#py_venv_common.create_dep_info-deps">deps</a>)
 </pre>
 
 Construct dependency info required for building `PyInfo`
@@ -211,7 +258,9 @@ struct: Dependency info.
 ## py_venv_common.create_py_info
 
 <pre>
-py_venv_common.create_py_info(<a href="#py_venv_common.create_py_info-ctx">ctx</a>, <a href="#py_venv_common.create_py_info-imports">imports</a>, <a href="#py_venv_common.create_py_info-srcs">srcs</a>, <a href="#py_venv_common.create_py_info-dep_info">dep_info</a>)
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_py_info(*, <a href="#py_venv_common.create_py_info-ctx">ctx</a>, <a href="#py_venv_common.create_py_info-imports">imports</a>, <a href="#py_venv_common.create_py_info-srcs">srcs</a>, <a href="#py_venv_common.create_py_info-dep_info">dep_info</a>)
 </pre>
 
 Construct a `PyInfo` provider
@@ -231,41 +280,14 @@ Construct a `PyInfo` provider
 PyInfo: A `PyInfo` provider.
 
 
-<a id="py_venv_common.create_python_zip_file"></a>
-
-## py_venv_common.create_python_zip_file
-
-<pre>
-py_venv_common.create_python_zip_file(<a href="#py_venv_common.create_python_zip_file-ctx">ctx</a>, <a href="#py_venv_common.create_python_zip_file-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_python_zip_file-py_info">py_info</a>, <a href="#py_venv_common.create_python_zip_file-main">main</a>, <a href="#py_venv_common.create_python_zip_file-runfiles">runfiles</a>, <a href="#py_venv_common.create_python_zip_file-py_toolchain">py_toolchain</a>,
-                                      <a href="#py_venv_common.create_python_zip_file-name">name</a>)
-</pre>
-
-Create a zipapp.
-
-**PARAMETERS**
-
-
-| Name  | Description | Default Value |
-| :------------- | :------------- | :------------- |
-| <a id="py_venv_common.create_python_zip_file-ctx"></a>ctx |  The rule's context object.   |  none |
-| <a id="py_venv_common.create_python_zip_file-venv_toolchain"></a>venv_toolchain |  A `py_venv_toolchain` toolchain.   |  none |
-| <a id="py_venv_common.create_python_zip_file-py_info"></a>py_info |  The `PyInfo` provider for the current target.   |  none |
-| <a id="py_venv_common.create_python_zip_file-main"></a>main |  The main python entrypoint.   |  none |
-| <a id="py_venv_common.create_python_zip_file-runfiles"></a>runfiles |  Runfiles associated with the executable.   |  none |
-| <a id="py_venv_common.create_python_zip_file-py_toolchain"></a>py_toolchain |  A `py_toolchain` toolchain. If one is not provided one will be acquired via `py_venv_toolchain`.   |  `None` |
-| <a id="py_venv_common.create_python_zip_file-name"></a>name |  An alternate name to use in the output instead of `ctx.label.name`.   |  `None` |
-
-**RETURNS**
-
-File: The generated zip file.
-
-
 <a id="py_venv_common.create_runfiles_collection"></a>
 
 ## py_venv_common.create_runfiles_collection
 
 <pre>
-py_venv_common.create_runfiles_collection(<a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_runfiles_collection(*, <a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
                                           <a href="#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
 </pre>
 
@@ -298,6 +320,8 @@ Tuple[File, Runfiles]: The generated runfiles collection and associated runfiles
 ## py_venv_common.create_venv_attrs
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
 py_venv_common.create_venv_attrs()
 </pre>
 
@@ -310,7 +334,9 @@ py_venv_common.create_venv_attrs()
 ## py_venv_common.create_venv_entrypoint
 
 <pre>
-py_venv_common.create_venv_entrypoint(<a href="#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_venv_entrypoint(*, <a href="#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
                                       <a href="#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
 </pre>
 
@@ -341,7 +367,9 @@ Tuple[File, Runfiles]: The generated entrypoint and associated runfiles.
 ## py_venv_common.get_toolchain
 
 <pre>
-py_venv_common.get_toolchain(<a href="#py_venv_common.get_toolchain-ctx">ctx</a>, <a href="#py_venv_common.get_toolchain-cfg">cfg</a>)
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.get_toolchain(<a href="#py_venv_common.get_toolchain-ctx">ctx</a>, *, <a href="#py_venv_common.get_toolchain-cfg">cfg</a>)
 </pre>
 
 
@@ -360,6 +388,8 @@ py_venv_common.get_toolchain(<a href="#py_venv_common.get_toolchain-ctx">ctx</a>
 ## py_global_venv_aspect
 
 <pre>
+load("@rules_venv//python/venv:defs.bzl", "py_global_venv_aspect")
+
 py_global_venv_aspect(<a href="#py_global_venv_aspect-name">name</a>)
 </pre>
 

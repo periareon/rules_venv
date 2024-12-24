@@ -1,6 +1,6 @@
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("//python/venv:defs.bzl", "py_venv_binary")
+load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
 load("//python/venv/private/tests/python_zip_file:python_zip_file_consumer.bzl", "python_zip_file_consumer")
 
 py_venv_binary(
@@ -14,10 +14,9 @@ py_venv_binary(
     ],
 )
 
-filegroup(
-    name = "writer_pyz",
-    srcs = [":writer"],
-    output_group = "python_zip_file",
+py_venv_zipapp(
+    name = "writer_zipapp",
+    binary = ":writer",
 )
 
 write_file(
@@ -32,7 +31,7 @@ write_file(
 
 python_zip_file_consumer(
     name = "python_zip_file_consumer",
-    zip_file = ":writer_pyz",
+    zip_file = ":writer_zipapp",
 )
 
 diff_test(

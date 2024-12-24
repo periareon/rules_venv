@@ -23,5 +23,6 @@ class ConsumerTests(unittest.TestCase):
         """Test data"""
         self.assertEqual(consumer.load_data(), "La-Li-Lu-Le-Lo")
 
+
 if __name__ == "__main__":
     unittest.main()

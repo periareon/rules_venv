@@ -34,16 +34,6 @@ build --incompatible_merge_fixed_and_default_shell_env
 build --incompatible_default_to_explicit_init_py
 
 ###############################################################################
-## Bzlmod
-###############################################################################
-
-# TODO: migrate all dependencies from WORKSPACE to MODULE.bazel
-common --noenable_bzlmod
-
-# Disable the bzlmod lockfile, so we don't accidentally commit MODULE.bazel.lock
-common --lockfile_mode=off
-
-###############################################################################
 ## Custom user flags
 ##
 ## This should always be the last thing in the `.bazelrc` file to ensure

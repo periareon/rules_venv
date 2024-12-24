@@ -11,7 +11,9 @@ class PytestTests(unittest.TestCase):
 
     def assert_text_contains(self, text: str, container: str) -> None:
         """Assert that a string is present in a larger string."""
-        assert text in container, f"`{text}` was not found in text:\n```\n{container}\n```"
+        assert (
+            text in container
+        ), f"`{text}` was not found in text:\n```\n{container}\n```"
 
     def test_module_script(self) -> None:
         """Show that modules can be used as scripts"""

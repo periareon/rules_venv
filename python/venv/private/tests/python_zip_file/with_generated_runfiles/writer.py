@@ -1,7 +1,6 @@
 """A smalls script for writing files."""
 
 import argparse
-import os
 from pathlib import Path
 
 from python.runfiles import Runfiles  # type: ignore
@@ -26,9 +25,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     Returns:
         The requested runifle.
     """
-    runfile = runfiles.Rlocation(
-        rlocationpath, source_repo=os.getenv("REPOSITORY_NAME")
-    )
+    runfile = runfiles.Rlocation(rlocationpath)
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
     path = Path(runfile)
@@ -45,7 +42,10 @@ def main() -> None:
     if not runfiles:
         raise EnvironmentError("Failed to locate runfiles.")
 
-    runfile = _rlocation(runfiles, "rules_venv/python/venv/private/tests/python_zip_file/with_generated_runfiles/data.txt")
+    runfile = _rlocation(
+        runfiles,
+        "rules_venv/python/venv/private/tests/python_zip_file/with_generated_runfiles/data.txt",
+    )
 
     args.output.write_bytes(runfile.read_bytes())
 

@@ -31,13 +31,10 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--rfile",
-        dest="runfile_pairs",
-        type=_srcs_pair_arg_file,
-        action="append",
-        default=[],
+        "--runfiles_manifest",
+        type=Path,
         required=True,
-        help="A `py_binary`'s `python_zip_file` output group",
+        help="The runfiles manifest for the py binary.",
     )
     parser.add_argument(
         "--venv_config_info",
@@ -82,24 +79,24 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def install_runfiles(
-    pairs: List[Tuple[Path, Path]], venv_config_info: Dict[str, Any], runfiles_dir: Path
+    files_manifest: Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
 ) -> RlocationPath:
     """Create a runfiles directory for creating zipapps.
 
     Args:
-        pairs: Pairs of runfile paths to their `rlocationpath` values.
+        files_manifest: The manifest of files to install.
         venv_config_info: Configuration info needed to construct a venv for the given runfiles.
         runfiles_dir: The output location to write into.
 
     Returns:
         The `rlocationpath` of the config file used to create venvs.
     """
-    for src, dest in pairs:
-        abs_dest = runfiles_dir / dest
-        abs_dest.parent.mkdir(exist_ok=True, parents=True)
-
-        # Copy2 will retain permissions
-        shutil.copy2(src, abs_dest)
+    with files_manifest.open("r", encoding="utf-8") as manifest_file:
+        for line in manifest_file:
+            rlocation, real_path = line.strip().split(" ", 1)
+            dest_path = runfiles_dir / rlocation
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(real_path, dest_path)
 
     config_file = runfiles_dir / f"{venv_config_info['name']}.venv_config.json"
     config_file.write_text(
@@ -194,7 +191,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
 
     with output.open("wb") as fd:
         if shebang:
-            shebang_bytes = b"#!" + shebang.encode("utf-8")
+            shebang_bytes = b"#!" + shebang.rstrip().encode("utf-8") + b"\n"
             fd.write(shebang_bytes)
             logging.debug("Writing shebang to zipapp: #!%s", shebang_bytes)
 
@@ -226,7 +223,7 @@ def main() -> None:
 
         logging.debug("Installing runfiles to: %s", runfiles_dir)
         config_file = install_runfiles(
-            pairs=args.runfile_pairs,
+            files_manifest=args.runfiles_manifest,
             venv_config_info=args.venv_config_info,
             runfiles_dir=runfiles_dir,
         )
