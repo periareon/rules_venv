@@ -432,9 +432,13 @@ def create_python_zip_file(
     if not interpreter:
         fail("Unable to locate interpreter from py_toolchain: {}".format(py_toolchain))
 
+    name = ctx.label.name
+    if not name.endswith(".pyz"):
+        name += ".pyz"
+
     venv_config_info = _create_venv_config_info(
         label = ctx.label,
-        name = ctx.label.name.replace("/", "_"),
+        name = name.replace("/", "_"),
         imports = py_info.imports.to_list(),
     )
 
@@ -450,7 +454,7 @@ def create_python_zip_file(
         runfiles.files,
     ])
 
-    python_zip_file = ctx.actions.declare_file("{}.pyz".format(ctx.label.name))
+    python_zip_file = ctx.actions.declare_file(name)
 
     python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
     python_args.add(venv_toolchain.zipapp_maker)
