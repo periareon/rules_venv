@@ -475,6 +475,7 @@ def create_python_zip_file(
         tools = [venv_toolchain.zipapp_maker],
         env = ctx.configuration.default_shell_env,
         resource_set = _zip_resource_set,
+        toolchain = _TOOLCHAIN_TYPE,
     )
 
     return python_zip_file
