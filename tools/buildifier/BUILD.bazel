@@ -15,6 +15,7 @@ buildifier(
         "./.git/*",
     ],
     lint_mode = "warn",
+    lint_warnings = ["all"],
     mode = "diff",
     visibility = ["//visibility:public"],
 )
