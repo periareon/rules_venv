@@ -1,5 +1,11 @@
 # {version}
 
+## bzlmod
+```python
+bazel_dep(name = "rules_venv", version = "{version}")
+```
+
+## WORKSPACE
 ```python
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
