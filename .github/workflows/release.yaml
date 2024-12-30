@@ -35,7 +35,7 @@ jobs:
       # Ensure this does not exclude the module used for the .bcr presubmit job.
       - name: Create release artifact
         run: |
-          tar -czf ${{ github.workspace }}/.github/rules_venv.tar.gz --exclude=".git" --exclude=".github" --exclude="examples" -C ${{ github.workspace }} .
+          tar -czf ${{ github.workspace }}/.github/rules_venv.tar.gz --exclude=".git" --exclude=".github" -C ${{ github.workspace }} .
           sha256_base64="$(shasum --algorithm 256 ${{ github.workspace }}/.github/rules_venv.tar.gz | awk '{ print $1 }' | xxd -r -p | base64)"
           echo "ARCHIVE_SHA256_BASE64=${sha256_base64}" >> "${GITHUB_ENV}"
       - name: Generate release notes
