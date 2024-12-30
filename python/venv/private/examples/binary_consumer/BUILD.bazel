@@ -1,0 +1,32 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+
+py_venv_binary(
+    name = "writer",
+    srcs = ["writer.py"],
+)
+
+run_binary(
+    name = "writer_output",
+    outs = ["writer_output.txt"],
+    args = ["--output=$(execpath :writer_output.txt)"],
+    tool = ":writer",
+)
+
+write_file(
+    name = "writer_expected",
+    out = "writer_expected.txt",
+    content = [
+        "La-Li-Lu-Le-Lo.",
+        "",
+    ],
+    newline = "unix",
+)
+
+diff_test(
+    name = "writer_diff_test",
+    file1 = ":writer_expected.txt",
+    file2 = ":writer_output.txt",
+)

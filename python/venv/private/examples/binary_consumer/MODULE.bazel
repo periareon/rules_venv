@@ -1,0 +1,14 @@
+module(
+    name = "binary_consumer",
+)
+
+bazel_dep(name = "rules_venv", version = "0.0.0")
+local_path_override(
+    module_name = "rules_venv",
+    path = "../../../../..",
+)
+
+bazel_dep(
+    name = "bazel_skylib",
+    version = "1.7.1",
+)

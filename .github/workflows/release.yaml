@@ -32,6 +32,7 @@ jobs:
         run: |
           version="$(grep 'VERSION =' ./version.bzl | sed 's/VERSION = "//' | sed 's/"//')"
           echo "RELEASE_VERSION=${version}" >> $GITHUB_ENV
+      # Ensure this does not exclude the module used for the .bcr presubmit job.
       - name: Create release artifact
         run: |
           tar -czf ${{ github.workspace }}/.github/rules_venv.tar.gz --exclude=".git" --exclude=".github" --exclude="examples" -C ${{ github.workspace }} .
