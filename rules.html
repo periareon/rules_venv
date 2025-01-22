@@ -1,0 +1,469 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rules - rules_venv</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">rules_venv</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/periareon/rules_venv" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<p>Bazel rules for Python.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
+<ul>
+<li><a href="#py_venv_binary">py_venv_binary</a></li>
+<li><a href="#py_venv_library">py_venv_library</a></li>
+<li><a href="#py_venv_test">py_venv_test</a></li>
+<li><a href="#py_venv_toolchain">py_venv_toolchain</a></li>
+<li><a href="#py_venv_zipapp">py_venv_zipapp</a></li>
+</ul>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="#py_venv_common.create_dep_info">py_venv_common.create_dep_info</a></li>
+<li><a href="#py_venv_common.create_py_info">py_venv_common.create_py_info</a></li>
+<li><a href="#py_venv_common.create_runfiles_collection">py_venv_common.create_runfiles_collection</a></li>
+<li><a href="#py_venv_common.create_venv_attrs">py_venv_common.create_venv_attrs</a></li>
+<li><a href="#py_venv_common.create_venv_config_info">py_venv_common.create_venv_config_info</a></li>
+<li><a href="#py_venv_common.create_venv_entrypoint">py_venv_common.create_venv_entrypoint</a></li>
+<li><a href="#py_venv_common.get_toolchain">py_venv_common.get_toolchain</a></li>
+</ul>
+<h2 id="aspects"><a class="header" href="#aspects">Aspects</a></h2>
+<ul>
+<li><a href="#py_global_venv_aspect">py_global_venv_aspect</a></li>
+</ul>
+<p><a id="py_venv_binary"></a></p>
+<h2 id="py_venv_binary"><a class="header" href="#py_venv_binary">py_venv_binary</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+
+py_venv_binary(<a href="#py_venv_binary-name">name</a>, <a href="#py_venv_binary-deps">deps</a>, <a href="#py_venv_binary-srcs">srcs</a>, <a href="#py_venv_binary-data">data</a>, <a href="#py_venv_binary-env">env</a>, <a href="#py_venv_binary-imports">imports</a>, <a href="#py_venv_binary-main">main</a>)
+</pre>
+<p>A <code>py_venv_binary</code> is an executable Python program consisting of a collection of
+<code>.py</code> source files (possibly belonging to other <code>py_library</code> rules), a <code>*.runfiles</code>
+directory tree containing all the code and data needed by the program at run-time,
+and a stub script that starts up the program with the correct initial environment
+and data.</p>
+<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+
+py_venv_binary(
+    name = "foo",
+    srcs = ["foo.py"],
+    data = [":transform"],  # a cc_binary which we invoke at run time
+    deps = [
+        ":bar",  # a py_library
+    ],
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_binary-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_binary-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_venv_library"></a></p>
+<h2 id="py_venv_library"><a class="header" href="#py_venv_library">py_venv_library</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_library")
+
+py_venv_library(<a href="#py_venv_library-name">name</a>, <a href="#py_venv_library-deps">deps</a>, <a href="#py_venv_library-srcs">srcs</a>, <a href="#py_venv_library-data">data</a>, <a href="#py_venv_library-imports">imports</a>)
+</pre>
+<p>A library of Python code that can be depended upon.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_library-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_library-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_library-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_library-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_library-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_venv_test"></a></p>
+<h2 id="py_venv_test"><a class="header" href="#py_venv_test">py_venv_test</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_test")
+
+py_venv_test(<a href="#py_venv_test-name">name</a>, <a href="#py_venv_test-deps">deps</a>, <a href="#py_venv_test-srcs">srcs</a>, <a href="#py_venv_test-data">data</a>, <a href="#py_venv_test-env">env</a>, <a href="#py_venv_test-env_inherit">env_inherit</a>, <a href="#py_venv_test-imports">imports</a>, <a href="#py_venv_test-main">main</a>)
+</pre>
+<p>A <code>py_venv_test</code> rule compiles a test. A test is a binary wrapper around some test code.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-env_inherit"></a>env_inherit</td><td style="text-align: left">Specifies additional environment variables to inherit from the external environment when the test is executed by <code>bazel test</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_test-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_venv_toolchain"></a></p>
+<h2 id="py_venv_toolchain"><a class="header" href="#py_venv_toolchain">py_venv_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_toolchain")
+
+py_venv_toolchain(<a href="#py_venv_toolchain-name">name</a>, <a href="#py_venv_toolchain-zipapp_shebang">zipapp_shebang</a>)
+</pre>
+<p>Declare a toolchain for <code>rules_venv</code> rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_toolchain-zipapp_shebang"></a>zipapp_shebang</td><td style="text-align: left">The shebang to use when creating zipapps (<code>OutputGroupInfo.python_zip_file</code>).</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_venv_zipapp"></a></p>
+<h2 id="py_venv_zipapp"><a class="header" href="#py_venv_zipapp">py_venv_zipapp</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_zipapp")
+
+py_venv_zipapp(<a href="#py_venv_zipapp-name">name</a>, <a href="#py_venv_zipapp-binary">binary</a>, <a href="#py_venv_zipapp-shebang">shebang</a>)
+</pre>
+<p>A <code>py_venv_zipapp</code> is an executable Python zipapp which contains all of the
+dependencies and runfiles for a given executable.</p>
+<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+
+py_venv_binary(
+    name = "foo",
+    srcs = ["foo.py"],
+)
+
+py_venv_zipapp(
+    name = "foo_pyz",
+    binary = ":foo",
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_zipapp-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_zipapp-binary"></a>binary</td><td style="text-align: left">The binary to package as a zipapp.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_zipapp-shebang"></a>shebang</td><td style="text-align: left">Optional shebang line to prepend to the zip (provided as content after #!).</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_venv_common.create_dep_info"></a></p>
+<h2 id="py_venv_commoncreate_dep_info"><a class="header" href="#py_venv_commoncreate_dep_info">py_venv_common.create_dep_info</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_dep_info(*, <a href="#py_venv_common.create_dep_info-ctx">ctx</a>, <a href="#py_venv_common.create_dep_info-deps">deps</a>)
+</pre>
+<p>Construct dependency info required for building <code>PyInfo</code></p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.create_dep_info-ctx"></a>ctx</td><td style="text-align: left">The rule's context object.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_dep_info-deps"></a>deps</td><td style="text-align: left">A list of python dependency targets</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>struct: Dependency info.</p>
+<p><a id="py_venv_common.create_py_info"></a></p>
+<h2 id="py_venv_commoncreate_py_info"><a class="header" href="#py_venv_commoncreate_py_info">py_venv_common.create_py_info</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_py_info(*, <a href="#py_venv_common.create_py_info-ctx">ctx</a>, <a href="#py_venv_common.create_py_info-imports">imports</a>, <a href="#py_venv_common.create_py_info-srcs">srcs</a>, <a href="#py_venv_common.create_py_info-dep_info">dep_info</a>)
+</pre>
+<p>Construct a <code>PyInfo</code> provider</p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.create_py_info-ctx"></a>ctx</td><td style="text-align: left">The rule's context object.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_py_info-imports"></a>imports</td><td style="text-align: left">The raw <code>imports</code> attribute.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_py_info-srcs"></a>srcs</td><td style="text-align: left">A list of python (<code>.py</code>) source files.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_py_info-dep_info"></a>dep_info</td><td style="text-align: left">Dependency info from the current target.</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>PyInfo: A <code>PyInfo</code> provider.</p>
+<p><a id="py_venv_common.create_runfiles_collection"></a></p>
+<h2 id="py_venv_commoncreate_runfiles_collection"><a class="header" href="#py_venv_commoncreate_runfiles_collection">py_venv_common.create_runfiles_collection</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_runfiles_collection(*, <a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
+                                          <a href="#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
+</pre>
+<p>Generate a runfiles directory</p>
+<p>This functionality exists due to the lack of native support for generating
+runfiles in an action. For details see: https://github.com/bazelbuild/bazel/issues/15486</p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-ctx"></a>ctx</td><td style="text-align: left">The rule's context object.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-venv_toolchain"></a>venv_toolchain</td><td style="text-align: left">A <code>py_venv_toolchain</code> toolchain.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-py_toolchain"></a>py_toolchain</td><td style="text-align: left">A <code>py_toolchain</code> toolchain.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-runfiles"></a>runfiles</td><td style="text-align: left">The runfiles to render into a directory</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-exclude_files"></a>exclude_files</td><td style="text-align: left">A collection of files to exclude from the collection despite them appearing in <code>runfiles</code>.</td><td style="text-align: left"><code>depset([])</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-name"></a>name</td><td style="text-align: left">An alternate name to use in the output instead of <code>ctx.label.name</code>.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-use_zip"></a>use_zip</td><td style="text-align: left">If True, a zip file will be generated instead of a json manifest.</td><td style="text-align: left"><code>False</code></td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>Tuple[File, Runfiles]: The generated runfiles collection and associated runfiles.</p>
+<p><a id="py_venv_common.create_venv_attrs"></a></p>
+<h2 id="py_venv_commoncreate_venv_attrs"><a class="header" href="#py_venv_commoncreate_venv_attrs">py_venv_common.create_venv_attrs</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_venv_attrs()
+</pre>
+<p><a id="py_venv_common.create_venv_config_info"></a></p>
+<h2 id="py_venv_commoncreate_venv_config_info"><a class="header" href="#py_venv_commoncreate_venv_config_info">py_venv_common.create_venv_config_info</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_venv_config_info(*, <a href="#py_venv_common.create_venv_config_info-label">label</a>, <a href="#py_venv_common.create_venv_config_info-name">name</a>, <a href="#py_venv_common.create_venv_config_info-imports">imports</a>)
+</pre>
+<p>Construct info used to create venvs.</p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-label"></a>label</td><td style="text-align: left">The label of the target that owns the venv.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-name"></a>name</td><td style="text-align: left">The name for the venv.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-imports"></a>imports</td><td style="text-align: left">A list of import paths to write to <code>.pth</code> files.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>struct: the data.</p>
+<p><a id="py_venv_common.create_venv_entrypoint"></a></p>
+<h2 id="py_venv_commoncreate_venv_entrypoint"><a class="header" href="#py_venv_commoncreate_venv_entrypoint">py_venv_common.create_venv_entrypoint</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.create_venv_entrypoint(*, <a href="#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
+                                      <a href="#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
+</pre>
+<p>Create an executable which constructs a python venv and subprocesses a given entrypoint.</p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-ctx"></a>ctx</td><td style="text-align: left">The rule's context object.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-venv_toolchain"></a>venv_toolchain</td><td style="text-align: left">A <code>py_venv_toolchain</code> toolchain.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-py_info"></a>py_info</td><td style="text-align: left">The <code>PyInfo</code> provider for the current target.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-main"></a>main</td><td style="text-align: left">The main python entrypoint.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-runfiles"></a>runfiles</td><td style="text-align: left">Runfiles associated with the executable.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-py_toolchain"></a>py_toolchain</td><td style="text-align: left">A <code>py_toolchain</code> toolchain. If one is not provided one will be acquired via <code>py_venv_toolchain</code>.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-name"></a>name</td><td style="text-align: left">An alternate name to use in the output instead of <code>ctx.label.name</code>.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint"></a>use_runfiles_in_entrypoint</td><td style="text-align: left">If true, an entrypoint will be created that relies on runfiles.</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-force_runfiles"></a>force_runfiles</td><td style="text-align: left">If True, a rendered runfiles directory will be used over builtin runfiles where <code>RUNFILES_DIR</code> would be provided.</td><td style="text-align: left"><code>False</code></td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>Tuple[File, Runfiles]: The generated entrypoint and associated runfiles.</p>
+<p><a id="py_venv_common.get_toolchain"></a></p>
+<h2 id="py_venv_commonget_toolchain"><a class="header" href="#py_venv_commonget_toolchain">py_venv_common.get_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
+
+py_venv_common.get_toolchain(<a href="#py_venv_common.get_toolchain-ctx">ctx</a>, *, <a href="#py_venv_common.get_toolchain-cfg">cfg</a>)
+</pre>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_venv_common.get_toolchain-ctx"></a>ctx</td><td style="text-align: left"><p align="center"> - </p></td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.get_toolchain-cfg"></a>cfg</td><td style="text-align: left"><p align="center"> - </p></td><td style="text-align: left"><code>"target"</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_global_venv_aspect"></a></p>
+<h2 id="py_global_venv_aspect"><a class="header" href="#py_global_venv_aspect">py_global_venv_aspect</a></h2>
+<pre>
+load("@rules_venv//python/venv:defs.bzl", "py_global_venv_aspect")
+
+py_global_venv_aspect()
+</pre>
+<p>An aspect for generating metadata required to include Python targets in a global venv.</p>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
