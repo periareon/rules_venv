@@ -1,4 +1,4 @@
-name: Docs-CI/CD
+name: Docs
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   docs:
     name: Docs
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
