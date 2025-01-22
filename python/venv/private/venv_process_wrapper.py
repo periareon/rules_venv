@@ -307,7 +307,12 @@ def main() -> None:
     finally:
         # https://bazel.build/reference/test-encyclopedia#initial-conditions
         # TEST_TMPDIR: Is defined whenever running in under `bazel test`.
-        if "TEST_TMPDIR" not in os.environ:
+        skip_cleanup = "TEST_TMPDIR" in os.environ
+
+        # Allow users to explicitly prevent cleanup
+        skip_cleanup = "RULES_VENV_PROCESS_WRAPPER_LEAK_VENV" in os.environ or skip_cleanup
+
+        if not skip_cleanup:
             try:
                 shutil.rmtree(temp_dir)
             except (PermissionError, OSError) as exc:

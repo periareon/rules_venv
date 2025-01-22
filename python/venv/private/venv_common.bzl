@@ -489,6 +489,7 @@ py_venv_common = struct(
     create_py_info = _create_py_info,
     create_runfiles_collection = _create_runfiles_collection,
     create_venv_attrs = _create_venv_attrs,
+    create_venv_config_info = _create_venv_config_info,
     create_venv_entrypoint = _create_venv_entrypoint,
     get_toolchain = _get_py_venv_toolchain,
     TOOLCHAIN_TYPE = _TOOLCHAIN_TYPE,
