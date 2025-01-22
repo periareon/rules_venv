@@ -13,7 +13,6 @@ jobs:
       - uses: actions/checkout@master
       - name: Run tests
         run: bazel run --compilation_mode=opt --stamp //docs:publish_book
-        working-directory: docs
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
