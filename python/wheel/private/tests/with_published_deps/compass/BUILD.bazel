@@ -1,0 +1,45 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_test")
+load("//python/wheel:defs.bzl", "py_wheel_library")
+
+write_file(
+    name = "constraints",
+    out = "constraints.txt",
+    content = [
+        "numpy>=2.0.0",
+        "black>=25.0.0",
+    ],
+    newline = "unix",
+)
+
+py_wheel_library(
+    name = "compass",
+    srcs = [
+        "compass.py",
+    ],
+    constraints_file = ":constraints.txt",
+    repository_url = "https://test.pypi.org/",
+    deps = [
+        "//python/wheel/private/tests/with_published_deps/north",
+        "//python/wheel/private/tests/with_published_deps/west",
+        "@pip_deps//:black",
+    ],
+)
+
+alias(
+    name = "wheel",
+    actual = ":compass.whl",
+)
+
+alias(
+    name = "publish",
+    actual = ":compass.publish",
+)
+
+py_test(
+    name = "compass_wheel_test",
+    srcs = ["compass_wheel_test.py"],
+    data = [":wheel"],
+    env = {"WHEEL": "$(rlocationpath :wheel)"},
+    deps = ["//python/runfiles"],
+)

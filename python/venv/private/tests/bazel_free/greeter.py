@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import platform
 from pathlib import Path
 
 from python.runfiles import Runfiles  # type: ignore
@@ -17,7 +18,11 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     Returns:
         The requested runifle.
     """
-    runfile = runfiles.Rlocation(rlocationpath, "")
+    # TODO: https://github.com/periareon/rules_venv/issues/37
+    source_repo = None
+    if platform.system() == "Windows":
+        source_repo = ""
+    runfile = runfiles.Rlocation(rlocationpath, source_repo)
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
     path = Path(runfile)

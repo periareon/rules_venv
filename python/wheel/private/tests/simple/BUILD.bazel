@@ -1,0 +1,16 @@
+load("//python/wheel:defs.bzl", "py_wheel_library")
+
+py_wheel_library(
+    name = "simple",
+    repository_url = "https://test.pypi.org/",
+)
+
+alias(
+    name = "wheel",
+    actual = ":simple.whl",
+)
+
+alias(
+    name = "publish",
+    actual = ":simple.publish",
+)

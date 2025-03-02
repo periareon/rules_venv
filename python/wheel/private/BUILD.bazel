@@ -1,0 +1,33 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_binary")
+load(":wheel.bzl", "current_py_wheel_toolchain_for_twine")
+
+py_binary(
+    name = "requires_parser",
+    srcs = ["requires_parser.py"],
+    visibility = ["//visibility:public"],
+)
+
+current_py_wheel_toolchain_for_twine(
+    name = "current_py_wheel_toolchain_for_twine",
+)
+
+py_binary(
+    name = "twine_process_wrapper",
+    srcs = ["twine_process_wrapper.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":current_py_wheel_toolchain_for_twine",
+        "//python/runfiles",
+    ],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/wheel:__pkg__"],
+    deps = [
+        "//python:defs_bzl",
+        "@rules_python//python:packaging_bzl",
+    ],
+)

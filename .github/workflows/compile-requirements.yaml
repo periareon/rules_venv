@@ -9,7 +9,7 @@ on:
     inputs:
       target:
         description: "The py_reqs_compiler target to run"
-        default: "//python/venv/private/tests/external_deps:requirements.update"
+        default: "//3rdparty:requirements.update"
 
 jobs:
   build:
@@ -29,8 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Compile requirements
+        if: runner.os == 'Windows'
         run: |
-          bazel run "${{ github.event.inputs.target }}" "--" "--upgrade" "--verbose"
+          bazel run "$env:TARGET" "--" "--upgrade" "--verbose"
+        env:
+          TARGET: ${{ github.event.inputs.target }}
+      - name: Compile requirements
+        if: runner.os != 'Windows'
+        run: |
+          bazel run "${TARGET}" "--" "--upgrade" "--verbose"
+        env:
+          TARGET: ${{ github.event.inputs.target }}
       - name: Display results
         shell: bash
         run: |
@@ -38,7 +47,7 @@ jobs:
           echo "<details>" >> "${GITHUB_STEP_SUMMARY}"
           echo "" >> "${GITHUB_STEP_SUMMARY}"
           echo '```' >> "${GITHUB_STEP_SUMMARY}"
-          cat "python/venv/private/tests/external_deps/requirements_${{ matrix.os }}.txt" >> "${GITHUB_STEP_SUMMARY}"
+          cat "3rdparty/requirements_${{ matrix.os }}.txt" >> "${GITHUB_STEP_SUMMARY}"
           echo '```' >> "${GITHUB_STEP_SUMMARY}"
           echo "" >> "${GITHUB_STEP_SUMMARY}"
           echo "</details>" >> "${GITHUB_STEP_SUMMARY}"

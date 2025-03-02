@@ -1,0 +1,31 @@
+load("//python:defs.bzl", "py_test")
+load("//python/wheel:defs.bzl", "py_wheel_library")
+
+py_wheel_library(
+    name = "colors",
+    srcs = ["colors.py"],
+    repository_url = "https://test.pypi.org/",
+    deps = [
+        "//python/wheel/private/tests/with_internal_deps/blue",
+        "//python/wheel/private/tests/with_internal_deps/green",
+        "//python/wheel/private/tests/with_internal_deps/red",
+    ],
+)
+
+alias(
+    name = "wheel",
+    actual = ":colors.whl",
+)
+
+alias(
+    name = "publish",
+    actual = ":colors.publish",
+)
+
+py_test(
+    name = "colors_wheel_test",
+    srcs = ["colors_wheel_test.py"],
+    data = [":wheel"],
+    env = {"WHEEL": "$(rlocationpath :wheel)"},
+    deps = ["//python/runfiles"],
+)
