@@ -1,0 +1,378 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>wheel - rules_venv</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">rules_venv</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/periareon/rules_venv" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
+<p>A framework for defining wheels from a tree of Bazel targets.</p>
+<h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
+<p>The rules here primarily wrap what rules_python provides but offers some improvements:</p>
+<ol>
+<li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
+<li>Sources and data are automatically collected.</li>
+</ol>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<p>Building wheels requires no setup, however, to activate all features of
+the wheel rules, a toolchain must be registered.</p>
+<p>First some external python requirements will be required. There is guidance on
+how to configure this in projects like <a href="https://github.com/periareon/req-compile">rules_req_compile</a>.
+Once there is a means to fetch external dependencies within your repository, a
+toolchain can be defined in a <code>BUILD.bazel</code> file.</p>
+<p>Example <code>//:BUILD.bazel</code>:</p>
+<pre><code class="language-python">load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
+
+py_wheel_toolchain(
+    name = "py_wheel_toolchain_impl",
+    # Definable using bzlmod modules like: https://github.com/periareon/req-compile
+    twine = "@pip_deps//:twine",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "py_wheel_toolchain",
+    toolchain = ":py_wheel_toolchain_impl",
+    toolchain_type = "@rules_venv//python/wheel:toolchain_type",
+    visibility = ["//visibility:public"],
+)
+</code></pre>
+<p>Once the toolchain is defined, it should be registered in the <code>MODULE.bazel</code> file</p>
+<p>Example <code>//:MODULE.bazel</code>:</p>
+<pre><code class="language-python">register_toolchains(
+    "//:py_wheel_toolchain",
+)
+</code></pre>
+<p>This will ensure all features of the wheel rules are available and usable.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
+<ul>
+<li><a href="#py_wheel_toolchain">py_wheel_toolchain</a></li>
+</ul>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="#package_tag">package_tag</a></li>
+<li><a href="#py_wheel_library">py_wheel_library</a></li>
+</ul>
+<p><a id="py_wheel_toolchain"></a></p>
+<h2 id="py_wheel_toolchain"><a class="header" href="#py_wheel_toolchain">py_wheel_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
+
+py_wheel_toolchain(<a href="#py_wheel_toolchain-name">name</a>, <a href="#py_wheel_toolchain-twine">twine</a>)
+</pre>
+<p>A toolchain for powering the <code>py_wheel</code> rules.</p>
+<pre><code class="language-python">load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
+
+py_wheel_toolchain(
+    name = "py_wheel_toolchain_impl",
+    # Definable using bzlmod modules like: https://github.com/periareon/req-compile
+    twine = "@pip_deps//:twine",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "py_wheel_toolchain",
+    toolchain = ":py_wheel_toolchain_impl",
+    toolchain_type = "@rules_venv//python/wheel:toolchain_type",
+    visibility = ["//visibility:public"],
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wheel_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_toolchain-twine"></a>twine</td><td style="text-align: left">A <code>py_library</code> for <a href="https://twine.readthedocs.io/en/stable/">twine</a>.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="package_tag"></a></p>
+<h2 id="package_tag"><a class="header" href="#package_tag">package_tag</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "package_tag")
+
+package_tag(<a href="#package_tag-name">name</a>)
+</pre>
+<p>Generate a tag used to associate the target with a python package.</p>
+<p>This tag should only be applied to other <code>py_*</code> targets.</p>
+<p>Example:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/wheel:defs.bzl", "package_tag")
+
+py_library(
+    name = "my_target",
+    tags = [package_tag("my_python_package")],
+    # ...
+    # ...
+    # ...
+)
+</code></pre>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="package_tag-name"></a>name</td><td style="text-align: left">The name of the package</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>str: The tag.</p>
+<p><a id="py_wheel_library"></a></p>
+<h2 id="py_wheel_library"><a class="header" href="#py_wheel_library">py_wheel_library</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "py_wheel_library")
+
+py_wheel_library(<a href="#py_wheel_library-name">name</a>, <a href="#py_wheel_library-srcs">srcs</a>, <a href="#py_wheel_library-deps">deps</a>, <a href="#py_wheel_library-data">data</a>, <a href="#py_wheel_library-abi">abi</a>, <a href="#py_wheel_library-author">author</a>, <a href="#py_wheel_library-author_email">author_email</a>, <a href="#py_wheel_library-classifiers">classifiers</a>, <a href="#py_wheel_library-constraints_file">constraints_file</a>,
+                 <a href="#py_wheel_library-data_files">data_files</a>, <a href="#py_wheel_library-description_content_type">description_content_type</a>, <a href="#py_wheel_library-description_file">description_file</a>, <a href="#py_wheel_library-extra_distinfo_files">extra_distinfo_files</a>,
+                 <a href="#py_wheel_library-homepage">homepage</a>, <a href="#py_wheel_library-license">license</a>, <a href="#py_wheel_library-platform">platform</a>, <a href="#py_wheel_library-project_urls">project_urls</a>, <a href="#py_wheel_library-python_requires">python_requires</a>, <a href="#py_wheel_library-python_tag">python_tag</a>,
+                 <a href="#py_wheel_library-strip_path_prefixes">strip_path_prefixes</a>, <a href="#py_wheel_library-summary">summary</a>, <a href="#py_wheel_library-version">version</a>, <a href="#py_wheel_library-distribution">distribution</a>, <a href="#py_wheel_library-repository_url">repository_url</a>, <a href="#py_wheel_library-kwargs">**kwargs</a>)
+</pre>
+<p>Define a <code>py_library</code> with an associated wheel.</p>
+<p>This rule will traverse dependencies (<code>deps</code>) to collect all data and dependencies
+that belong to the current package. Any dependency tagged with the <code>package_tag</code> whose
+name matches this targets name will be considered a submodule and included in the package.</p>
+<p>Example:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/wheel:defs.bzl", "package_tag", "py_wheel_library")
+
+py_library(
+    name = "submodule",
+    srcs = ["submodule.py"],
+    tags = [
+        # Note this name matches the name of the `py_wheel_library` target
+        # and as a result will be included as a submodule within the wheel.
+        package_tag("my_py_package")
+    ],
+)
+
+py_wheel_library(
+    name = "my_py_package",
+    deps = [":submodule"],
+)
+</code></pre>
+<p>Targets created by this library:</p>
+<div class="table-wrapper"><table><thead><tr><th>name</th><th>details</th></tr></thead><tbody>
+<tr><td><code>{name}</code></td><td>The <code>py_library</code> target for the wheel.</td></tr>
+<tr><td><code>{name}.whl</code></td><td>The <code>py_wheel</code> target created from the <code>{name}</code> target.</td></tr>
+<tr><td><code>{name}.publish</code></td><td>A utility executable for publishing the wheel to a remote index. Defined only with <code>repository_url</code>.</td></tr>
+</tbody></table>
+</div>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wheel_library-name"></a>name</td><td style="text-align: left">The name of the target.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-srcs"></a>srcs</td><td style="text-align: left">Python source files which make up the lirary.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-deps"></a>deps</td><td style="text-align: left">A list of Python dependencies.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-data"></a>data</td><td style="text-align: left">Data required at runtime.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-abi"></a>abi</td><td style="text-align: left">Python ABI tag. 'none' for pure-Python wheels.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-author"></a>author</td><td style="text-align: left">A string specifying the author of the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-author_email"></a>author_email</td><td style="text-align: left">A string specifying the email address of the package author.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-classifiers"></a>classifiers</td><td style="text-align: left">A list of strings describing the categories for the package. For valid classifiers see https://pypi.org/classifiers</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-constraints_file"></a>constraints_file</td><td style="text-align: left">A constraints (<code>requirements.in</code>) file which contains package constraints.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-data_files"></a>data_files</td><td style="text-align: left">"Any file that is not normally installed inside site-packages goes into the .data directory, named as the .dist-info directory but with the <code>.data/</code> extension. Allowed paths: <code>("purelib", "platlib", "headers", "scripts", "data")</code></td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-description_content_type"></a>description_content_type</td><td style="text-align: left">The type of contents in description_file. If not provided, the type will be inferred from the extension of description_file. Also see https://packaging.python.org/en/latest/specifications/core-metadata/#description-content-type</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-description_file"></a>description_file</td><td style="text-align: left">A file containing text describing the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-extra_distinfo_files"></a>extra_distinfo_files</td><td style="text-align: left">Extra files to add to distinfo directory in the archive.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-homepage"></a>homepage</td><td style="text-align: left">A string specifying the URL for the package homepage.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-license"></a>license</td><td style="text-align: left">A string specifying the license of the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-platform"></a>platform</td><td style="text-align: left">Supported platform. Use 'any' for pure-Python wheel.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-project_urls"></a>project_urls</td><td style="text-align: left">A string dict specifying additional browsable URLs for the project and corresponding labels, where label is the key and url is the value. e.g <code>{{"Bug Tracker": "http://bitbucket.org/tarek/distribute/issues/"}}</code></td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-python_requires"></a>python_requires</td><td style="text-align: left">Python versions required by this distribution, e.g. '&gt;=3.9,&lt;3.13'</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-python_tag"></a>python_tag</td><td style="text-align: left">Supported Python version(s), eg <code>py3</code>, <code>cp39.cp310</code>, etc</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-strip_path_prefixes"></a>strip_path_prefixes</td><td style="text-align: left">path prefixes to strip from files added to the generated package</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-summary"></a>summary</td><td style="text-align: left">A one-line summary of what the distribution does</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-version"></a>version</td><td style="text-align: left">The version of the package.</td><td style="text-align: left"><code>"0.0.0"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-distribution"></a>distribution</td><td style="text-align: left">Name of the distribution. If unset, <code>name</code> will be used.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-repository_url"></a>repository_url</td><td style="text-align: left">The repository (package index) URL to upload the wheel to.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="venv.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="venv.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

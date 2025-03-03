@@ -177,8 +177,11 @@ more expensive than systems which support runfiles.</p>
 </li>
 </ol>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<h3 id="bzlmod"><a class="header" href="#bzlmod">bzlmod</a></h3>
+<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
+</code></pre>
 <h3 id="workspacebazel"><a class="header" href="#workspacebazel">WORKSPACE.bazel</a></h3>
-<pre><code class="language-starlark">load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+<pre><code class="language-python">load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # See releases for urls and checksums
 http_archive(
@@ -197,39 +200,37 @@ load("@rules_venv//python/venv:repositories_transitive.bzl", "rules_venv_transit
 
 rules_venv_transitive_deps()
 </code></pre>
-<h3 id="bzlmod"><a class="header" href="#bzlmod">bzlmod</a></h3>
-<pre><code class="language-starlark">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
-<p>Bazel rules for Python.</p>
+<h1 id="venv"><a class="header" href="#venv">Venv</a></h1>
+<p>Core Bazel rules for defining Python targets.</p>
 <h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
 <ul>
-<li><a href="rules.html#py_venv_binary">py_venv_binary</a></li>
-<li><a href="rules.html#py_venv_library">py_venv_library</a></li>
-<li><a href="rules.html#py_venv_test">py_venv_test</a></li>
-<li><a href="rules.html#py_venv_toolchain">py_venv_toolchain</a></li>
-<li><a href="rules.html#py_venv_zipapp">py_venv_zipapp</a></li>
+<li><a href="venv.html#py_venv_binary">py_venv_binary</a></li>
+<li><a href="venv.html#py_venv_library">py_venv_library</a></li>
+<li><a href="venv.html#py_venv_test">py_venv_test</a></li>
+<li><a href="venv.html#py_venv_toolchain">py_venv_toolchain</a></li>
+<li><a href="venv.html#py_venv_zipapp">py_venv_zipapp</a></li>
 </ul>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <ul>
-<li><a href="rules.html#py_venv_common.create_dep_info">py_venv_common.create_dep_info</a></li>
-<li><a href="rules.html#py_venv_common.create_py_info">py_venv_common.create_py_info</a></li>
-<li><a href="rules.html#py_venv_common.create_runfiles_collection">py_venv_common.create_runfiles_collection</a></li>
-<li><a href="rules.html#py_venv_common.create_venv_attrs">py_venv_common.create_venv_attrs</a></li>
-<li><a href="rules.html#py_venv_common.create_venv_config_info">py_venv_common.create_venv_config_info</a></li>
-<li><a href="rules.html#py_venv_common.create_venv_entrypoint">py_venv_common.create_venv_entrypoint</a></li>
-<li><a href="rules.html#py_venv_common.get_toolchain">py_venv_common.get_toolchain</a></li>
+<li><a href="venv.html#py_venv_common.create_dep_info">py_venv_common.create_dep_info</a></li>
+<li><a href="venv.html#py_venv_common.create_py_info">py_venv_common.create_py_info</a></li>
+<li><a href="venv.html#py_venv_common.create_runfiles_collection">py_venv_common.create_runfiles_collection</a></li>
+<li><a href="venv.html#py_venv_common.create_venv_attrs">py_venv_common.create_venv_attrs</a></li>
+<li><a href="venv.html#py_venv_common.create_venv_config_info">py_venv_common.create_venv_config_info</a></li>
+<li><a href="venv.html#py_venv_common.create_venv_entrypoint">py_venv_common.create_venv_entrypoint</a></li>
+<li><a href="venv.html#py_venv_common.get_toolchain">py_venv_common.get_toolchain</a></li>
 </ul>
 <h2 id="aspects"><a class="header" href="#aspects">Aspects</a></h2>
 <ul>
-<li><a href="rules.html#py_global_venv_aspect">py_global_venv_aspect</a></li>
+<li><a href="venv.html#py_global_venv_aspect">py_global_venv_aspect</a></li>
 </ul>
 <p><a id="py_venv_binary"></a></p>
 <h2 id="py_venv_binary"><a class="header" href="#py_venv_binary">py_venv_binary</a></h2>
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
 
-py_venv_binary(<a href="rules.html#py_venv_binary-name">name</a>, <a href="rules.html#py_venv_binary-deps">deps</a>, <a href="rules.html#py_venv_binary-srcs">srcs</a>, <a href="rules.html#py_venv_binary-data">data</a>, <a href="rules.html#py_venv_binary-env">env</a>, <a href="rules.html#py_venv_binary-imports">imports</a>, <a href="rules.html#py_venv_binary-main">main</a>)
+py_venv_binary(<a href="venv.html#py_venv_binary-name">name</a>, <a href="venv.html#py_venv_binary-deps">deps</a>, <a href="venv.html#py_venv_binary-srcs">srcs</a>, <a href="venv.html#py_venv_binary-data">data</a>, <a href="venv.html#py_venv_binary-env">env</a>, <a href="venv.html#py_venv_binary-imports">imports</a>, <a href="venv.html#py_venv_binary-main">main</a>)
 </pre>
 <p>A <code>py_venv_binary</code> is an executable Python program consisting of a collection of
 <code>.py</code> source files (possibly belonging to other <code>py_library</code> rules), a <code>*.runfiles</code>
@@ -263,7 +264,7 @@ py_venv_binary(
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_library")
 
-py_venv_library(<a href="rules.html#py_venv_library-name">name</a>, <a href="rules.html#py_venv_library-deps">deps</a>, <a href="rules.html#py_venv_library-srcs">srcs</a>, <a href="rules.html#py_venv_library-data">data</a>, <a href="rules.html#py_venv_library-imports">imports</a>)
+py_venv_library(<a href="venv.html#py_venv_library-name">name</a>, <a href="venv.html#py_venv_library-deps">deps</a>, <a href="venv.html#py_venv_library-srcs">srcs</a>, <a href="venv.html#py_venv_library-data">data</a>, <a href="venv.html#py_venv_library-imports">imports</a>)
 </pre>
 <p>A library of Python code that can be depended upon.</p>
 <p><strong>ATTRIBUTES</strong></p>
@@ -280,7 +281,7 @@ py_venv_library(<a href="rules.html#py_venv_library-name">name</a>, <a href="rul
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_test")
 
-py_venv_test(<a href="rules.html#py_venv_test-name">name</a>, <a href="rules.html#py_venv_test-deps">deps</a>, <a href="rules.html#py_venv_test-srcs">srcs</a>, <a href="rules.html#py_venv_test-data">data</a>, <a href="rules.html#py_venv_test-env">env</a>, <a href="rules.html#py_venv_test-env_inherit">env_inherit</a>, <a href="rules.html#py_venv_test-imports">imports</a>, <a href="rules.html#py_venv_test-main">main</a>)
+py_venv_test(<a href="venv.html#py_venv_test-name">name</a>, <a href="venv.html#py_venv_test-deps">deps</a>, <a href="venv.html#py_venv_test-srcs">srcs</a>, <a href="venv.html#py_venv_test-data">data</a>, <a href="venv.html#py_venv_test-env">env</a>, <a href="venv.html#py_venv_test-env_inherit">env_inherit</a>, <a href="venv.html#py_venv_test-imports">imports</a>, <a href="venv.html#py_venv_test-main">main</a>)
 </pre>
 <p>A <code>py_venv_test</code> rule compiles a test. A test is a binary wrapper around some test code.</p>
 <p><strong>ATTRIBUTES</strong></p>
@@ -300,7 +301,7 @@ py_venv_test(<a href="rules.html#py_venv_test-name">name</a>, <a href="rules.htm
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_toolchain")
 
-py_venv_toolchain(<a href="rules.html#py_venv_toolchain-name">name</a>, <a href="rules.html#py_venv_toolchain-zipapp_shebang">zipapp_shebang</a>)
+py_venv_toolchain(<a href="venv.html#py_venv_toolchain-name">name</a>, <a href="venv.html#py_venv_toolchain-zipapp_shebang">zipapp_shebang</a>)
 </pre>
 <p>Declare a toolchain for <code>rules_venv</code> rules.</p>
 <p><strong>ATTRIBUTES</strong></p>
@@ -314,7 +315,7 @@ py_venv_toolchain(<a href="rules.html#py_venv_toolchain-name">name</a>, <a href=
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_zipapp")
 
-py_venv_zipapp(<a href="rules.html#py_venv_zipapp-name">name</a>, <a href="rules.html#py_venv_zipapp-binary">binary</a>, <a href="rules.html#py_venv_zipapp-shebang">shebang</a>)
+py_venv_zipapp(<a href="venv.html#py_venv_zipapp-name">name</a>, <a href="venv.html#py_venv_zipapp-binary">binary</a>, <a href="venv.html#py_venv_zipapp-shebang">shebang</a>)
 </pre>
 <p>A <code>py_venv_zipapp</code> is an executable Python zipapp which contains all of the
 dependencies and runfiles for a given executable.</p>
@@ -342,7 +343,7 @@ py_venv_zipapp(
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_dep_info(*, <a href="rules.html#py_venv_common.create_dep_info-ctx">ctx</a>, <a href="rules.html#py_venv_common.create_dep_info-deps">deps</a>)
+py_venv_common.create_dep_info(*, <a href="venv.html#py_venv_common.create_dep_info-ctx">ctx</a>, <a href="venv.html#py_venv_common.create_dep_info-deps">deps</a>)
 </pre>
 <p>Construct dependency info required for building <code>PyInfo</code></p>
 <p><strong>PARAMETERS</strong></p>
@@ -358,7 +359,7 @@ py_venv_common.create_dep_info(*, <a href="rules.html#py_venv_common.create_dep_
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_py_info(*, <a href="rules.html#py_venv_common.create_py_info-ctx">ctx</a>, <a href="rules.html#py_venv_common.create_py_info-imports">imports</a>, <a href="rules.html#py_venv_common.create_py_info-srcs">srcs</a>, <a href="rules.html#py_venv_common.create_py_info-dep_info">dep_info</a>)
+py_venv_common.create_py_info(*, <a href="venv.html#py_venv_common.create_py_info-ctx">ctx</a>, <a href="venv.html#py_venv_common.create_py_info-imports">imports</a>, <a href="venv.html#py_venv_common.create_py_info-srcs">srcs</a>, <a href="venv.html#py_venv_common.create_py_info-dep_info">dep_info</a>)
 </pre>
 <p>Construct a <code>PyInfo</code> provider</p>
 <p><strong>PARAMETERS</strong></p>
@@ -376,8 +377,8 @@ py_venv_common.create_py_info(*, <a href="rules.html#py_venv_common.create_py_in
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_runfiles_collection(*, <a href="rules.html#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="rules.html#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="rules.html#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="rules.html#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
-                                          <a href="rules.html#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="rules.html#py_venv_common.create_runfiles_collection-name">name</a>, <a href="rules.html#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
+py_venv_common.create_runfiles_collection(*, <a href="venv.html#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="venv.html#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="venv.html#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="venv.html#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
+                                          <a href="venv.html#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="venv.html#py_venv_common.create_runfiles_collection-name">name</a>, <a href="venv.html#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
 </pre>
 <p>Generate a runfiles directory</p>
 <p>This functionality exists due to the lack of native support for generating
@@ -407,7 +408,7 @@ py_venv_common.create_venv_attrs()
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_venv_config_info(*, <a href="rules.html#py_venv_common.create_venv_config_info-label">label</a>, <a href="rules.html#py_venv_common.create_venv_config_info-name">name</a>, <a href="rules.html#py_venv_common.create_venv_config_info-imports">imports</a>)
+py_venv_common.create_venv_config_info(*, <a href="venv.html#py_venv_common.create_venv_config_info-label">label</a>, <a href="venv.html#py_venv_common.create_venv_config_info-name">name</a>, <a href="venv.html#py_venv_common.create_venv_config_info-imports">imports</a>)
 </pre>
 <p>Construct info used to create venvs.</p>
 <p><strong>PARAMETERS</strong></p>
@@ -424,8 +425,8 @@ py_venv_common.create_venv_config_info(*, <a href="rules.html#py_venv_common.cre
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_venv_entrypoint(*, <a href="rules.html#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
-                                      <a href="rules.html#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="rules.html#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
+py_venv_common.create_venv_entrypoint(*, <a href="venv.html#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
+                                      <a href="venv.html#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
 </pre>
 <p>Create an executable which constructs a python venv and subprocesses a given entrypoint.</p>
 <p><strong>PARAMETERS</strong></p>
@@ -448,7 +449,7 @@ py_venv_common.create_venv_entrypoint(*, <a href="rules.html#py_venv_common.crea
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.get_toolchain(<a href="rules.html#py_venv_common.get_toolchain-ctx">ctx</a>, *, <a href="rules.html#py_venv_common.get_toolchain-cfg">cfg</a>)
+py_venv_common.get_toolchain(<a href="venv.html#py_venv_common.get_toolchain-ctx">ctx</a>, *, <a href="venv.html#py_venv_common.get_toolchain-cfg">cfg</a>)
 </pre>
 <p><strong>PARAMETERS</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
@@ -466,7 +467,182 @@ py_global_venv_aspect()
 <p>An aspect for generating metadata required to include Python targets in a global venv.</p>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
+<p>A framework for defining wheels from a tree of Bazel targets.</p>
+<h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
+<p>The rules here primarily wrap what rules_python provides but offers some improvements:</p>
+<ol>
+<li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
+<li>Sources and data are automatically collected.</li>
+</ol>
+<h2 id="setup-1"><a class="header" href="#setup-1">Setup</a></h2>
+<p>Building wheels requires no setup, however, to activate all features of
+the wheel rules, a toolchain must be registered.</p>
+<p>First some external python requirements will be required. There is guidance on
+how to configure this in projects like <a href="https://github.com/periareon/req-compile">rules_req_compile</a>.
+Once there is a means to fetch external dependencies within your repository, a
+toolchain can be defined in a <code>BUILD.bazel</code> file.</p>
+<p>Example <code>//:BUILD.bazel</code>:</p>
+<pre><code class="language-python">load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
 
+py_wheel_toolchain(
+    name = "py_wheel_toolchain_impl",
+    # Definable using bzlmod modules like: https://github.com/periareon/req-compile
+    twine = "@pip_deps//:twine",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "py_wheel_toolchain",
+    toolchain = ":py_wheel_toolchain_impl",
+    toolchain_type = "@rules_venv//python/wheel:toolchain_type",
+    visibility = ["//visibility:public"],
+)
+</code></pre>
+<p>Once the toolchain is defined, it should be registered in the <code>MODULE.bazel</code> file</p>
+<p>Example <code>//:MODULE.bazel</code>:</p>
+<pre><code class="language-python">register_toolchains(
+    "//:py_wheel_toolchain",
+)
+</code></pre>
+<p>This will ensure all features of the wheel rules are available and usable.</p>
+<h2 id="rules-1"><a class="header" href="#rules-1">Rules</a></h2>
+<ul>
+<li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
+</ul>
+<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<ul>
+<li><a href="wheel.html#package_tag">package_tag</a></li>
+<li><a href="wheel.html#py_wheel_library">py_wheel_library</a></li>
+</ul>
+<p><a id="py_wheel_toolchain"></a></p>
+<h2 id="py_wheel_toolchain"><a class="header" href="#py_wheel_toolchain">py_wheel_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
+
+py_wheel_toolchain(<a href="wheel.html#py_wheel_toolchain-name">name</a>, <a href="wheel.html#py_wheel_toolchain-twine">twine</a>)
+</pre>
+<p>A toolchain for powering the <code>py_wheel</code> rules.</p>
+<pre><code class="language-python">load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
+
+py_wheel_toolchain(
+    name = "py_wheel_toolchain_impl",
+    # Definable using bzlmod modules like: https://github.com/periareon/req-compile
+    twine = "@pip_deps//:twine",
+    visibility = ["//visibility:public"],
+)
+
+toolchain(
+    name = "py_wheel_toolchain",
+    toolchain = ":py_wheel_toolchain_impl",
+    toolchain_type = "@rules_venv//python/wheel:toolchain_type",
+    visibility = ["//visibility:public"],
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wheel_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_toolchain-twine"></a>twine</td><td style="text-align: left">A <code>py_library</code> for <a href="https://twine.readthedocs.io/en/stable/">twine</a>.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="package_tag"></a></p>
+<h2 id="package_tag"><a class="header" href="#package_tag">package_tag</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "package_tag")
+
+package_tag(<a href="wheel.html#package_tag-name">name</a>)
+</pre>
+<p>Generate a tag used to associate the target with a python package.</p>
+<p>This tag should only be applied to other <code>py_*</code> targets.</p>
+<p>Example:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/wheel:defs.bzl", "package_tag")
+
+py_library(
+    name = "my_target",
+    tags = [package_tag("my_python_package")],
+    # ...
+    # ...
+    # ...
+)
+</code></pre>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="package_tag-name"></a>name</td><td style="text-align: left">The name of the package</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><strong>RETURNS</strong></p>
+<p>str: The tag.</p>
+<p><a id="py_wheel_library"></a></p>
+<h2 id="py_wheel_library"><a class="header" href="#py_wheel_library">py_wheel_library</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "py_wheel_library")
+
+py_wheel_library(<a href="wheel.html#py_wheel_library-name">name</a>, <a href="wheel.html#py_wheel_library-srcs">srcs</a>, <a href="wheel.html#py_wheel_library-deps">deps</a>, <a href="wheel.html#py_wheel_library-data">data</a>, <a href="wheel.html#py_wheel_library-abi">abi</a>, <a href="wheel.html#py_wheel_library-author">author</a>, <a href="wheel.html#py_wheel_library-author_email">author_email</a>, <a href="wheel.html#py_wheel_library-classifiers">classifiers</a>, <a href="wheel.html#py_wheel_library-constraints_file">constraints_file</a>,
+                 <a href="wheel.html#py_wheel_library-data_files">data_files</a>, <a href="wheel.html#py_wheel_library-description_content_type">description_content_type</a>, <a href="wheel.html#py_wheel_library-description_file">description_file</a>, <a href="wheel.html#py_wheel_library-extra_distinfo_files">extra_distinfo_files</a>,
+                 <a href="wheel.html#py_wheel_library-homepage">homepage</a>, <a href="wheel.html#py_wheel_library-license">license</a>, <a href="wheel.html#py_wheel_library-platform">platform</a>, <a href="wheel.html#py_wheel_library-project_urls">project_urls</a>, <a href="wheel.html#py_wheel_library-python_requires">python_requires</a>, <a href="wheel.html#py_wheel_library-python_tag">python_tag</a>,
+                 <a href="wheel.html#py_wheel_library-strip_path_prefixes">strip_path_prefixes</a>, <a href="wheel.html#py_wheel_library-summary">summary</a>, <a href="wheel.html#py_wheel_library-version">version</a>, <a href="wheel.html#py_wheel_library-distribution">distribution</a>, <a href="wheel.html#py_wheel_library-repository_url">repository_url</a>, <a href="wheel.html#py_wheel_library-kwargs">**kwargs</a>)
+</pre>
+<p>Define a <code>py_library</code> with an associated wheel.</p>
+<p>This rule will traverse dependencies (<code>deps</code>) to collect all data and dependencies
+that belong to the current package. Any dependency tagged with the <code>package_tag</code> whose
+name matches this targets name will be considered a submodule and included in the package.</p>
+<p>Example:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/wheel:defs.bzl", "package_tag", "py_wheel_library")
+
+py_library(
+    name = "submodule",
+    srcs = ["submodule.py"],
+    tags = [
+        # Note this name matches the name of the `py_wheel_library` target
+        # and as a result will be included as a submodule within the wheel.
+        package_tag("my_py_package")
+    ],
+)
+
+py_wheel_library(
+    name = "my_py_package",
+    deps = [":submodule"],
+)
+</code></pre>
+<p>Targets created by this library:</p>
+<div class="table-wrapper"><table><thead><tr><th>name</th><th>details</th></tr></thead><tbody>
+<tr><td><code>{name}</code></td><td>The <code>py_library</code> target for the wheel.</td></tr>
+<tr><td><code>{name}.whl</code></td><td>The <code>py_wheel</code> target created from the <code>{name}</code> target.</td></tr>
+<tr><td><code>{name}.publish</code></td><td>A utility executable for publishing the wheel to a remote index. Defined only with <code>repository_url</code>.</td></tr>
+</tbody></table>
+</div>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wheel_library-name"></a>name</td><td style="text-align: left">The name of the target.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-srcs"></a>srcs</td><td style="text-align: left">Python source files which make up the lirary.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-deps"></a>deps</td><td style="text-align: left">A list of Python dependencies.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-data"></a>data</td><td style="text-align: left">Data required at runtime.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-abi"></a>abi</td><td style="text-align: left">Python ABI tag. 'none' for pure-Python wheels.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-author"></a>author</td><td style="text-align: left">A string specifying the author of the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-author_email"></a>author_email</td><td style="text-align: left">A string specifying the email address of the package author.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-classifiers"></a>classifiers</td><td style="text-align: left">A list of strings describing the categories for the package. For valid classifiers see https://pypi.org/classifiers</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-constraints_file"></a>constraints_file</td><td style="text-align: left">A constraints (<code>requirements.in</code>) file which contains package constraints.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-data_files"></a>data_files</td><td style="text-align: left">"Any file that is not normally installed inside site-packages goes into the .data directory, named as the .dist-info directory but with the <code>.data/</code> extension. Allowed paths: <code>("purelib", "platlib", "headers", "scripts", "data")</code></td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-description_content_type"></a>description_content_type</td><td style="text-align: left">The type of contents in description_file. If not provided, the type will be inferred from the extension of description_file. Also see https://packaging.python.org/en/latest/specifications/core-metadata/#description-content-type</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-description_file"></a>description_file</td><td style="text-align: left">A file containing text describing the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-extra_distinfo_files"></a>extra_distinfo_files</td><td style="text-align: left">Extra files to add to distinfo directory in the archive.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-homepage"></a>homepage</td><td style="text-align: left">A string specifying the URL for the package homepage.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-license"></a>license</td><td style="text-align: left">A string specifying the license of the package.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-platform"></a>platform</td><td style="text-align: left">Supported platform. Use 'any' for pure-Python wheel.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-project_urls"></a>project_urls</td><td style="text-align: left">A string dict specifying additional browsable URLs for the project and corresponding labels, where label is the key and url is the value. e.g <code>{{"Bug Tracker": "http://bitbucket.org/tarek/distribute/issues/"}}</code></td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-python_requires"></a>python_requires</td><td style="text-align: left">Python versions required by this distribution, e.g. '&gt;=3.9,&lt;3.13'</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-python_tag"></a>python_tag</td><td style="text-align: left">Supported Python version(s), eg <code>py3</code>, <code>cp39.cp310</code>, etc</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-strip_path_prefixes"></a>strip_path_prefixes</td><td style="text-align: left">path prefixes to strip from files added to the generated package</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-summary"></a>summary</td><td style="text-align: left">A one-line summary of what the distribution does</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-version"></a>version</td><td style="text-align: left">The version of the package.</td><td style="text-align: left"><code>"0.0.0"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-distribution"></a>distribution</td><td style="text-align: left">Name of the distribution. If unset, <code>name</code> will be used.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-repository_url"></a>repository_url</td><td style="text-align: left">The repository (package index) URL to upload the wheel to.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_library-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">

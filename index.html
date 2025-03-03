@@ -176,8 +176,11 @@ more expensive than systems which support runfiles.</p>
 </li>
 </ol>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<h3 id="bzlmod"><a class="header" href="#bzlmod">bzlmod</a></h3>
+<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
+</code></pre>
 <h3 id="workspacebazel"><a class="header" href="#workspacebazel">WORKSPACE.bazel</a></h3>
-<pre><code class="language-starlark">load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+<pre><code class="language-python">load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # See releases for urls and checksums
 http_archive(
@@ -196,16 +199,13 @@ load("@rules_venv//python/venv:repositories_transitive.bzl", "rules_venv_transit
 
 rules_venv_transitive_deps()
 </code></pre>
-<h3 id="bzlmod"><a class="header" href="#bzlmod">bzlmod</a></h3>
-<pre><code class="language-starlark">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
 
-                            <a rel="next prefetch" href="rules.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="venv.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -216,7 +216,7 @@ rules_venv_transitive_deps()
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
 
-                    <a rel="next prefetch" href="rules.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="venv.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
