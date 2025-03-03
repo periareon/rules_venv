@@ -1,4 +1,8 @@
-"""Bazel rules for Python."""
+"""# Venv
+
+Core Bazel rules for defining Python targets.
+
+"""
 
 load(
     "//python/venv/private:venv.bzl",

@@ -1,0 +1,33 @@
+load("@rules_req_compile//:defs.bzl", "py_reqs_compiler", "py_reqs_solution_test")
+
+PLATFORMS = [
+    "linux",
+    "macos",
+    "windows",
+]
+
+[
+    py_reqs_compiler(
+        name = "requirements.{}.update".format(platform),
+        requirements_in = "requirements.in",
+        requirements_txt = "requirements_{}.txt".format(platform),
+        target_compatible_with = ["@platforms//os:{}".format(platform)],
+    )
+    for platform in PLATFORMS
+]
+
+[
+    py_reqs_solution_test(
+        name = "requirements_{}_test".format(platform),
+        compiler = ":requirements.{}.update".format(platform),
+    )
+    for platform in PLATFORMS
+]
+
+alias(
+    name = "requirements.update",
+    actual = select({
+        "@platforms//os:{}".format(platform): ":requirements.{}.update".format(platform)
+        for platform in PLATFORMS
+    }),
+)

@@ -27,7 +27,7 @@ jobs:
 
       # Caches and restores the Bazel outputs.
       - name: Retain Bazel cache (linux)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: bazel-cache
         with:
@@ -37,7 +37,7 @@ jobs:
           key: ${{ runner.os }}-${{ env.cache-name }}
         if: startswith(runner.os, 'Linux')
       - name: Retain Bazel cache (MacOS)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: bazel-cache
         with:
@@ -47,7 +47,7 @@ jobs:
           key: ${{ runner.os }}-${{ env.cache-name }}
         if: startswith(runner.os, 'MacOS')
       - name: Retain Bazel cache (Windows)
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         env:
           cache-name: bazel-cache
         with:
@@ -120,7 +120,10 @@ jobs:
           python -m pip install --upgrade pip setuptools
       - name: Install dependencies
         run: |
-          pip install -r python/venv/private/tests/external_deps/requirements_linux.txt --user
+          python -c 'import pathlib; print("\n".join([r.strip(" \\") for r in pathlib.Path("3rdparty/requirements_linux.txt").read_text().splitlines() if "==" in r]))' > requirements.txt
+          python -m pip install -r requirements.txt --user
+          rm requirements.txt
+
       - name: Run mypy
         run: |
           python -m mypy python

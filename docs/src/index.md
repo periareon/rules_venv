@@ -23,9 +23,15 @@ suffers from a few issues which this repo aims to solve:
 
 ## Setup
 
+### bzlmod
+
+```python
+bazel_dep(name = "rules_venv", version = "{version}")
+```
+
 ### WORKSPACE.bazel
 
-```starlark
+```python
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # See releases for urls and checksums
@@ -44,10 +50,4 @@ venv_register_toolchains()
 load("@rules_venv//python/venv:repositories_transitive.bzl", "rules_venv_transitive_deps")
 
 rules_venv_transitive_deps()
-```
-
-### bzlmod
-
-```starlark
-bazel_dep(name = "rules_venv", version = "{version}")
 ```

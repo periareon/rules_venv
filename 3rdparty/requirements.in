@@ -1,8 +1,9 @@
-# Python requirements
+# Test requirements
 
 numpy
 pytest
 pytest-cov
+twine
 
 # linters
 pylint

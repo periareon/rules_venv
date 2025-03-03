@@ -1,0 +1,21 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_library")
+load("//python/wheel:defs.bzl", "package_tag")
+
+write_file(
+    name = "data",
+    out = "data.txt",
+    content = [
+        "blue",
+        "",
+    ],
+    newline = "unix",
+)
+
+py_library(
+    name = "blue",
+    srcs = ["blue.py"],
+    data = [":data"],
+    tags = [package_tag("colors")],
+    visibility = ["//python/wheel/private/tests/with_internal_deps:__subpackages__"],
+)
