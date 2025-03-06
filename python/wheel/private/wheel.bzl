@@ -303,11 +303,18 @@ def _py_wheel_publisher_impl(ctx):
     ]
 
 py_wheel_publisher = rule(
-    doc = "A rule for publishing wheels to pypi registries.",
+    doc = """\
+A rule for publishing wheels to pypi registries.
+
+The rule uses [twine][tw] to python registries. Users should refer to the documentation there
+for any configuration flags (such as auth) needed to deploy to the desired location.
+
+[tw]: https://twine.readthedocs.io/en/stable/index.html#twine
+""",
     implementation = _py_wheel_publisher_impl,
     attrs = {
         "repository_url": attr.string(
-            doc = "The repository (package index) URL to upload the wheel to.",
+            doc = "The repository (package index) URL to upload the wheel to. If passed the `twine` arg `--repository-url` will be set to this value.",
         ),
         "wheel": attr.label(
             mandatory = True,
@@ -383,7 +390,7 @@ def py_wheel_library(
     | --- | --- |
     | `{name}` | The `py_library` target for the wheel. |
     | `{name}.whl` | The `py_wheel` target created from the `{name}` target. |
-    | `{name}.publish` | A utility executable for publishing the wheel to a remote index. Defined only with `repository_url`. |
+    | `{name}.publish` | A [`py_wheel_publisher`](#py_wheel_publisher) target for publishing the wheel to a remote index. Defined only with `repository_url`. |
 
     Args:
         name (str): The name of the target.

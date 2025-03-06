@@ -4,6 +4,6 @@ load("//python/wheel:defs.bzl", "package_tag")
 py_library(
     name = "green",
     srcs = ["green.py"],
-    tags = [package_tag("colors")],
+    tags = [package_tag("*")],
     visibility = ["//python/wheel/private/tests/with_internal_deps:__subpackages__"],
 )
