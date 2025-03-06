@@ -509,6 +509,7 @@ toolchain(
 <p>This will ensure all features of the wheel rules are available and usable.</p>
 <h2 id="rules-1"><a class="header" href="#rules-1">Rules</a></h2>
 <ul>
+<li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
 </ul>
 <h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
@@ -516,6 +517,23 @@ toolchain(
 <li><a href="wheel.html#package_tag">package_tag</a></li>
 <li><a href="wheel.html#py_wheel_library">py_wheel_library</a></li>
 </ul>
+<p><a id="py_wheel_publisher"></a></p>
+<h2 id="py_wheel_publisher"><a class="header" href="#py_wheel_publisher">py_wheel_publisher</a></h2>
+<pre>
+load("@rules_venv//python/wheel:defs.bzl", "py_wheel_publisher")
+
+py_wheel_publisher(<a href="wheel.html#py_wheel_publisher-name">name</a>, <a href="wheel.html#py_wheel_publisher-repository_url">repository_url</a>, <a href="wheel.html#py_wheel_publisher-wheel">wheel</a>)
+</pre>
+<p>A rule for publishing wheels to pypi registries.</p>
+<p>The rule uses <a href="https://twine.readthedocs.io/en/stable/index.html#twine">twine</a> to python registries. Users should refer to the documentation there
+for any configuration flags (such as auth) needed to deploy to the desired location.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wheel_publisher-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_publisher-repository_url"></a>repository_url</td><td style="text-align: left">The repository (package index) URL to upload the wheel to. If passed the <code>twine</code> arg <code>--repository-url</code> will be set to this value.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wheel_publisher-wheel"></a>wheel</td><td style="text-align: left">The wheel to extract.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
 <p><a id="py_wheel_toolchain"></a></p>
 <h2 id="py_wheel_toolchain"><a class="header" href="#py_wheel_toolchain">py_wheel_toolchain</a></h2>
 <pre>
@@ -611,7 +629,7 @@ py_wheel_library(
 <div class="table-wrapper"><table><thead><tr><th>name</th><th>details</th></tr></thead><tbody>
 <tr><td><code>{name}</code></td><td>The <code>py_library</code> target for the wheel.</td></tr>
 <tr><td><code>{name}.whl</code></td><td>The <code>py_wheel</code> target created from the <code>{name}</code> target.</td></tr>
-<tr><td><code>{name}.publish</code></td><td>A utility executable for publishing the wheel to a remote index. Defined only with <code>repository_url</code>.</td></tr>
+<tr><td><code>{name}.publish</code></td><td>A <a href="wheel.html#py_wheel_publisher"><code>py_wheel_publisher</code></a> target for publishing the wheel to a remote index. Defined only with <code>repository_url</code>.</td></tr>
 </tbody></table>
 </div>
 <p><strong>PARAMETERS</strong></p>
