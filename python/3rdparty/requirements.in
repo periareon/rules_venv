@@ -1,0 +1,14 @@
+# Rule requirements
+
+-r ../black/requirements.in
+-r ../wheel/requirements.in
+
+# Test requirements
+numpy
+pytest
+pytest-cov
+
+# linters
+pylint
+isort
+mypy

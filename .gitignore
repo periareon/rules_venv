@@ -5,3 +5,5 @@ bazel-*
 user.bazelrc
 
 /*venv*/
+/.mypy_cache
+/.pylint_cache

@@ -1,0 +1,13 @@
+load("//python/black:defs.bzl", "py_black_toolchain")
+
+py_black_toolchain(
+    name = "py_black_toolchain",
+    black = "@pip_deps//:black",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_black_toolchain",
+    toolchain_type = "//python/black:toolchain_type",
+    visibility = ["//visibility:public"],
+)

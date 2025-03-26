@@ -2,7 +2,9 @@
 
 [Introduction](./index.md)
 
----
-
 - [venv](./venv.md)
-- [wheel](./wheel.md)
+
+- [Extensions](./extensions.md)
+    - [black](./black.md)
+    - [global_venv](./global_venv.md)
+    - [wheel](./wheel.md)

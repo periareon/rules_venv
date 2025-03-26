@@ -16,10 +16,6 @@ coverage --combined_report=lcov
 # https://bazel.build/reference/command-line-reference#flag--experimental_fetch_all_coverage_outputs
 coverage --experimental_fetch_all_coverage_outputs
 
-###############################################################################
-## Incompatibility flags
-###############################################################################
-
 # https://github.com/bazelbuild/bazel/issues/8195
 build --incompatible_disallow_empty_glob=true
 
@@ -32,6 +28,19 @@ build --incompatible_merge_fixed_and_default_shell_env
 # Disable legacy __init__.py behavior which is known to conflict with
 # modern python versions (3.9+)
 build --incompatible_default_to_explicit_init_py
+
+# https://github.com/bazelbuild/bazel/issues/23043.
+build --incompatible_autoload_externally=
+
+###############################################################################
+## Configuration Flags
+###############################################################################
+# Enable rustfmt for all targets in the workspace
+build:black --aspects=//python/black:defs.bzl%py_black_aspect
+build:black --output_groups=+py_black_checks
+
+# Define a config that enables all linter aspects.
+build:strict --config=black
 
 ###############################################################################
 ## Custom user flags

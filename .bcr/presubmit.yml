@@ -1,7 +1,7 @@
 bcr_test_module:
-  module_path: "python/venv/private/examples/binary_consumer"
+  module_path: "examples/binary_consumer"
   matrix:
-    platform: ["macos", "ubuntu2004", "windows"]
+    platform: ["macos_arm64", "ubuntu2004", "windows"]
     bazel: [7.x, 8.x]
   tasks:
     run_tests:

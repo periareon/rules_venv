@@ -1,12 +1,12 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python/global_venv/private:global_venv.bzl", "global_venv")
 
 exports_files([
     "defs.bzl",
-    "requirements.in",
 ])
 
-toolchain_type(
-    name = "toolchain_type",
+global_venv(
+    name = "global_venv",
     visibility = ["//visibility:public"],
 )
 
@@ -14,5 +14,5 @@ bzl_library(
     name = "bzl_lib",
     srcs = glob(["*.bzl"]),
     visibility = ["//visibility:public"],
-    deps = ["//python/wheel/private:bzl_lib"],
+    deps = ["//python/global_venv/private:bzl_lib"],
 )

@@ -1,5 +1,4 @@
-"""Pytest test code
-"""
+"""Pytest test code"""
 
 import subprocess
 import sys

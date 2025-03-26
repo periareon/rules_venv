@@ -5,7 +5,7 @@ module(
     version = "0.2.0",
 )
 
-bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.2.0")
 bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 
@@ -13,10 +13,10 @@ register_toolchains(
     "//python/venv/toolchain",
 )
 
-bazel_dep(name = "rules_req_compile", version = "1.0.0rc34", dev_dependency = True)
-bazel_dep(name = "stardoc", version = "0.7.2", dev_dependency = True, repo_name = "io_bazel_stardoc")
-bazel_dep(name = "rules_rust_mdbook", version = "0.58.0", dev_dependency = True)
-bazel_dep(name = "rules_shell", version = "0.3.0", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.0.0rc35", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
+bazel_dep(name = "rules_rust_mdbook", version = "0.59.2", dev_dependency = True)
+bazel_dep(name = "rules_shell", version = "0.4.0", dev_dependency = True)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
@@ -40,15 +40,16 @@ requirements = use_extension("@rules_req_compile//extensions:python.bzl", "requi
 requirements.parse(
     name = "pip_deps",
     requirements_locks = {
-        "//3rdparty:requirements_linux.txt": "@platforms//os:linux",
-        "//3rdparty:requirements_macos.txt": "@platforms//os:macos",
-        "//3rdparty:requirements_windows.txt": "@platforms//os:windows",
+        "//python/3rdparty:requirements_linux.txt": "@platforms//os:linux",
+        "//python/3rdparty:requirements_macos.txt": "@platforms//os:macos",
+        "//python/3rdparty:requirements_windows.txt": "@platforms//os:windows",
     },
 )
 use_repo(requirements, "pip_deps")
 
 register_toolchains(
-    "//python/wheel/private/tests:py_wheel_toolchain",
+    "//python/wheel/toolchain",
+    "//python/black/toolchain",
     dev_dependency = True,
 )
 

@@ -1,6 +1,8 @@
 """# Wheel
 
-A framework for defining wheels from a tree of Bazel targets.
+A framework for defining [wheels][whl] from a tree of Bazel targets.
+
+[whl]: https://packaging.python.org/en/latest/specifications/binary-distribution-format/
 
 ## Why use this over what `rules_python` provides?
 

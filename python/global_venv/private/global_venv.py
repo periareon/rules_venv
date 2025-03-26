@@ -17,7 +17,7 @@ SPEC_FILE_SUFFIX = ".py_global_venv_info.json"
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
         "--bazel", type=str, default="bazel", help="The path to a Bazel binary"
@@ -122,7 +122,7 @@ def generate_global_venv_specs(
     args = [
         str(bazel),
         "build",
-        rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
+        rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
         "--output_groups=py_global_venv_info",
     ] + targets
     logging.debug(" ".join(args))
