@@ -45,6 +45,11 @@ build:isort --aspects=//python/isort:defs.bzl%py_isort_aspect
 build:isort --output_groups=+py_isort_checks
 build --//python/isort:config=//:.isort.cfg
 
+# Enable mypy for all targets in the workspace
+build:mypy --aspects=//python/mypy:defs.bzl%py_mypy_aspect
+build:mypy --output_groups=+py_mypy_checks
+build --//python/mypy:config=//:.mypy.ini
+
 # Enable pylint for all targets in the workspace
 build:pylint --aspects=//python/pylint:defs.bzl%py_pylint_aspect
 build:pylint --output_groups=+py_pylint_checks
@@ -54,6 +59,7 @@ build --//python/pylint:config=//:.pylintrc.toml
 build:strict --config=black
 build:strict --config=isort
 build:strict --config=pylint
+build:strict --config=mypy
 
 ###############################################################################
 ## Custom user flags

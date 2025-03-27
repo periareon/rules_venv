@@ -1,6 +1,6 @@
 """Bazel rules for black"""
 
-load("//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 load("//python/private:target_srcs.bzl", "find_srcs", "target_sources_aspect")
 load("//python/venv:defs.bzl", "py_venv_common")
 

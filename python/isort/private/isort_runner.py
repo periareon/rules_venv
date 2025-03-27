@@ -10,9 +10,9 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import Generator, List, Optional, Sequence
+from typing import Any, Generator, List, Optional, Sequence, cast
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 # isort gets confused seeing itself in a file, explicitly skip sorting this
 # isort: off
@@ -27,7 +27,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
         rlocationpath: The runfile key
 
     Returns:
-        The requested runifle.
+        The requested runfile.
     """
     # TODO: https://github.com/periareon/rules_venv/issues/37
     source_repo = None
@@ -166,19 +166,18 @@ def generate_config_with_projects(
     raise ValueError(f"Unexpected isort config file '{existing}'.")
 
 
-def _no_realpath(path, **kwargs):  # type: ignore
-    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
-    del kwargs
-    return os.path.abspath(path)
-
-
 @contextlib.contextmanager
-def determinisim_patch() -> Generator[None, None, None]:
+def determinism_patch() -> Generator[None, None, None]:
     """A context manager for applying deterministic behavior to the python stdlib."""
+
+    def _no_realpath(path, **kwargs):  # type: ignore
+        """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+        del kwargs
+        return os.path.abspath(path)
 
     # Avoid sandbox escapes
     old_realpath = os.path.realpath
-    os.path.realpath = _no_realpath  # type: ignore
+    os.path.realpath = cast(Any, _no_realpath)
 
     try:
         yield
@@ -245,7 +244,7 @@ def main() -> None:
 
         isort_args.extend(args.isort_args + [str(src) for src in args.sources])
 
-        with determinisim_patch():
+        with determinism_patch():
             isort_main(isort_args)
 
     except SystemExit as exc:

@@ -7,7 +7,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:

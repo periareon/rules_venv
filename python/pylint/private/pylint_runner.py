@@ -8,25 +8,24 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import Generator, Optional, Sequence
+from typing import Any, Generator, Optional, Sequence, cast
 
 from pylint import run_pylint
-from python.runfiles import Runfiles  # type: ignore
-
-
-def _no_realpath(path, **kwargs):  # type: ignore
-    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
-    del kwargs
-    return os.path.abspath(path)
+from python.runfiles import Runfiles
 
 
 @contextlib.contextmanager
-def determinisim_patch() -> Generator[None, None, None]:
+def determinism_patch() -> Generator[None, None, None]:
     """A context manager for applying deterministic behavior to the python stdlib."""
+
+    def _no_realpath(path, **kwargs):  # type: ignore
+        """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+        del kwargs
+        return os.path.abspath(path)
 
     # Avoid sandbox escapes
     old_realpath = os.path.realpath
-    os.path.realpath = _no_realpath  # type: ignore
+    os.path.realpath = cast(Any, _no_realpath)
 
     try:
         yield
@@ -166,7 +165,7 @@ def main() -> None:
         if "RULES_VENV_PYLINT_DEBUG" in os.environ:
             pylint_args.append("--verbose")
 
-        with determinisim_patch():
+        with determinism_patch():
             run_pylint(pylint_args)
 
     except SystemExit as exc:

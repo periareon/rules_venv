@@ -1,0 +1,27 @@
+load("//python:defs.bzl", "py_library", "py_test")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+package(default_testonly = 1)
+
+py_library(
+    name = "thrice",
+    srcs = [
+        "thrice.py",
+    ],
+)
+
+py_mypy_test(
+    name = "thrice_mypy_test",
+    target = ":thrice",
+)
+
+py_test(
+    name = "consumer_unit_test",
+    srcs = ["consumer.py"],
+    deps = [":thrice"],
+)
+
+py_mypy_test(
+    name = "consumer_mypy_test",
+    target = ":consumer_unit_test",
+)

@@ -1,6 +1,6 @@
 """Pylint toolchain rules."""
 
-load("//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 
 TOOLCHAIN_TYPE = str(Label("//python/pylint:toolchain_type"))
 
