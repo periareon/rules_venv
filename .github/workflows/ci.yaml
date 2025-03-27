@@ -192,25 +192,3 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             exit 1
           fi
-
-  ci-lint:
-    runs-on: ubuntu-20.04
-    steps:
-      # Checkout the code
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
-      - name: Setup pip
-        run: |
-          python -m pip install --upgrade pip setuptools
-      - name: Install dependencies
-        run: |
-          python -c 'import pathlib; print("\n".join([r.strip(" \\") for r in pathlib.Path("python/3rdparty/requirements_linux_x86_64.txt").read_text().splitlines() if "==" in r]))' > requirements.txt
-          python -m pip install -r requirements.txt --user
-          rm requirements.txt
-
-      - name: Run mypy
-        run: |
-          python -m mypy python

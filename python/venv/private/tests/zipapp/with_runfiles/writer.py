@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 
 def parse_args() -> argparse.Namespace:

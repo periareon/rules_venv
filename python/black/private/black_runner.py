@@ -9,25 +9,24 @@ import sys
 import tempfile
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Generator, Optional, Sequence
+from typing import Any, Generator, Optional, Sequence, cast
 
 import black
-from python.runfiles import Runfiles  # type: ignore
-
-
-def _no_realpath(path, **kwargs):  # type: ignore
-    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
-    del kwargs
-    return os.path.abspath(path)
+from python.runfiles import Runfiles
 
 
 @contextlib.contextmanager
 def determinism_patch() -> Generator[None, None, None]:
     """A context manager for applying deterministic behavior to the python stdlib."""
 
+    def _no_realpath(path, **kwargs):  # type: ignore
+        """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+        del kwargs
+        return os.path.abspath(path)
+
     # Avoid sandbox escapes
     old_realpath = os.path.realpath
-    os.path.realpath = _no_realpath  # type: ignore
+    os.path.realpath = cast(Any, _no_realpath)
 
     try:
         yield

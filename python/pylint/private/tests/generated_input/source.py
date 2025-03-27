@@ -3,7 +3,7 @@
 Used for tests against pylint rules.
 """
 
-from python.pylint.private.tests.generated_input.generated import (  # type: ignore
+from python.pylint.private.tests.generated_input.generated import (
     greeting,
 )
 

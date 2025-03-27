@@ -5,7 +5,7 @@ import re
 import unittest
 from pathlib import Path
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 
 def rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
