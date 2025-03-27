@@ -12,7 +12,33 @@ stardoc(
         "@platforms//os:windows": ["@platforms//:incompatible"],
         "//conditions:default": [],
     }),
-    deps = ["//python/venv:bzl_lib"],
+    deps = ["@rules_venv//python/venv:bzl_lib"],
+)
+
+stardoc(
+    name = "black",
+    out = "src/black.md",
+    input = "//python/black:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    # TODO: https://github.com/bazelbuild/stardoc/issues/110
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = ["//python/black:bzl_lib"],
+)
+
+stardoc(
+    name = "global_venv",
+    out = "src/global_venv.md",
+    input = "//python/global_venv:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    # TODO: https://github.com/bazelbuild/stardoc/issues/110
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = ["//python/global_venv:bzl_lib"],
 )
 
 stardoc(
@@ -31,6 +57,8 @@ stardoc(
 mdbook(
     name = "book",
     srcs = glob(["src/**/*.md"]) + [
+        ":black",
+        ":global_venv",
         ":venv",
         ":wheel",
     ],

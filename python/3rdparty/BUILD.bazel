@@ -6,10 +6,21 @@ PLATFORMS = [
     "windows",
 ]
 
+filegroup(
+    name = "requirements_in",
+    srcs = [
+        "requirements.in",
+    ],
+    data = [
+        "//python/black:requirements.in",
+        "//python/wheel:requirements.in",
+    ],
+)
+
 [
     py_reqs_compiler(
         name = "requirements.{}.update".format(platform),
-        requirements_in = "requirements.in",
+        requirements_in = "requirements_in",
         requirements_txt = "requirements_{}.txt".format(platform),
         target_compatible_with = ["@platforms//os:{}".format(platform)],
     )
