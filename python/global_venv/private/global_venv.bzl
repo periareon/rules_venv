@@ -14,7 +14,10 @@ def global_venv(name, **kwargs):
 
     py_venv_binary(
         name = name,
-        srcs = [main],
+        srcs = [
+            main,
+            Label("//python/venv/private:venv_process_wrapper.py"),
+        ],
         main = main,
         **kwargs
     )

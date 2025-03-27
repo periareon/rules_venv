@@ -310,7 +310,9 @@ def main() -> None:
         skip_cleanup = "TEST_TMPDIR" in os.environ
 
         # Allow users to explicitly prevent cleanup
-        skip_cleanup = "RULES_VENV_PROCESS_WRAPPER_LEAK_VENV" in os.environ or skip_cleanup
+        skip_cleanup = (
+            "RULES_VENV_PROCESS_WRAPPER_LEAK_VENV" in os.environ or skip_cleanup
+        )
 
         if not skip_cleanup:
             try:

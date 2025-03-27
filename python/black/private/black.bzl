@@ -1,61 +1,8 @@
 """Bazel rules for black"""
 
-load("@rules_venv//python:defs.bzl", "PyInfo")
-load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
-
-PySourcesInfo = provider(
-    doc = "A provider containing information needed for running a venv tool.",
-    fields = {
-        "srcs": "depset[File]: All direct source files.",
-    },
-)
-
-def _find_srcs(target, aspect_ctx = None):
-    """Parse a target for it's sources to run on.
-
-    Args:
-        target (Target): The target the aspect is running on.
-        aspect_ctx (ctx, optional): The aspect's context object.
-
-    Returns:
-        depset: A depset of sources (`File`).
-    """
-    if PyInfo not in target:
-        return depset()
-
-    # Ignore external targets
-    if target.label.workspace_root.startswith("external"):
-        return depset()
-
-    # Sources are located differently based on whether or not
-    # there's an aspect context object.
-    if aspect_ctx:
-        # Get a list of all non-generated source files.
-        srcs = depset([
-            src
-            for src in getattr(aspect_ctx.rule.files, "srcs", [])
-            if src.is_source
-        ])
-
-    elif PySourcesInfo not in target:
-        srcs = depset()
-    else:
-        srcs = target[PySourcesInfo].srcs
-
-    return srcs
-
-def _target_sources_impl(target, ctx):
-    srcs = _find_srcs(target, aspect_ctx = ctx)
-
-    return [PySourcesInfo(
-        srcs = srcs,
-    )]
-
-target_sources_aspect = aspect(
-    implementation = _target_sources_impl,
-    doc = "An aspect for gathering additional data on a lintable target.",
-    provides = [PySourcesInfo],
-)
+load("//python:defs.bzl", "PyInfo")
+load("//python/private:target_srcs.bzl", "find_srcs", "target_sources_aspect")
+load("//python/venv:defs.bzl", "py_venv_common")
 
 def _rlocationpath(file, workspace_name):
     if file.short_path.startswith("../"):
@@ -86,7 +33,7 @@ def _py_black_test_impl(ctx):
         runfiles = dep_info.runfiles,
     )
 
-    srcs = _find_srcs(ctx.attr.target)
+    srcs = find_srcs(ctx.attr.target)
 
     # External repos always fall into the `../` branch of `_rlocationpath`.
     workspace_name = ctx.workspace_name
@@ -165,7 +112,7 @@ def _py_black_aspect_impl(target, ctx):
         if sanitized in ignore_tags:
             return []
 
-    srcs = _find_srcs(target, ctx)
+    srcs = find_srcs(target, ctx)
     if not srcs:
         return []
 

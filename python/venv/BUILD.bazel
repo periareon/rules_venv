@@ -1,5 +1,4 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//python/venv/private:venv_global.bzl", "global_venv")
 load("//python/venv/private:venv_toolchain.bzl", "current_py_venv_toolchain")
 
 exports_files([
@@ -13,11 +12,6 @@ toolchain_type(
 
 current_py_venv_toolchain(
     name = "current_py_venv_toolchain",
-    visibility = ["//visibility:public"],
-)
-
-global_venv(
-    name = "global_venv",
     visibility = ["//visibility:public"],
 )
 

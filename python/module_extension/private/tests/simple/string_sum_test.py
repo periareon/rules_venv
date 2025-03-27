@@ -2,7 +2,6 @@
 
 import unittest
 
-# pylint: disable-next=no-name-in-module
 from python.module_extension.private.tests.simple import string_sum  # type: ignore
 
 

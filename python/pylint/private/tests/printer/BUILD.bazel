@@ -1,0 +1,16 @@
+load("//python:defs.bzl", "py_binary")
+load("//python/pylint:defs.bzl", "py_pylint_test")
+
+py_binary(
+    name = "printer",
+    srcs = ["printer.py"],
+    deps = [
+        "//python/pylint/private/tests/greeting",
+        "//python/pylint/private/tests/imports:fibonacci",
+    ],
+)
+
+py_pylint_test(
+    name = "py_binary_lint",
+    target = ":printer",
+)

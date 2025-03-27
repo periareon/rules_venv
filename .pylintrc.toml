@@ -11,17 +11,5 @@ disable = [
     "fixme",                  # Developers should be allowed to leave TODO comments.
     "wrong-import-position",  # isort is in charge of import ordering.
     "wrong-import-order",     # isort is in charge of import ordering.
-    "line-too-long",         # Black is responsible for shortening where possible.
-
-    # TODO: Because pylint runs outside of Bazel, some of the results will
-    # be inacurate due to the broad availability of sources and potential
-    # lack of imports
-    "import-error",   # Some dependencies will only be made available via Bazel (e.g. `python.runfiles`).
-    "duplicate-code", # Lack of Bazel sandboxing means all sources are available and some tests are known to be similar.
-]
-
-ignored-modules = [
-    # Because pylint is not running in Bazel, the runfiles library will
-    # not be available
-    "python.runfiles"
+    "line-too-long",          # Black is responsible for shortening where possible.
 ]

@@ -10,6 +10,7 @@ from dataclasses import Field, dataclass, fields
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+# pylint: disable-next=import-error,no-name-in-module
 from python.venv.private.venv_process_wrapper import create_venv
 
 SPEC_FILE_SUFFIX = ".py_global_venv_info.json"

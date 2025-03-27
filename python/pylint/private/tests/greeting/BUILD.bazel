@@ -1,0 +1,14 @@
+load("//python:defs.bzl", "py_library")
+load("//python/pylint:defs.bzl", "py_pylint_test")
+
+py_library(
+    name = "greeting",
+    srcs = ["greeting/__init__.py"],
+    imports = ["."],
+    visibility = ["//python/pylint/private/tests:__subpackages__"],
+)
+
+py_pylint_test(
+    name = "py_library_lint",
+    target = ":greeting",
+)
