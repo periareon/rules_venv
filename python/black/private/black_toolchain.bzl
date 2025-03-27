@@ -1,6 +1,6 @@
 """black toolchain rules."""
 
-load("@rules_venv//python:defs.bzl", "PyInfo")
+load("//python:defs.bzl", "PyInfo")
 
 TOOLCHAIN_TYPE = str(Label("//python/black:toolchain_type"))
 
