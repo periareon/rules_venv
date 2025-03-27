@@ -467,16 +467,128 @@ py_global_venv_aspect()
 <p>An aspect for generating metadata required to include Python targets in a global venv.</p>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="extensions"><a class="header" href="#extensions">Extensions</a></h1>
+<p>Additional rules which are built from core <code>rules_venv</code> to
+provide Bazel rules for popular python tools.</p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="black"><a class="header" href="#black">Black</a></h1>
+<p>Bazel rules for the Python formatter <a href="https://black.readthedocs.io/en/stable/index.html">black</a>.</p>
+<h3 id="setup-1"><a class="header" href="#setup-1">Setup</a></h3>
+<p>Add <code>rules_venv</code> to your <code>MODULE.bazel</code> file</p>
+<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
+</code></pre>
+<p>Next, the <code>black</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>black</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="black.html#py_black_toolchain">py_black_toolchain</a> will need to be configured:</p>
+<pre><code class="language-python">load("@rules_venv//python/black:defs.bzl", "py_black_toolchain")
+
+py_black_toolchain(
+    name = "toolchain_impl",
+    black = "@pip_deps//:black",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/black:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/black:toolchain")
+</code></pre>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<p>Python code can be formatted using the following command:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/black
+</code></pre>
+<p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="black.html#py_black_aspect">py_black_aspect</a>
+aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/black:defs.bzl%py_black_aspect
+build --output_groups=+py_black_checks
+</code></pre>
+<h2 id="rules-1"><a class="header" href="#rules-1">Rules</a></h2>
+<ul>
+<li><a href="black.html#py_black_test">py_black_test</a></li>
+<li><a href="black.html#py_black_toolchain">py_black_toolchain</a></li>
+</ul>
+<h2 id="aspects-1"><a class="header" href="#aspects-1">Aspects</a></h2>
+<ul>
+<li><a href="black.html#py_black_aspect">py_black_aspect</a></li>
+</ul>
+<p><a id="py_black_test"></a></p>
+<h2 id="py_black_test"><a class="header" href="#py_black_test">py_black_test</a></h2>
+<pre>
+load("@rules_venv//python/black:defs.bzl", "py_black_test")
+
+py_black_test(<a href="black.html#py_black_test-name">name</a>, <a href="black.html#py_black_test-config">config</a>, <a href="black.html#py_black_test-target">target</a>)
+</pre>
+<p>A rule for running black on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_black_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_black_test-config"></a>config</td><td style="text-align: left">The config file (<code>pyproject.toml</code>) containing black settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/black:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_black_test-target"></a>target</td><td style="text-align: left">The target to run <code>black</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_black_toolchain"></a></p>
+<h2 id="py_black_toolchain"><a class="header" href="#py_black_toolchain">py_black_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/black:defs.bzl", "py_black_toolchain")
+
+py_black_toolchain(<a href="black.html#py_black_toolchain-name">name</a>, <a href="black.html#py_black_toolchain-black">black</a>)
+</pre>
+<p>A toolchain for the <a href="https://black.readthedocs.io/en/stable/">black</a> formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_black_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_black_toolchain-black"></a>black</td><td style="text-align: left">The black <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_black_aspect"></a></p>
+<h2 id="py_black_aspect"><a class="header" href="#py_black_aspect">py_black_aspect</a></h2>
+<pre>
+load("@rules_venv//python/black:defs.bzl", "py_black_aspect")
+
+py_black_aspect()
+</pre>
+<p>An aspect for running black on targets with Python sources.</p>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="global-venv"><a class="header" href="#global-venv">Global Venv</a></h1>
+<p>Bazel rules for generating usable <a href="https://docs.python.org/3/library/venv.html">virtualenv</a> from Bazel targets.</p>
+<h2 id="usage-1"><a class="header" href="#usage-1">Usage</a></h2>
+<p>A venv can be created by invoking the following command</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/global_venv
+</code></pre>
+<p>From here a <a href="https://docs.python.org/3/library/venv.html">venv</a> will likely be available at <code>.venv</code> within your workspace that
+can be activated for improved IDE support.</p>
+<h2 id="aspects-2"><a class="header" href="#aspects-2">Aspects</a></h2>
+<ul>
+<li><a href="global_venv.html#py_global_venv_aspect">py_global_venv_aspect</a></li>
+</ul>
+<p><a id="py_global_venv_aspect"></a></p>
+<h2 id="py_global_venv_aspect-1"><a class="header" href="#py_global_venv_aspect-1">py_global_venv_aspect</a></h2>
+<pre>
+load("@rules_venv//python/global_venv:defs.bzl", "py_global_venv_aspect")
+
+py_global_venv_aspect()
+</pre>
+<p>An aspect for generating metadata required to include Python targets in a global venv.</p>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
-<p>A framework for defining wheels from a tree of Bazel targets.</p>
+<p>A framework for defining <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/">wheels</a> from a tree of Bazel targets.</p>
 <h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
 <p>The rules here primarily wrap what rules_python provides but offers some improvements:</p>
 <ol>
 <li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
 <li>Sources and data are automatically collected.</li>
 </ol>
-<h2 id="setup-1"><a class="header" href="#setup-1">Setup</a></h2>
+<h2 id="setup-2"><a class="header" href="#setup-2">Setup</a></h2>
 <p>Building wheels requires no setup, however, to activate all features of
 the wheel rules, a toolchain must be registered.</p>
 <p>First some external python requirements will be required. There is guidance on
@@ -507,7 +619,7 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
-<h2 id="rules-1"><a class="header" href="#rules-1">Rules</a></h2>
+<h2 id="rules-2"><a class="header" href="#rules-2">Rules</a></h2>
 <ul>
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>

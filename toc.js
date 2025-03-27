@@ -8,7 +8,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
         super();
     }
     connectedCallback() {
-        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="spacer"></li><li class="chapter-item expanded "><a href="venv.html"><strong aria-hidden="true">1.</strong> venv</a></li><li class="chapter-item expanded "><a href="wheel.html"><strong aria-hidden="true">2.</strong> wheel</a></li></ol>';
+        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="venv.html"><strong aria-hidden="true">1.</strong> venv</a></li><li class="chapter-item expanded "><a href="extensions.html"><strong aria-hidden="true">2.</strong> Extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="black.html"><strong aria-hidden="true">2.1.</strong> black</a></li><li class="chapter-item expanded "><a href="global_venv.html"><strong aria-hidden="true">2.2.</strong> global_venv</a></li><li class="chapter-item expanded "><a href="wheel.html"><strong aria-hidden="true">2.3.</strong> wheel</a></li></ol></li></ol>';
         // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString().split("#")[0];
         if (current_page.endsWith("/")) {
