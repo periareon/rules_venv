@@ -9,7 +9,7 @@ def _py_black_toolchain_impl(ctx):
 
     # For some reason, simply forwarding `DefaultInfo` from
     # the target results in a loss of data. To avoid this a
-    # new provider is created with teh same info.
+    # new provider is created with the same info.
     default_info = DefaultInfo(
         files = black_target[DefaultInfo].files,
         runfiles = black_target[DefaultInfo].default_runfiles,
