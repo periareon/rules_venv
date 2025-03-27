@@ -1,0 +1,18 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/isort:defs.bzl", "py_isort_test")
+
+py_library(
+    name = "example",
+    srcs = [
+        "example.py",
+    ],
+    imports = ["."],
+    deps = [
+        "//python/isort/private/tests/imports/deps:library",
+    ],
+)
+
+py_isort_test(
+    name = "example_isort_test",
+    target = ":example",
+)

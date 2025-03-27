@@ -1,0 +1,29 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("//python/isort:defs.bzl", "py_isort_test")
+load("//python/isort/private/tests:isort_regex_test.bzl", "isort_regex_test")
+
+py_binary(
+    name = "consumer",
+    srcs = ["consumer.py"],
+    deps = [
+        "//python/isort/private/tests/duplicate_name/dependency",
+        "@pip_deps//:tomlkit",
+    ],
+)
+
+isort_regex_test(
+    name = "consumer_regex_test",
+    src = "consumer.py",
+    expectation = """\
+import pathlib
+
+# pylint: disable-next=no-name-in-module
+from python.within_second_python.py_dep import print_greeting  # type: ignore
+from tomlkit import __name__ as toml_name
+""",
+)
+
+py_isort_test(
+    name = "consumer_isort_test",
+    target = ":consumer",
+)

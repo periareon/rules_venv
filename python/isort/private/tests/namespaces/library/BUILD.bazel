@@ -1,0 +1,30 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/isort:defs.bzl", "py_isort_test")
+load("//python/isort/private/tests:isort_regex_test.bzl", "isort_regex_test")
+
+py_library(
+    name = "library",
+    srcs = [
+        "first_party_1.py",
+        "first_party_2.py",
+        "first_party_3.py",
+    ],
+    visibility = ["//python/isort/private/tests/namespaces:__subpackages__"],
+    deps = ["@pip_deps//:tomlkit"],
+)
+
+isort_regex_test(
+    name = "first_party_1_regex_test",
+    src = "first_party_1.py",
+    expectation = """\
+import tomlkit
+
+import python.isort.private.tests.namespaces.library.first_party_2
+from python.isort.private.tests.namespaces.library.first_party_3 import goodbye
+""",
+)
+
+py_isort_test(
+    name = "library_isort_test",
+    target = ":library",
+)

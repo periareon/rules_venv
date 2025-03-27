@@ -13,6 +13,7 @@ filegroup(
     ],
     data = [
         "//python/black:requirements.in",
+        "//python/isort:requirements.in",
         "//python/wheel:requirements.in",
     ],
 )

@@ -1,0 +1,13 @@
+load("//python/isort:defs.bzl", "py_isort_toolchain")
+
+py_isort_toolchain(
+    name = "py_isort_toolchain",
+    isort = "@pip_deps//:isort",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_isort_toolchain",
+    toolchain_type = "//python/isort:toolchain_type",
+    visibility = ["//visibility:public"],
+)
