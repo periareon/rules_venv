@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@rules_venv//python:defs.bzl", "py_binary", "py_library")
+load("//python:defs.bzl", "py_binary", "py_library")
 
 exports_files([
     "black_runner.py",
@@ -11,7 +11,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//python/black:current_py_black_toolchain",
-        "@rules_venv//python/runfiles",
+        "//python/runfiles",
     ],
 )
 
@@ -27,7 +27,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//python/black:current_py_black_toolchain",
-        "@rules_venv//python/runfiles",
+        "//python/runfiles",
     ],
 )
 
@@ -36,7 +36,7 @@ bzl_library(
     srcs = glob(["*.bzl"]),
     visibility = ["//python/black:__subpackages__"],
     deps = [
-        "@rules_venv//python:bzl_lib",
-        "@rules_venv//python/venv:bzl_lib",
+        "//python:bzl_lib",
+        "//python/venv:bzl_lib",
     ],
 )

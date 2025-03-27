@@ -128,7 +128,7 @@ def run_black(
 
     black_args = ["--config", str(settings_path)]
 
-    if "RULES_BLACK_DEBUG" in os.environ:
+    if "RULES_VENV_BLACK_DEBUG" in os.environ:
         black_args.append("--verbose")
 
     black_args.extend(sources)

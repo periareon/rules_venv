@@ -35,7 +35,8 @@ build --incompatible_autoload_externally=
 ###############################################################################
 ## Configuration Flags
 ###############################################################################
-# Enable rustfmt for all targets in the workspace
+
+# Enable black for all targets in the workspace
 build:black --aspects=//python/black:defs.bzl%py_black_aspect
 build:black --output_groups=+py_black_checks
 
