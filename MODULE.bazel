@@ -30,6 +30,7 @@ python.toolchain(
 use_repo(
     python,
     "python_3_11_aarch64-apple-darwin",
+    "python_3_11_aarch64-unknown-linux-gnu",
     "python_3_11_x86_64-apple-darwin",
     "python_3_11_x86_64-pc-windows-msvc",
     "python_3_11_x86_64-unknown-linux-gnu",
@@ -48,8 +49,9 @@ requirements.parse(
 use_repo(requirements, "pip_deps")
 
 register_toolchains(
-    "//python/wheel/toolchain",
     "//python/black/toolchain",
+    "//python/isort/toolchain",
+    "//python/wheel/toolchain",
     dev_dependency = True,
 )
 

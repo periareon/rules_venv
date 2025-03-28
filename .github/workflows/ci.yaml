@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  merge_group:
   pull_request:
     types:
       - opened
@@ -43,7 +44,7 @@ jobs:
 
       # Build and Test the code
       - name: Test (Unix)
-        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //... && bazel ${BAZEL_STARTUP_FLAGS[@]} run buildifier_check
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //...
         if: startswith(runner.os, 'Windows') != true
       - name: Test (Windows)
         run: bazel $env:BAZEL_STARTUP_FLAGS test //...
@@ -80,7 +81,7 @@ jobs:
 
       # Build and Test the code
       - name: Test (Unix)
-        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //... && bazel ${BAZEL_STARTUP_FLAGS[@]} run buildifier_check
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //...
         if: startswith(runner.os, 'Windows') != true
       - name: Test (Windows)
         run: bazel $env:BAZEL_STARTUP_FLAGS test //...
@@ -123,11 +124,49 @@ jobs:
               exit 1
           }
 
-  ci-lint-and-format:
+  ci-format:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+          - os: ubuntu-20.04
+          - os: windows-2019
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Format (unix)
+        run: |
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //:buildifier_check
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/black
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/isort
+        if: startswith(runner.os, 'Windows') != true
+      - name: Format (Windows)
+        run: |
+          bazel $env:BAZEL_STARTUP_FLAGS run //:buildifier_check
+          bazel $env:BAZEL_STARTUP_FLAGS run //python/black
+          bazel $env:BAZEL_STARTUP_FLAGS run //python/isort
+        if: startswith(runner.os, 'Windows')
+
+      - name: Git diff
+        shell: bash
+        run: |
+          git diff
+          if [[ -n "$(git status --porcelain)" ]]; then
+            exit 1
+          fi
+
+  ci-lint:
     runs-on: ubuntu-20.04
     steps:
       # Checkout the code
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -147,6 +186,3 @@ jobs:
       - name: Run pylint
         run: |
           PYTHONPATH="$(pwd)" python -m pylint python
-      - name: Run isort
-        run: |
-          python -m isort --check-only python

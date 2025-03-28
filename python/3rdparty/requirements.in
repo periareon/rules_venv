@@ -1,14 +1,15 @@
 # Rule requirements
 
 -r ../black/requirements.in
+-r ../isort/requirements.in
 -r ../wheel/requirements.in
 
 # Test requirements
 numpy
+tomlkit
 pytest
 pytest-cov
 
 # linters
 pylint
-isort
 mypy

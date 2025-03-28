@@ -1,0 +1,43 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_binary", "py_library")
+
+exports_files([
+    "isort_runner.py",
+])
+
+py_library(
+    name = "isort_runner",
+    srcs = ["isort_runner.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//python/isort:current_py_isort_toolchain",
+        "//python/runfiles",
+    ],
+)
+
+py_binary(
+    name = "isort_fixer",
+    srcs = ["isort_fixer.py"],
+    data = [
+        "//python/isort:config",
+    ],
+    env = {
+        "ISORT_SETTINGS_PATH": "$(rlocationpath //python/isort:config)",
+    },
+    visibility = ["//visibility:public"],
+    deps = [
+        ":isort_runner",
+        "//python/isort:current_py_isort_toolchain",
+        "//python/runfiles",
+    ],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/isort:__subpackages__"],
+    deps = [
+        "//python:bzl_lib",
+        "//python/venv:bzl_lib",
+    ],
+)

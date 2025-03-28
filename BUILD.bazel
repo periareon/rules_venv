@@ -1,8 +1,19 @@
-exports_files([
-    "MODULE.bazel",
-    "README.md",
-    "version.bzl",
-])
+exports_files(
+    [
+        "MODULE.bazel",
+        "version.bzl",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(
+    [
+        ".isort.cfg",
+        ".mypy.ini",
+        ".pylintrc.toml",
+    ],
+    visibility = ["//visibility:private"],
+)
 
 alias(
     name = "buildifier",

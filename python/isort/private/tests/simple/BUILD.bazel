@@ -1,0 +1,79 @@
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//python/isort:defs.bzl", "py_isort_test")
+load("//python/isort/private/tests:isort_regex_test.bzl", "isort_regex_test")
+
+py_library(
+    name = "example",
+    srcs = ["example.py"],
+    deps = [
+        ":first_party_1",
+        ":first_party_2",
+        ":first_party_3",
+        "@pip_deps//:tomlkit",
+    ],
+)
+
+isort_regex_test(
+    name = "example_regex_test",
+    src = "example.py",
+    expectation = """\
+import os
+import unittest
+from pathlib import Path
+
+import tomlkit
+
+import python.isort.private.tests.simple.first_party_1
+import python.isort.private.tests.simple.first_party_3 as first_party_3  # pylint: disable=consider-using-from-import
+from python.isort.private.tests.simple.first_party_2 import (
+    assert_equal as assert_equal_2,
+)
+""",
+)
+
+py_test(
+    name = "example_test",
+    srcs = ["example.py"],
+    main = "example.py",
+    deps = [
+        ":first_party_1",
+        ":first_party_2",
+        ":first_party_3",
+        "@pip_deps//:tomlkit",
+    ],
+)
+
+py_library(
+    name = "first_party_1",
+    srcs = ["first_party_1.py"],
+)
+
+py_library(
+    name = "first_party_2",
+    srcs = ["first_party_2.py"],
+)
+
+py_library(
+    name = "first_party_3",
+    srcs = ["first_party_3.py"],
+)
+
+py_isort_test(
+    name = "example_isort_test",
+    target = ":example",
+)
+
+py_isort_test(
+    name = "first_party_1_isort_test",
+    target = ":first_party_1",
+)
+
+py_isort_test(
+    name = "first_party_2_isort_test",
+    target = ":first_party_2",
+)
+
+py_isort_test(
+    name = "first_party_3_isort_test",
+    target = ":first_party_3",
+)

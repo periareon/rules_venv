@@ -1,0 +1,36 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python/isort/private:isort_toolchain.bzl", "current_py_isort_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "isort.cfg",
+    "defs.bzl",
+    "requirements.in",
+])
+
+label_flag(
+    name = "config",
+    build_setting_default = ":.isort.cfg",
+)
+
+toolchain_type(
+    name = "toolchain_type",
+)
+
+current_py_isort_toolchain(
+    name = "current_py_isort_toolchain",
+    tags = ["manual"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//visibility:public"],
+    deps = ["//python/isort/private:bzl_lib"],
+)
+
+alias(
+    name = "isort",
+    actual = "//python/isort/private:isort_fixer",
+)
