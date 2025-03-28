@@ -267,7 +267,7 @@ def _py_isort_aspect_impl(target, ctx):
     args.add("--diff")
 
     ctx.actions.run(
-        mnemonic = "isort",
+        mnemonic = "PyIsort",
         progress_message = "isort %{label}",
         executable = executable,
         inputs = depset([ctx.file._config] + srcs),
