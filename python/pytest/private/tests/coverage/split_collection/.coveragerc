@@ -1,0 +1,10 @@
+[run]
+branch = True
+
+# Note that `fail_under` does not work here because no single target represents
+# 100% coverage. Instead, coverage is collected from different targets at the end
+# and some post-processing needs to be explicitly done to confirm the desired level
+# of of coverage.
+#
+# [report]
+# fail_under = 100

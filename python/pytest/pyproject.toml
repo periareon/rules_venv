@@ -1,0 +1,2 @@
+# pyproject.toml: https://docs.pytest.org/en/stable/customize.html#pyproject-toml
+[tool.pytest.ini_options]

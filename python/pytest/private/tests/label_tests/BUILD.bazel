@@ -1,0 +1,5 @@
+load(":pytest_label_test.bzl", "pytest_label_test")
+
+pytest_label_test(
+    name = "label_test",
+)

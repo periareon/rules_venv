@@ -1,0 +1,8 @@
+[run]
+branch = True
+
+# Note that `fail_under` works here because the test
+# consuming this runs all tests under a single target.
+[report]
+fail_under = 100
+show_missing = True

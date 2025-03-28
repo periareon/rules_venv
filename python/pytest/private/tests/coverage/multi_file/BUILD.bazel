@@ -1,0 +1,16 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/pytest:defs.bzl", "py_pytest_test")
+
+py_library(
+    name = "coverage",
+    srcs = glob(["lib/**/*.py"]),
+    imports = ["."],
+)
+
+py_pytest_test(
+    name = "coverage_test",
+    srcs = glob(["tests/**/*_test.py"]),
+    coverage_rc = ".coveragerc",
+    visibility = ["//python/pytest/private/tests/coverage:__pkg__"],
+    deps = [":coverage"],
+)

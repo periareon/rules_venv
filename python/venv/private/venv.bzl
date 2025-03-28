@@ -1,6 +1,7 @@
 """Bazel rules for Python venvs"""
 
 load("//python:py_info.bzl", "PyInfo")
+load("//python/private:coverage.bzl", "COVERAGE_ATTRS")
 load(":venv_common.bzl", venv_common = "py_venv_common")
 
 _COMMON_ATTRS = {
@@ -316,34 +317,12 @@ def _py_venv_test_impl(ctx):
         ),
     ]
 
-_COVERAGE_ATTRS = {
-    "_collect_cc_coverage": attr.label(
-        default = "@bazel_tools//tools/test:collect_cc_coverage",
-        executable = True,
-        cfg = "exec",
-    ),
-    # Bazel’s coverage runner
-    # (https://github.com/bazelbuild/bazel/blob/6.0.0/tools/test/collect_coverage.sh)
-    # needs a binary called “lcov_merge.”  Its location is passed in the
-    # LCOV_MERGER environmental variable.  For builtin rules, this variable
-    # is set automatically based on a magic “$lcov_merger” or
-    # “:lcov_merger” attribute, but it’s not possible to create such
-    # attributes in Starlark.  Therefore we specify the variable ourselves.
-    # Note that the coverage runner runs in the runfiles root instead of
-    # the execution root, therefore we use “path” instead of “short_path.”
-    "_lcov_merger": attr.label(
-        default = configuration_field(fragment = "coverage", name = "output_generator"),
-        executable = True,
-        cfg = "exec",
-    ),
-}
-
 py_venv_test = rule(
     doc = """\
 A `py_venv_test` rule compiles a test. A test is a binary wrapper around some test code.
 """,
     implementation = _py_venv_test_impl,
-    attrs = _EXECUTABLE_ATTRS | _COVERAGE_ATTRS | {
+    attrs = _EXECUTABLE_ATTRS | COVERAGE_ATTRS | {
         "env_inherit": attr.string_list(
             doc = "Specifies additional environment variables to inherit from the external environment when the test is executed by `bazel test`.",
         ),
