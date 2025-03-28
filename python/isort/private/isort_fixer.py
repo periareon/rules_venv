@@ -11,13 +11,10 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List
 
+from isort.main import main as isort_main
 from python.runfiles import Runfiles  # type: ignore
 
 from python.isort.private.isort_runner import generate_config_with_projects
-
-# isort gets confused seeing itself in a file, explicitly skip sorting this
-# isort: off
-from isort.main import main as isort_main
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
@@ -255,9 +252,8 @@ def main() -> None:
         query_string=imports_scope, bazel=args.bazel, workspace_dir=workspace_dir
     )
 
-    # pylint: disable-next=consider-using-dict-items
-    for target in imports:
-        imports[target]["src_targets"] = query_targets(
+    for target, target_imports in imports.items():
+        target_imports["src_targets"] = query_targets(
             srcs_query_template.replace("{scope}", target),
             args.bazel,
             workspace_dir,
