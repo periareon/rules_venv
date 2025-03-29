@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_test")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+
+py_cc_extension(
+    name = "string_sum_import",
+    srcs = ["string_sum_import.cc"],
+    imports = ["."],
+)
+
+py_test(
+    name = "string_sum_import_test",
+    srcs = ["string_sum_import_test.py"],
+    deps = [":string_sum_import"],
+)

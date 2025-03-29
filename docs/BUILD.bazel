@@ -21,12 +21,12 @@ stardoc(
 )
 
 stardoc(
-    name = "isort",
-    out = "src/isort.md",
-    input = "//python/isort:defs.bzl",
+    name = "module_extension",
+    out = "src/module_extension.md",
+    input = "//python/module_extension:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
     tags = ["manual"],
-    deps = ["//python/isort:bzl_lib"],
+    deps = ["//python/module_extension:bzl_lib"],
 )
 
 stardoc(
@@ -36,6 +36,15 @@ stardoc(
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
     tags = ["manual"],
     deps = ["//python/global_venv:bzl_lib"],
+)
+
+stardoc(
+    name = "isort",
+    out = "src/isort.md",
+    input = "//python/isort:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/isort:bzl_lib"],
 )
 
 stardoc(
@@ -53,6 +62,7 @@ mdbook(
         ":black",
         ":global_venv",
         ":isort",
+        ":module_extension",
         ":venv",
         ":wheel",
     ],

@@ -5,9 +5,10 @@ module(
     version = "0.2.0",
 )
 
-bazel_dep(name = "rules_python", version = "1.2.0")
-bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "rules_python", version = "1.3.0")
 
 register_toolchains(
     "//python/venv/toolchain",
@@ -41,9 +42,10 @@ requirements = use_extension("@rules_req_compile//extensions:python.bzl", "requi
 requirements.parse(
     name = "pip_deps",
     requirements_locks = {
-        "//python/3rdparty:requirements_linux.txt": "@platforms//os:linux",
-        "//python/3rdparty:requirements_macos.txt": "@platforms//os:macos",
-        "//python/3rdparty:requirements_windows.txt": "@platforms//os:windows",
+        "//python/3rdparty:requirements_linux_aarch64.txt": "@@//python/3rdparty:linux_aarch64",
+        "//python/3rdparty:requirements_linux_x86_64.txt": "@@//python/3rdparty:linux_x86_64",
+        "//python/3rdparty:requirements_macos_aarch64.txt": "@@//python/3rdparty:macos_aarch64",
+        "//python/3rdparty:requirements_windows_x86_64.txt": "@@//python/3rdparty:windows_x86_64",
     },
 )
 use_repo(requirements, "pip_deps")
