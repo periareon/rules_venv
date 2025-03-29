@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>global_venv - rules_venv</title>
+        <title>isort - rules_venv</title>
 
 
         <!-- Custom HTML head -->
@@ -156,26 +156,107 @@
                 <div id="content" class="content">
                     <main>
                         <!-- Generated with Stardoc: http://skydoc.bazel.build -->
-<h1 id="global-venv"><a class="header" href="#global-venv">Global Venv</a></h1>
-<p>Bazel rules for generating usable <a href="https://docs.python.org/3/library/venv.html">virtualenv</a> from Bazel targets.</p>
-<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<p>A venv can be created by invoking the following command</p>
-<pre><code class="language-bash">bazel run @rules_venv//python/global_venv
+<h1 id="isort"><a class="header" href="#isort">isort</a></h1>
+<p>Bazel rules for the Python formatter <a href="https://pycqa.github.io/isort/">isort</a>.</p>
+<h3 id="setup"><a class="header" href="#setup">Setup</a></h3>
+<p>Add <code>rules_venv</code> to your <code>MODULE.bazel</code> file</p>
+<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
 </code></pre>
-<p>From here a <a href="https://docs.python.org/3/library/venv.html">venv</a> will likely be available at <code>.venv</code> within your workspace that
-can be activated for improved IDE support.</p>
+<p>Next, the <code>rules_venv</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>isort</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="#py_isort_toolchain">py_isort_toolchain</a> will need to be configured:</p>
+<pre><code class="language-python">load("@rules_venv//python/isort:defs.bzl", "py_isort_toolchain")
+
+py_isort_toolchain(
+    name = "toolchain_impl",
+    isort = "@pip_deps//:isort",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/isort:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/isort:toolchain")
+</code></pre>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<p>Python code can be formatted using the following command:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/isort
+</code></pre>
+<p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="#py_isort_aspect">py_isort_aspect</a>
+aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/isort:defs.bzl%py_isort_aspect
+build --output_groups=+py_isort_checks
+</code></pre>
+<h2 id="sections-and-ordering"><a class="header" href="#sections-and-ordering">Sections and Ordering</a></h2>
+<p>Of all isort <a href="https://pycqa.github.io/isort/reference/isort/sections.html">sections</a>, <code>FIRSTPARTY</code> and
+<code>THIRDPARTY</code> follow unique rules to ensure ordering makes sense on a per-target basis.</p>
+<h3 id="first-party"><a class="header" href="#first-party">First party</a></h3>
+<ul>
+<li>Direct source dependencies passed to the <code>srcs</code> attribute.</li>
+<li>Repository relative packages.</li>
+</ul>
+<h3 id="third-party"><a class="header" href="#third-party">Third party</a></h3>
+<ul>
+<li>Other <code>py_*</code> targets (the <code>deps</code> attribute). Note that <code>deps</code> which use repo absolute import paths
+will be considered first party.</li>
+</ul>
+<h2 id="tips"><a class="header" href="#tips">Tips</a></h2>
+<p>Isort is sensitive to the <a href="https://bazel.build/reference/be/python#py_binary.legacy_create_init"><code>legacy_create_init</code></a> attribute on python rules. For more correct
+and consistent behavior, this value should always be <code>0</code> or if the default of <code>-1</code> is set, the
+<a href="https://github.com/bazelbuild/bazel/issues/10076"><code>--incompatible_default_to_explicit_init_py</code></a> flag should be added to the workspace's
+<code>.bazelrc</code> file to ensure the behavior is disabled.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
+<ul>
+<li><a href="#py_isort_test">py_isort_test</a></li>
+<li><a href="#py_isort_toolchain">py_isort_toolchain</a></li>
+</ul>
 <h2 id="aspects"><a class="header" href="#aspects">Aspects</a></h2>
 <ul>
-<li><a href="#py_global_venv_aspect">py_global_venv_aspect</a></li>
+<li><a href="#py_isort_aspect">py_isort_aspect</a></li>
 </ul>
-<p><a id="py_global_venv_aspect"></a></p>
-<h2 id="py_global_venv_aspect"><a class="header" href="#py_global_venv_aspect">py_global_venv_aspect</a></h2>
+<p><a id="py_isort_test"></a></p>
+<h2 id="py_isort_test"><a class="header" href="#py_isort_test">py_isort_test</a></h2>
 <pre>
-load("@rules_venv//python/global_venv:defs.bzl", "py_global_venv_aspect")
+load("@rules_venv//python/isort:defs.bzl", "py_isort_test")
 
-py_global_venv_aspect()
+py_isort_test(<a href="#py_isort_test-name">name</a>, <a href="#py_isort_test-config">config</a>, <a href="#py_isort_test-target">target</a>)
 </pre>
-<p>An aspect for generating metadata required to include Python targets in a global venv.</p>
+<p>A rule for running isort on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_isort_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_isort_test-config"></a>config</td><td style="text-align: left">The config file (isort.cfg) containing isort settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/isort:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_isort_test-target"></a>target</td><td style="text-align: left">The target to run <code>isort</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_isort_toolchain"></a></p>
+<h2 id="py_isort_toolchain"><a class="header" href="#py_isort_toolchain">py_isort_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/isort:defs.bzl", "py_isort_toolchain")
+
+py_isort_toolchain(<a href="#py_isort_toolchain-name">name</a>, <a href="#py_isort_toolchain-isort">isort</a>)
+</pre>
+<p>A toolchain for the <a href="https://pycqa.github.io/isort/index.html">isort</a> formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_isort_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_isort_toolchain-isort"></a>isort</td><td style="text-align: left">The isort <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_isort_aspect"></a></p>
+<h2 id="py_isort_aspect"><a class="header" href="#py_isort_aspect">py_isort_aspect</a></h2>
+<pre>
+load("@rules_venv//python/isort:defs.bzl", "py_isort_aspect")
+
+py_isort_aspect()
+</pre>
+<p>An aspect for running isort on targets with Python sources.</p>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
 
@@ -183,11 +264,11 @@ py_global_venv_aspect()
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="black.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="global_venv.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="isort.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="wheel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -197,11 +278,11 @@ py_global_venv_aspect()
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="black.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="global_venv.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="isort.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="wheel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
