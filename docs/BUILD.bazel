@@ -7,11 +7,7 @@ stardoc(
     out = "src/venv.md",
     input = "//python/venv:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
-    # TODO: https://github.com/bazelbuild/stardoc/issues/110
-    target_compatible_with = select({
-        "@platforms//os:windows": ["@platforms//:incompatible"],
-        "//conditions:default": [],
-    }),
+    tags = ["manual"],
     deps = ["@rules_venv//python/venv:bzl_lib"],
 )
 
@@ -20,12 +16,17 @@ stardoc(
     out = "src/black.md",
     input = "//python/black:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
-    # TODO: https://github.com/bazelbuild/stardoc/issues/110
-    target_compatible_with = select({
-        "@platforms//os:windows": ["@platforms//:incompatible"],
-        "//conditions:default": [],
-    }),
+    tags = ["manual"],
     deps = ["//python/black:bzl_lib"],
+)
+
+stardoc(
+    name = "isort",
+    out = "src/isort.md",
+    input = "//python/isort:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/isort:bzl_lib"],
 )
 
 stardoc(
@@ -33,11 +34,7 @@ stardoc(
     out = "src/global_venv.md",
     input = "//python/global_venv:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
-    # TODO: https://github.com/bazelbuild/stardoc/issues/110
-    target_compatible_with = select({
-        "@platforms//os:windows": ["@platforms//:incompatible"],
-        "//conditions:default": [],
-    }),
+    tags = ["manual"],
     deps = ["//python/global_venv:bzl_lib"],
 )
 
@@ -46,11 +43,7 @@ stardoc(
     out = "src/wheel.md",
     input = "//python/wheel:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
-    # TODO: https://github.com/bazelbuild/stardoc/issues/110
-    target_compatible_with = select({
-        "@platforms//os:windows": ["@platforms//:incompatible"],
-        "//conditions:default": [],
-    }),
+    tags = ["manual"],
     deps = ["//python/wheel:bzl_lib"],
 )
 
@@ -59,10 +52,16 @@ mdbook(
     srcs = glob(["src/**/*.md"]) + [
         ":black",
         ":global_venv",
+        ":isort",
         ":venv",
         ":wheel",
     ],
     book = "book.toml",
+    # Windows builds are typically super slow in CI so they're avoided.
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
 )
 
 alias(

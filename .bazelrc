@@ -40,8 +40,14 @@ build --incompatible_autoload_externally=
 build:black --aspects=//python/black:defs.bzl%py_black_aspect
 build:black --output_groups=+py_black_checks
 
+# Enable isort for all targets in the workspace
+build:isort --aspects=//python/isort:defs.bzl%py_isort_aspect
+build:isort --output_groups=+py_isort_checks
+build --//python/isort:config=//:.isort.cfg
+
 # Define a config that enables all linter aspects.
 build:strict --config=black
+build:strict --config=isort
 
 ###############################################################################
 ## Custom user flags
