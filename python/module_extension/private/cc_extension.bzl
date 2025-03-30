@@ -50,29 +50,67 @@ def _get_imports(ctx, imports):
 
     return depset(result)
 
-def _py_cc_extension_library_impl(ctx):
-    files = []
+def target_platform_has_any_constraint(ctx, constraints):
+    """Check if target platform has any of a list of constraints.
 
-    extension = ctx.executable.extension
+    Args:
+        ctx: rule context.
+        constraints: label_list of constraints.
+
+    Returns:
+        True if target platform has at least one of the constraints.
+    """
+    for constraint in constraints:
+        constraint_value = constraint[platform_common.ConstraintValueInfo]
+        if ctx.target_platform_has_constraint(constraint_value):
+            return True
+    return False
+
+def _extension_name(*, ctx, name, linux_abi, extension, py_toolchain):
     is_windows = extension.basename.endswith(".dll")
     is_macos = extension.basename.endswith(".dylib")
+    is_aarch64 = target_platform_has_any_constraint(ctx, [ctx.attr._cpu_aarch64])
 
-    py_toolchain = ctx.toolchains["//python:toolchain_type"]
     py_runtime = py_toolchain.py3_runtime
-
     pyc_tag = py_runtime.pyc_tag
+    extension = "so"
+
     if is_windows:
+        extension = "pyd"
+        platform = "win_amd64"
         pyc_tag = "cp{major}{minor}".format(
             major = py_runtime.interpreter_version_info.major,
             minor = py_runtime.interpreter_version_info.minor,
         )
+    elif is_macos:
+        platform = "darwin"
+    else:
+        platform = "{cpu}-linux-{abi}".format(
+            cpu = "aarch64" if is_aarch64 else "x86_64",
+            abi = linux_abi,
+        ).rstrip("-")
 
     extension_template = "{module}.{pyc_tag}-{platform}.{ext}"
-    ext = ctx.actions.declare_file(extension_template.format(
+    extension_name = extension_template.format(
         module = ctx.label.name,
         pyc_tag = pyc_tag,
-        platform = "darwin" if is_macos else ("win_amd64" if is_windows else "linux"),
-        ext = "pyd" if is_windows else "so",
+        platform = platform,
+        ext = extension,
+    )
+
+    return extension_name
+
+def _py_cc_extension_library_impl(ctx):
+    files = []
+
+    extension = ctx.executable.extension
+    py_toolchain = ctx.toolchains["//python:toolchain_type"]
+    ext = ctx.actions.declare_file(_extension_name(
+        ctx = ctx,
+        linux_abi = ctx.attr.abi,
+        name = ctx.label.name,
+        extension = extension,
+        py_toolchain = py_toolchain,
     ))
 
     ctx.actions.symlink(
@@ -111,6 +149,9 @@ py_cc_extension_library = rule(
     implementation = _py_cc_extension_library_impl,
     cfg = _compilation_mode_transition,
     attrs = {
+        "abi": attr.string(
+            doc = "An optional abi value for the output library name.",
+        ),
         "compilation_mode": attr.string(
             doc = (
                 "Specify the mode `extension` will be built in. For details see " +
@@ -134,9 +175,17 @@ py_cc_extension_library = rule(
         "imports": attr.string_list(
             doc = "List of import directories to be added to the `PYTHONPATH`.",
         ),
+        "_cpu_aarch64": attr.label(
+            default = Label("@platforms//cpu:aarch64"),
+        ),
     },
     toolchains = ["//python:toolchain_type"],
 )
+
+_LINUX_ABI = select({
+    "@platforms//os:linux": "gnu",
+    "//conditions:default": "",
+})
 
 def py_cc_extension(
         *,
@@ -155,6 +204,7 @@ def py_cc_extension(
         local_defines = None,
         malloc = None,
         compilation_mode = "opt",
+        abi = _LINUX_ABI,
         **kwargs):
     """Define a Python C extension module.
 
@@ -191,6 +241,7 @@ def py_cc_extension(
             For more details see [cc_binary.malloc](https://bazel.build/reference/be/c-cpp#cc_binary.malloc)
         compilation_mode (str, optional): The [compilation_mode](https://bazel.build/reference/command-line-reference#flag--compilation_mode)
             value to build the extension for. If set to `"current"`, the current configuration will be used.
+        abi (str, optional): The ABI value to use for the output library name.
         **kwargs (dict): Additional keyword arguments for common definition attributes.
     """
     tags = kwargs.pop("tags", [])
@@ -222,6 +273,7 @@ def py_cc_extension(
     py_cc_extension_library(
         name = name,
         extension = name + "_shared",
+        abi = abi,
         compilation_mode = compilation_mode,
         imports = imports,
         tags = tags,
