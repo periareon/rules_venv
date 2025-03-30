@@ -6,7 +6,7 @@
 ##
 ## To regenerate this file, use the following command:
 ##
-##    bazel run "@@//python/3rdparty:requirements.linux.update"
+##    bazel run "@@//python/3rdparty:requirements.linux_x86_64.update"
 ##
 ################################################################################
 
@@ -198,10 +198,10 @@ rfc3986==2.0.0 \
     --hash=sha256:50b1502b60e289cb37883f3dfd34532b8873c7de9f49bb546641ce9cbd256ebd
     # via twine (>=1.4.0)
     # https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl#sha256=50b1502b60e289cb37883f3dfd34532b8873c7de9f49bb546641ce9cbd256ebd
-rich==13.9.4 \
-    --hash=sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90
+rich==14.0.0 \
+    --hash=sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0
     # via twine (>=12.0.0)
-    # https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl#sha256=6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90
+    # https://files.pythonhosted.org/packages/0d/9b/63f4c7ebc259242c89b3acafdb37b41d1185c07ff0011164674e9076b491/rich-14.0.0-py3-none-any.whl#sha256=1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0
 SecretStorage==3.3.3 \
     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
     # via keyring (>=3.2)

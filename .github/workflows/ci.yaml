@@ -21,6 +21,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-20.04
+          - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
       # Checkout the code
@@ -57,6 +58,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-20.04
+          - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
       # Checkout the code
@@ -94,6 +96,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-20.04
+          - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
       - uses: actions/checkout@v4
@@ -124,13 +127,14 @@ jobs:
               exit 1
           }
 
-  ci-format:
+  ci-fixers:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: macos-latest
           - os: ubuntu-20.04
+          - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
       # Checkout the code
@@ -143,16 +147,43 @@ jobs:
 
       - name: Format (unix)
         run: |
-          bazel ${BAZEL_STARTUP_FLAGS[@]} run //:buildifier_check
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/black
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/isort
         if: startswith(runner.os, 'Windows') != true
       - name: Format (Windows)
         run: |
-          bazel $env:BAZEL_STARTUP_FLAGS run //:buildifier_check
           bazel $env:BAZEL_STARTUP_FLAGS run //python/black
           bazel $env:BAZEL_STARTUP_FLAGS run //python/isort
         if: startswith(runner.os, 'Windows')
+
+      - name: Git diff
+        shell: bash
+        run: |
+          git diff
+          if [[ -n "$(git status --porcelain)" ]]; then
+            exit 1
+          fi
+
+  ci-format:
+    runs-on: ubuntu-20.04
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - uses: DoozyX/clang-format-lint-action@v0.14
+        with:
+          source: '.'
+          extensions: 'h,c,cc'
+          clangFormatVersion: 14
+
+      - name: Format (unix)
+        run: |
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //:buildifier_check
 
       - name: Git diff
         shell: bash
@@ -176,7 +207,7 @@ jobs:
           python -m pip install --upgrade pip setuptools
       - name: Install dependencies
         run: |
-          python -c 'import pathlib; print("\n".join([r.strip(" \\") for r in pathlib.Path("python/3rdparty/requirements_linux.txt").read_text().splitlines() if "==" in r]))' > requirements.txt
+          python -c 'import pathlib; print("\n".join([r.strip(" \\") for r in pathlib.Path("python/3rdparty/requirements_linux_x86_64.txt").read_text().splitlines() if "==" in r]))' > requirements.txt
           python -m pip install -r requirements.txt --user
           rm requirements.txt
 

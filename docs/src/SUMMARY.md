@@ -8,4 +8,5 @@
     - [black](./black.md)
     - [global_venv](./global_venv.md)
     - [isort](./isort.md)
+    - [module_extension](./module_extension.md)
     - [wheel](./wheel.md)

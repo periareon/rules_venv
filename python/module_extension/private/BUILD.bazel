@@ -1,0 +1,19 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+# TODO: https://github.com/bazelbuild/rules_cc/issues/279
+bzl_library(
+    name = "rules_cc",
+    srcs = ["@rules_cc//cc:bzl_srcs"],
+    deps = ["@rules_cc//cc/common"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/module_extension:__pkg__"],
+    deps = [
+        ":rules_cc",
+        "//python:defs_bzl",
+        "@bazel_skylib//lib:paths",
+    ],
+)
