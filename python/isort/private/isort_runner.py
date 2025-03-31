@@ -166,8 +166,9 @@ def generate_config_with_projects(
     raise ValueError(f"Unexpected isort config file '{existing}'.")
 
 
-def _no_realpath(path, **_kwargs):  # type: ignore
-    """Redirect realpath, with any keyword args, to abspath."""
+def _no_realpath(path, **kwargs):  # type: ignore
+    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+    del kwargs
     return os.path.abspath(path)
 
 

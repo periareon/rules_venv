@@ -14,8 +14,9 @@ from pylint import run_pylint
 from python.runfiles import Runfiles  # type: ignore
 
 
-def _no_realpath(path, **_kwargs):  # type: ignore
-    """Redirect realpath, with any keyword args, to abspath."""
+def _no_realpath(path, **kwargs):  # type: ignore
+    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+    del kwargs
     return os.path.abspath(path)
 
 
@@ -161,6 +162,9 @@ def main() -> None:
             "--rcfile",
             str(args.rcfile),
         ] + [str(src) for src in args.sources]
+
+        if "RULES_VENV_PYLINT_DEBUG" in os.environ:
+            pylint_args.append("--verbose")
 
         with determinisim_patch():
             run_pylint(pylint_args)

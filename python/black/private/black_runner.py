@@ -15,8 +15,9 @@ import black
 from python.runfiles import Runfiles  # type: ignore
 
 
-def _no_realpath(path, **_kwargs):  # type: ignore
-    """Redirect realpath, with any keyword args, to abspath."""
+def _no_realpath(path, **kwargs):  # type: ignore
+    """Avoid resolving symlinks and instead, simply convert paths to absolute."""
+    del kwargs
     return os.path.abspath(path)
 
 

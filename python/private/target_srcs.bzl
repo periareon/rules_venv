@@ -12,47 +12,47 @@ PySourcesInfo = provider(
 )
 
 def find_srcs(target, aspect_ctx = None):
-    """Parse a target for it's sources to run on.
+    """Find all lintable source files for a given target.
+
+    Note that generated files are ignored.
 
     Args:
-        target (Target): The target the aspect is running on.
-        aspect_ctx (ctx, optional): The aspect's context object.
+        target (Target): The target to collect from.
+        aspect_ctx (ctx, optional): The context object for an aspect if called within one.
 
     Returns:
-        depset[File]: A depset of sources.
+        depset[File]: A depset of lintable source files.
     """
     if PyInfo not in target:
         return depset()
 
-    # Ignore external targets
+    # Ignore any external targets
     if target.label.workspace_root.startswith("external"):
         return depset()
 
-    # Sources are located differently based on whether or not
-    # there's an aspect context object.
     if aspect_ctx:
-        # Get a list of all non-generated source files.
+        # If running in an aspect, we can directly check attributes
         srcs = depset([
             src
             for src in getattr(aspect_ctx.rule.files, "srcs", [])
             if src.is_source
         ])
 
-    elif PySourcesInfo not in target:
-        srcs = depset()
-    else:
+    elif PySourcesInfo in target:
+        # Use previous results of the `target_sources_aspect`.
         srcs = target[PySourcesInfo].srcs
+    else:
+        # No sources can be found.
+        srcs = depset()
 
     return srcs
 
 def _get_imports(target, aspect_ctx):
-    """Gets the imports from a rule's `imports` attribute.
-
-    See create_binary_semantics_struct for details about this function.
+    """Get all usable import paths for a given target.
 
     Args:
-        target (Target): The target the aspect is running on.
-        aspect_ctx (ctx): The aspect's context object.
+        target (Target): The target to collect from.
+        aspect_ctx (ctx, optional): The context object for an aspect if called within one.
 
     Returns:
         List of strings.
@@ -60,6 +60,8 @@ def _get_imports(target, aspect_ctx):
     workspace_name = target.label.workspace_name
     if not workspace_name:
         workspace_name = aspect_ctx.workspace_name
+    if not workspace_name:
+        workspace_name = "_main"
 
     prefix = "{}/{}".format(
         workspace_name,
@@ -71,11 +73,10 @@ def _get_imports(target, aspect_ctx):
         if import_str.startswith("/"):
             continue
 
-        # To prevent "escaping" out of the runfiles tree, we normalize
-        # the path and ensure it doesn't have up-level references.
+        # Relative paths are all normalized to help prevent sandbox escapes.
         import_path = paths.normalize("{}/{}".format(prefix, import_str))
         if import_path.startswith("../") or import_path == "..":
-            fail("Path '{}' references a path above the execution root".format(
+            fail("Import paths cannot refer to paths outside the execution root: `{}`".format(
                 import_str,
             ))
         result.append(import_path)
@@ -85,8 +86,7 @@ def _get_imports(target, aspect_ctx):
 def _target_sources_impl(target, ctx):
     srcs = find_srcs(target, aspect_ctx = ctx)
 
-    # Only collect imports for the current workspace to indicate which paths
-    # are known first party packages.
+    # Targets from external workspaces are ignored and given empty results.
     workspace_name = target.label.workspace_name
     if workspace_name and workspace_name != ctx.workspace_name:
         return [PySourcesInfo(
