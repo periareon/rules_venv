@@ -155,6 +155,15 @@ def query_imports(
     return imports
 
 
+def pathify(label: str) -> str:
+    """Converts `//foo:bar` into `foo/bar`."""
+    if label.startswith("@"):
+        raise ValueError("External labels are unsupported", label)
+    if label.startswith("//:"):
+        return label[3:]
+    return label.replace(":", "/").replace("//", "")
+
+
 def run_isort(
     targets: List[str],
     settings_path: Path,
@@ -173,7 +182,7 @@ def run_isort(
         return
 
     # Convert the targets to source paths
-    sources = [target.replace(":", "/").replace("//", "") for target in targets]
+    sources = [pathify(target) for target in targets]
 
     isort_args = ["--settings-path", str(settings_path)]
 

@@ -87,11 +87,13 @@ mdbook(
 alias(
     name = "docs",
     actual = ":book",
+    tags = ["manual"],
 )
 
 mdbook_server(
     name = "server",
     book = ":book",
+    tags = ["manual"],
 )
 
 sh_binary(
@@ -99,4 +101,5 @@ sh_binary(
     srcs = ["publish_book.sh"],
     data = [":book"],
     env = {"BOOK_DIR": "$(rootpath :book)"},
+    tags = ["manual"],
 )
