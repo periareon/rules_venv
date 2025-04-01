@@ -66,10 +66,18 @@ def target_platform_has_any_constraint(ctx, constraints):
             return True
     return False
 
-def _extension_name(*, ctx, name, linux_abi, extension, py_toolchain):
+def _linux_cpu(ctx):
+    if target_platform_has_any_constraint(ctx, [ctx.attr._cpu_aarch64]):
+        return "aarch64"
+
+    if target_platform_has_any_constraint(ctx, [ctx.attr._cpu_armv7]):
+        return "armv7l"
+
+    return "x86_64"
+
+def _extension_name(*, name, linux_cpu, linux_abi, extension, py_toolchain):
     is_windows = extension.basename.endswith(".dll")
     is_macos = extension.basename.endswith(".dylib")
-    is_aarch64 = target_platform_has_any_constraint(ctx, [ctx.attr._cpu_aarch64])
 
     py_runtime = py_toolchain.py3_runtime
     pyc_tag = py_runtime.pyc_tag
@@ -86,13 +94,13 @@ def _extension_name(*, ctx, name, linux_abi, extension, py_toolchain):
         platform = "darwin"
     else:
         platform = "{cpu}-linux-{abi}".format(
-            cpu = "aarch64" if is_aarch64 else "x86_64",
+            cpu = linux_cpu,
             abi = linux_abi,
         ).rstrip("-")
 
     extension_template = "{module}.{pyc_tag}-{platform}.{ext}"
     extension_name = extension_template.format(
-        module = ctx.label.name,
+        module = name,
         pyc_tag = pyc_tag,
         platform = platform,
         ext = extension,
@@ -106,7 +114,7 @@ def _py_cc_extension_library_impl(ctx):
     extension = ctx.executable.extension
     py_toolchain = ctx.toolchains["//python:toolchain_type"]
     ext = ctx.actions.declare_file(_extension_name(
-        ctx = ctx,
+        linux_cpu = _linux_cpu(ctx),
         linux_abi = ctx.attr.abi,
         name = ctx.label.name,
         extension = extension,
@@ -177,6 +185,9 @@ py_cc_extension_library = rule(
         ),
         "_cpu_aarch64": attr.label(
             default = Label("@platforms//cpu:aarch64"),
+        ),
+        "_cpu_armv7": attr.label(
+            default = Label("@platforms//cpu:armv7"),
         ),
     },
     toolchains = ["//python:toolchain_type"],
