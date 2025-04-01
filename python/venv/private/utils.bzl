@@ -1,7 +1,7 @@
 """Venv utilities"""
 
 def _venv_entrypoint_impl(ctx):
-    py_toolchain = ctx.toolchains["@rules_python//python:toolchain_type"]
+    py_toolchain = ctx.attr._py_toolchain_exec[platform_common.ToolchainInfo]
     py_runtime = py_toolchain.py3_runtime
     interpreter = None
     if py_runtime.interpreter:
@@ -79,9 +79,13 @@ venv_entrypoint = rule(
             allow_single_file = True,
             default = Label("//python/venv/private:venv_entrypoint_maker.py"),
         ),
+        "_py_toolchain_exec": attr.label(
+            cfg = "exec",
+            default = Label("@rules_python//python:current_py_toolchain"),
+            providers = [platform_common.ToolchainInfo],
+        ),
     },
     toolchains = [
-        str(Label("@rules_python//python:toolchain_type")),
         config_common.toolchain_type("@bazel_tools//tools/sh:toolchain_type", mandatory = False),
     ],
     executable = True,
