@@ -463,9 +463,7 @@ provide Bazel rules for popular python tools.</p>
 <h1 id="black"><a class="header" href="#black">Black</a></h1>
 <p>Bazel rules for the Python formatter <a href="https://black.readthedocs.io/en/stable/index.html">black</a>.</p>
 <h3 id="setup-1"><a class="header" href="#setup-1">Setup</a></h3>
-<p>Add <code>rules_venv</code> to your <code>MODULE.bazel</code> file</p>
-<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
 <p>Next, the <code>black</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>black</code>)
 for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
 <a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
@@ -572,9 +570,7 @@ py_global_venv_aspect()
 <h1 id="isort"><a class="header" href="#isort">isort</a></h1>
 <p>Bazel rules for the Python formatter <a href="https://pycqa.github.io/isort/">isort</a>.</p>
 <h3 id="setup-2"><a class="header" href="#setup-2">Setup</a></h3>
-<p>Add <code>rules_venv</code> to your <code>MODULE.bazel</code> file</p>
-<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
 <p>Next, the <code>rules_venv</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>isort</code>)
 for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
 <a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
@@ -710,6 +706,92 @@ py_cc_extension(*, <a href="module_extension.html#py_cc_extension-name">name</a>
 <tr><td style="text-align: left"><a id="py_cc_extension-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for common definition attributes.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="pylint"><a class="header" href="#pylint">Pylint</a></h1>
+<p>Bazel rules for the Python linter <a href="https://pylint.pycqa.org/en/latest/">Pylint</a>.</p>
+<h3 id="setup-3"><a class="header" href="#setup-3">Setup</a></h3>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
+<p>Next, the <code>pylint</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>pylint</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="pylint.html#py_pylint_toolchain">py_pylint_toolchain</a> will need to be configured:</p>
+<pre><code class="language-python">load("@rules_venv//python/pylint:defs.bzl", "py_pylint_toolchain")
+
+py_pylint_toolchain(
+    name = "toolchain_impl",
+    pylint = "@pip_deps//:pylint",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/pylint:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/pylint:toolchain")
+</code></pre>
+<p>From here, <a href="pylint.html#py_pylint_test">py_pylint_test</a> and the <a href="pylint.html#py_pylint_aspect">py_pylint_aspect</a>
+should now be usable. Both of these rules use a global flag to determine which pylint configuration
+file to use with in actions. The following snippet can be added to the <code>.bazelrc</code> file to chose the
+desired configuration file</p>
+<pre><code class="language-text">build --@rules_pylint//python/pylint:config=//:.pylintrc.toml
+</code></pre>
+<p>Note that these files will need to be available via <a href="https://bazel.build/reference/be/functions#exports_files">exports_files</a></p>
+<h2 id="rules-3"><a class="header" href="#rules-3">Rules</a></h2>
+<ul>
+<li><a href="pylint.html#py_pylint_test">py_pylint_test</a></li>
+<li><a href="pylint.html#py_pylint_toolchain">py_pylint_toolchain</a></li>
+</ul>
+<h2 id="aspects-3"><a class="header" href="#aspects-3">Aspects</a></h2>
+<ul>
+<li><a href="pylint.html#py_pylint_aspect">py_pylint_aspect</a></li>
+</ul>
+<p><a id="py_pylint_test"></a></p>
+<h2 id="py_pylint_test"><a class="header" href="#py_pylint_test">py_pylint_test</a></h2>
+<pre>
+load("@rules_venv//python/pylint:defs.bzl", "py_pylint_test")
+
+py_pylint_test(<a href="pylint.html#py_pylint_test-name">name</a>, <a href="pylint.html#py_pylint_test-config">config</a>, <a href="pylint.html#py_pylint_test-target">target</a>)
+</pre>
+<p>A rule for running pylint on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_pylint_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_pylint_test-config"></a>config</td><td style="text-align: left">The config file (pylintrc) containing pylint settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/pylint:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pylint_test-target"></a>target</td><td style="text-align: left">The target to run <code>pylint</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_pylint_toolchain"></a></p>
+<h2 id="py_pylint_toolchain"><a class="header" href="#py_pylint_toolchain">py_pylint_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/pylint:defs.bzl", "py_pylint_toolchain")
+
+py_pylint_toolchain(<a href="pylint.html#py_pylint_toolchain-name">name</a>, <a href="pylint.html#py_pylint_toolchain-pylint">pylint</a>)
+</pre>
+<p>A toolchain for the <a href="https://pylint.readthedocs.io/en/stable/">pylint</a> formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_pylint_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_pylint_toolchain-pylint"></a>pylint</td><td style="text-align: left">The pylint <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_pylint_aspect"></a></p>
+<h2 id="py_pylint_aspect"><a class="header" href="#py_pylint_aspect">py_pylint_aspect</a></h2>
+<pre>
+load("@rules_venv//python/pylint:defs.bzl", "py_pylint_aspect")
+
+py_pylint_aspect()
+</pre>
+<p>An aspect for running pylint on targets with Python sources.</p>
+<p>This aspect can be configured by adding the following snippet to a workspace's <code>.bazelrc</code> file:</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/pylint:defs.bzl%py_pylint_aspect
+build --output_groups=+py_pylint_checks
+</code></pre>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
 <p>A framework for defining <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/">wheels</a> from a tree of Bazel targets.</p>
 <h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
@@ -718,7 +800,7 @@ py_cc_extension(*, <a href="module_extension.html#py_cc_extension-name">name</a>
 <li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
 <li>Sources and data are automatically collected.</li>
 </ol>
-<h2 id="setup-3"><a class="header" href="#setup-3">Setup</a></h2>
+<h2 id="setup-4"><a class="header" href="#setup-4">Setup</a></h2>
 <p>Building wheels requires no setup, however, to activate all features of
 the wheel rules, a toolchain must be registered.</p>
 <p>First some external python requirements will be required. There is guidance on
@@ -749,7 +831,7 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
-<h2 id="rules-3"><a class="header" href="#rules-3">Rules</a></h2>
+<h2 id="rules-4"><a class="header" href="#rules-4">Rules</a></h2>
 <ul>
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>

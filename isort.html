@@ -159,9 +159,7 @@
 <h1 id="isort"><a class="header" href="#isort">isort</a></h1>
 <p>Bazel rules for the Python formatter <a href="https://pycqa.github.io/isort/">isort</a>.</p>
 <h3 id="setup"><a class="header" href="#setup">Setup</a></h3>
-<p>Add <code>rules_venv</code> to your <code>MODULE.bazel</code> file</p>
-<pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
 <p>Next, the <code>rules_venv</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>isort</code>)
 for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
 <a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
