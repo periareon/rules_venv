@@ -1,0 +1,51 @@
+load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_test", "py_venv_zipapp")
+load("//python/venv/private/tests/zipapp:python_zip_file_consumer.bzl", "python_zip_file_consumer")
+
+py_venv_binary(
+    name = "from_binary",
+    srcs = ["greeting.py"],
+    env = {"EMBEDDED_ENV_NAME": "From Binary"},
+    main = "greeting.py",
+)
+
+py_venv_zipapp(
+    name = "from_binary.pyz",
+    binary = ":from_binary",
+    inherit_env = True,
+)
+
+python_zip_file_consumer(
+    name = "from_binary_output",
+    zip_file = ":from_binary.pyz",
+)
+
+py_venv_binary(
+    name = "from_zipapp",
+    srcs = ["greeting.py"],
+    main = "greeting.py",
+)
+
+py_venv_zipapp(
+    name = "from_zipapp.pyz",
+    binary = ":from_zipapp",
+    env = {"EMBEDDED_ENV_NAME": "From Zipapp"},
+)
+
+python_zip_file_consumer(
+    name = "from_zipapp_output",
+    zip_file = ":from_zipapp.pyz",
+)
+
+py_venv_test(
+    name = "embedded_env_test",
+    srcs = ["embedded_env_test.py"],
+    data = [
+        ":from_binary_output",
+        ":from_zipapp_output",
+    ],
+    env = {
+        "FROM_BINARY": "$(rlocationpath :from_binary_output)",
+        "FROM_ZIPAPP": "$(rlocationpath :from_zipapp_output)",
+    },
+    deps = ["//python/runfiles"],
+)

@@ -9,7 +9,6 @@ load(
     _py_venv_binary = "py_venv_binary",
     _py_venv_library = "py_venv_library",
     _py_venv_test = "py_venv_test",
-    _py_venv_zipapp = "py_venv_zipapp",
 )
 load(
     "//python/venv/private:venv_common.bzl",
@@ -18,6 +17,10 @@ load(
 load(
     "//python/venv/private:venv_toolchain.bzl",
     _py_venv_toolchain = "py_venv_toolchain",
+)
+load(
+    "//python/venv/private:venv_zipapp.bzl",
+    _py_venv_zipapp = "py_venv_zipapp",
 )
 
 py_venv_binary = _py_venv_binary

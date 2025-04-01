@@ -391,7 +391,7 @@ def _get_py_venv_toolchain(ctx, *, cfg = "target"):
             ))
         toolchain = ctx.attr._py_venv_toolchain[platform_common.ToolchainInfo]
         return toolchain
-    fail("Unepxected configuration for {}: `cfg = {}`".format(
+    fail("Unexpected configuration for {}: `cfg = {}`".format(
         ctx.label,
         cfg,
     ))
@@ -402,9 +402,12 @@ def create_python_zip_file(
         venv_toolchain,
         py_info,
         main,
+        inject_args,
+        inject_env,
         runfiles,
         files_to_run,
         py_toolchain = None,
+        py_toolchain_exec = None,
         shebang = None):
     """Create a zipapp.
 
@@ -413,16 +416,23 @@ def create_python_zip_file(
         venv_toolchain (ToolchainInfo): A `py_venv_toolchain` toolchain.
         py_info (PyInfo): The `PyInfo` provider for the current target.
         main (File): The main python entrypoint.
+        inject_args (list): A list of arguments to inject to the beginning of all zipapp invocations.
+        inject_env (dict): A map of arguments to inject to the beginning of all zipapp invocations.
         runfiles (Runfiles): Runfiles associated with the executable.
         files_to_run (FilesToRunProvider): Files to run associated with the executable.
         py_toolchain (ToolchainInfo, optional): A `py_toolchain` toolchain. If one is not
             provided one will be acquired via `py_venv_toolchain`.
+        py_toolchain_exec (ToolchainInfo, optional): A `py_toolchain` toolchain for the execution
+            platform. If one is not provided one will be acquired via `py_venv_toolchain`.
         shebang (str, optional): Optional shebang contents to include, overriding the toolchain.
     Returns:
         File: The generated zip file.
     """
     if py_toolchain == None:
         py_toolchain = venv_toolchain.py_toolchain
+
+    if py_toolchain_exec == None:
+        py_toolchain_exec = venv_toolchain.py_toolchain_exec
 
     py_runtime = py_toolchain.py3_runtime
     interpreter = None
@@ -469,13 +479,26 @@ def create_python_zip_file(
     args.add("--output", python_zip_file)
     args.add("--venv_config_info", json.encode(venv_config_info))
     args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
+    args.add("--inject_args", json.encode(inject_args))
+    args.add("--inject_env", json.encode(inject_env))
+
+    py_runtime_exec = py_toolchain_exec.py3_runtime
+    interpreter_exec = None
+    if py_runtime_exec.interpreter:
+        interpreter_exec = py_runtime_exec.interpreter
+
+    if not interpreter_exec:
+        fail("Unable to locate interpreter (exec) from py_toolchain: {}".format(py_toolchain_exec))
 
     ctx.actions.run(
         mnemonic = "PyVenvZipapp",
-        executable = interpreter,
+        executable = interpreter_exec,
         arguments = [python_args, args],
         outputs = [python_zip_file],
-        inputs = venv_runfiles,
+        inputs = depset(transitive = [
+            venv_runfiles,
+            py_runtime_exec.files,
+        ]),
         tools = [venv_toolchain.zipapp_maker],
         env = ctx.configuration.default_shell_env,
         resource_set = _zip_resource_set,

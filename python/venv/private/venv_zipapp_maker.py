@@ -11,7 +11,7 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Mapping
 
 RlocationPath = str
 
@@ -67,6 +67,18 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="The rules_venv binary process wrapper.",
     )
     parser.add_argument(
+        "--inject_args",
+        type=json.loads,
+        required=True,
+        help="Json encoded arguments to inject into the zipapp.",
+    )
+    parser.add_argument(
+        "--inject_env",
+        type=json.loads,
+        required=True,
+        help="Json encoded environment variables to inject into the zipapp.",
+    )
+    parser.add_argument(
         "--shebang",
         type=str,
         help="The shebang to use for the python entrypoint",
@@ -114,6 +126,8 @@ def write_entrypoint(
     venv_process_wrapper: RlocationPath,
     venv_config: RlocationPath,
     main_bin: RlocationPath,
+    args: Sequence[str],
+    env: Mapping[str, str],
     zipapp_dir: Path,
 ) -> None:
     """Generate the zipapp entrypoint
@@ -124,6 +138,8 @@ def write_entrypoint(
         venv_process_wrapper: The venv process wrapper
         venv_config: The venv config file
         main_bin: The main entrypoint.
+        args: Arguments to inject before all command line args of the zipapp.
+        env: Environment variables to set for all invocations of the zipapp.
         zipapp_dir: The directory in which to write outputs.
     """
     content = template.read_text(encoding="utf-8")
@@ -133,6 +149,8 @@ def write_entrypoint(
     )
     content = content.replace('VENV_CONFIG = ""', f'VENV_CONFIG = "{venv_config}"')
     content = content.replace('MAIN = ""', f'MAIN = "{main_bin}"')
+    content = content.replace("ARGS: List[str] = []", f"ARGS: List[str] = {args}")
+    content = content.replace("ENV: Mapping[str, str] = {}", f"ENV: Mapping[str, str] = {env}")
 
     # The existence of this file will force the zipapp to use this as the
     # main entrypoint.
@@ -234,6 +252,8 @@ def main() -> None:
             venv_process_wrapper=args.venv_process_wrapper,
             venv_config=config_file,
             main_bin=args.main,
+            args=args.inject_args,
+            env=args.inject_env,
             zipapp_dir=runfiles_dir,
         )
 

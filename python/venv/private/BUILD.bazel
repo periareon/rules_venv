@@ -3,7 +3,6 @@ load(":runfiles_enabled.bzl", "runfiles_enabled_build_setting")
 load(":utils.bzl", "venv_entrypoint")
 
 exports_files([
-    "global_venv.py",
     "venv_process_wrapper.py",
     "venv_runfiles.py",
     "venv_zipapp_maker.py",

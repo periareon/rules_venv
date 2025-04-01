@@ -7,12 +7,14 @@ def _py_venv_toolchain_impl(ctx):
     all_files.append(ctx.attr._entrypoint[DefaultInfo].default_runfiles.files)
 
     py_toolchain = ctx.toolchains[Label("@rules_python//python:toolchain_type")]
+    py_toolchain_exec = ctx.attr._py_toolchain_exec[platform_common.ToolchainInfo]
 
     return [platform_common.ToolchainInfo(
         all_files = depset(transitive = all_files),
         entrypoint = ctx.file._entrypoint,
         process_wrapper = ctx.file._process_wrapper,
         py_toolchain = py_toolchain,
+        py_toolchain_exec = py_toolchain_exec,
         runfiles_enabled = is_runfiles_enabled(ctx.attr),
         runfiles_maker = ctx.file._runfiles_maker,
         zipapp_shebang = ctx.attr.zipapp_shebang,
@@ -36,6 +38,11 @@ py_venv_toolchain = rule(
             cfg = "target",
             allow_single_file = True,
             default = Label("//python/venv/private:venv_process_wrapper.py"),
+        ),
+        "_py_toolchain_exec": attr.label(
+            cfg = "exec",
+            default = Label("@rules_python//python:current_py_toolchain"),
+            providers = [platform_common.ToolchainInfo],
         ),
         "_runfiles_maker": attr.label(
             cfg = "target",
