@@ -7,22 +7,21 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
-# isort: off
-
 
 class ActionTest(unittest.TestCase):
     """Test cases to confirm the python environment is setup correctly for actions."""
 
     def test_greetings(self) -> None:
         """Test that an aspect target's python libraries are importable."""
-        # pylint: disable-next=import-outside-toplevel,no-name-in-module
-        from python.venv.private.tests.common_api.aspect_dep.greeting import (  # type: ignore
-            greeting as aspect_greeting,
-        )
-
-        # pylint: disable-next=import-outside-toplevel,no-name-in-module
+        # isort: off
+        # pylint: disable-next=import-error,import-outside-toplevel,no-name-in-module
         from python.venv.private.tests.common_api.user_dep.greeting import (  # type: ignore
             greeting as user_greeting,
+        )
+
+        # pylint: disable-next=import-error,import-outside-toplevel,no-name-in-module
+        from python.venv.private.tests.common_api.aspect_dep.greeting import (  # type: ignore
+            greeting as aspect_greeting,
         )
 
         self.assertEqual(aspect_greeting("World"), user_greeting("World"))

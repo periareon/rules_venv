@@ -45,9 +45,15 @@ build:isort --aspects=//python/isort:defs.bzl%py_isort_aspect
 build:isort --output_groups=+py_isort_checks
 build --//python/isort:config=//:.isort.cfg
 
+# Enable pylint for all targets in the workspace
+build:pylint --aspects=//python/pylint:defs.bzl%py_pylint_aspect
+build:pylint --output_groups=+py_pylint_checks
+build --//python/pylint:config=//:.pylintrc.toml
+
 # Define a config that enables all linter aspects.
 build:strict --config=black
 build:strict --config=isort
+build:strict --config=pylint
 
 ###############################################################################
 ## Custom user flags

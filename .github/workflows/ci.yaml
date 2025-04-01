@@ -214,6 +214,3 @@ jobs:
       - name: Run mypy
         run: |
           python -m mypy python
-      - name: Run pylint
-        run: |
-          PYTHONPATH="$(pwd)" python -m pylint python

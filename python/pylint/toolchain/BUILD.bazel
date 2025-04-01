@@ -1,0 +1,13 @@
+load("//python/pylint:defs.bzl", "py_pylint_toolchain")
+
+py_pylint_toolchain(
+    name = "py_pylint_toolchain",
+    pylint = "@pip_deps//:pylint",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_pylint_toolchain",
+    toolchain_type = "//python/pylint:toolchain_type",
+    visibility = ["//visibility:public"],
+)

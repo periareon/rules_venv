@@ -1,0 +1,38 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_library")
+load("//python/pylint:defs.bzl", "py_pylint_test")
+
+write_file(
+    name = "generated",
+    out = "generated/__init__.py",
+    content = """\
+\"\"\"A module for generating greeting messages.\"\"\"
+
+
+def greeting(name: str) -> str:
+    \"\"\"Generate a greeting message.
+
+    Args:
+        name: The name of the entity to greet.
+
+    Returns:
+        The greeting.
+    \"\"\"
+    return f"Hello, {name}"
+
+""".splitlines(),
+    newline = "unix",
+)
+
+py_library(
+    name = "generated_inputs",
+    srcs = [
+        "generated/__init__.py",
+        "source.py",
+    ],
+)
+
+py_pylint_test(
+    name = "generated_inputs_pylint_test",
+    target = ":generated_inputs",
+)

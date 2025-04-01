@@ -1,17 +1,16 @@
-"""A script for running black within Bazel."""
+"""A script for running pylint within Bazel."""
 
 import argparse
 import contextlib
+import io
 import os
-import platform
 import shutil
 import sys
 import tempfile
-from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Generator, Optional, Sequence
 
-import black
+from pylint import run_pylint
 from python.runfiles import Runfiles  # type: ignore
 
 
@@ -22,7 +21,7 @@ def _no_realpath(path, **kwargs):  # type: ignore
 
 
 @contextlib.contextmanager
-def determinism_patch() -> Generator[None, None, None]:
+def determinisim_patch() -> Generator[None, None, None]:
     """A context manager for applying deterministic behavior to the python stdlib."""
 
     # Avoid sandbox escapes
@@ -45,11 +44,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     Returns:
         The requested runifle.
     """
-    # TODO: https://github.com/periareon/rules_venv/issues/37
-    source_repo = None
-    if platform.system() == "Windows":
-        source_repo = ""
-    runfile = runfiles.Rlocation(rlocationpath, source_repo)
+    runfile = runfiles.Rlocation(rlocationpath, source_repo=os.getenv("TEST_WORKSPACE"))
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
     path = Path(runfile)
@@ -75,18 +70,18 @@ def _maybe_runfile(arg: str) -> Path:
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser("Black Runner")
+    parser = argparse.ArgumentParser("Pylint Runner")
 
     parser.add_argument(
-        "--config",
+        "--rcfile",
         required=True,
         type=_maybe_runfile,
-        help="The configuration file (`pyproject.toml`).",
+        help="The configuration file (`pylintrc.toml`).",
     )
     parser.add_argument(
         "--marker",
         type=_maybe_runfile,
-        help="The file to create as an indication that the 'PyBlack' action succeeded.",
+        help="The file to create as an indication that the 'PyPylint' action succeeded.",
     )
     parser.add_argument(
         "--src",
@@ -94,7 +89,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         action="append",
         type=_maybe_runfile,
         required=True,
-        help="A source file to run black on.",
+        help="A source file to run pylint on.",
     )
 
     parsed_args = parser.parse_args(args)
@@ -107,67 +102,96 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def _load_args() -> Sequence[str]:
     """Load command line arguments from the environment."""
-    if "BAZEL_TEST" in os.environ and "PY_BLACK_RUNNER_ARGS_FILE" in os.environ:
+    if "BAZEL_TEST" in os.environ and "PY_PYLINT_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
             raise EnvironmentError("Failed to locate runfiles")
-        arg_file = _rlocation(runfiles, os.environ["PY_BLACK_RUNNER_ARGS_FILE"])
+        arg_file = _rlocation(runfiles, os.environ["PY_PYLINT_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
     return sys.argv[1:]
+
+
+def _report_logs(log_dir: Path) -> None:
+    """Print additional logs such as pytest crash logs to stderr."""
+    logs = []
+    for entry in log_dir.iterdir():
+        if not entry.is_file():
+            continue
+
+        if not entry.name.startswith("pylint-crash"):
+            continue
+
+        logs.append(entry)
+
+    if not logs:
+        return
+
+    delimiter = "-" * 80
+    print(delimiter, file=sys.stdout)
+    print("rules_pylint: Reporting additional log files", file=sys.stdout)
+    print(delimiter, file=sys.stdout)
+    for entry in logs:
+        print(delimiter, file=sys.stdout)
+        print(f"Log file: {entry}", file=sys.stdout)
+        print(delimiter, file=sys.stdout)
+        print(entry.read_text(encoding="utf-8"), file=sys.stdout)
+        print(delimiter, file=sys.stdout)
 
 
 def main() -> None:
     """The main entrypoint."""
     args = parse_args(_load_args())
 
-    black_args = [
-        "--check",
-        "--diff",
-        "--config",
-        str(args.config),
-    ] + [str(src) for src in args.sources]
+    old_stderr = sys.stderr
+    old_stdout = sys.stdout
 
-    old_argv = list(sys.argv)
-    sys.argv = [sys.argv[0]] + black_args
+    stream = io.StringIO()
+    if args.marker:
+        sys.stderr = stream
+        sys.stdout = stream
 
     exit_code = 0
-    tmp_dir = tempfile.mkdtemp(prefix="bazel-black-", dir=os.getenv("TEST_TMPDIR"))
+    tmp_dir = tempfile.mkdtemp(prefix="bazel-pylint-", dir=os.getenv("TEST_TMPDIR"))
+    try:
+        os.environ["HOME"] = str(tmp_dir)
+        os.environ["USERPROFILE"] = str(tmp_dir)
+        os.environ["PYLINTHOME"] = str(tmp_dir)
 
-    stream = Path(tmp_dir) / "stream"
+        pylint_args = [
+            "--rcfile",
+            str(args.rcfile),
+        ] + [str(src) for src in args.sources]
 
-    os.environ["HOME"] = str(tmp_dir)
-    os.environ["USERPROFILE"] = str(tmp_dir)
+        if "RULES_VENV_PYLINT_DEBUG" in os.environ:
+            pylint_args.append("--verbose")
 
-    with determinism_patch():
-        try:
-            # If a stream is defined, ensure the output is captured to this file.
-            if args.marker:
-                with stream.open("w", encoding="utf-8") as tmp:
-                    with redirect_stderr(tmp), redirect_stdout(tmp):
-                        black.patched_main()
-            else:
-                black.patched_main()
+        with determinisim_patch():
+            run_pylint(pylint_args)
 
-        except SystemExit as exc:
-            if exc.code is None:
-                exit_code = 0
-            elif isinstance(exc.code, str):
-                exit_code = int(exc.code)
-            else:
-                exit_code = exc.code
+    except SystemExit as exc:
+        if exc.code is None:
+            exit_code = 0
+        elif isinstance(exc.code, str):
+            exit_code = int(exc.code)
+        else:
+            exit_code = exc.code
 
-        finally:
-            sys.argv = old_argv
+    finally:
+        _report_logs(Path(tmp_dir))
+
+        if args.marker:
+            sys.stderr = old_stderr
+            sys.stdout = old_stdout
+
+        if "TEST_TMPDIR" not in os.environ:
+            shutil.rmtree(tmp_dir)
 
     if args.marker:
         if exit_code == 0:
             args.marker.write_bytes(b"")
         else:
-            print(stream.read_text(encoding="utf-8"), file=sys.stderr)
-
-    if "TEST_TMPDIR" not in os.environ:
-        shutil.rmtree(tmp_dir)
+            print(stream.getvalue(), file=sys.stderr)
 
     sys.exit(exit_code)
 

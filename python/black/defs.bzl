@@ -4,11 +4,7 @@ Bazel rules for the Python formatter [black][blk].
 
 ### Setup
 
-Add `rules_venv` to your `MODULE.bazel` file
-
-```python
-bazel_dep(name = "rules_venv", version = "{version}")
-```
+First ensure `rules_venv` is setup by referring to [rules_venv setup](../index.md#setup).
 
 Next, the `black` rules work mostly off of toolchains which are used to provide the necessary python targets (aka `black`)
 for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as

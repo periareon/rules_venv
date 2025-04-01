@@ -38,6 +38,7 @@ bzl_library(
     visibility = ["//python/isort:__subpackages__"],
     deps = [
         "//python:bzl_lib",
+        "//python/private:bzl_lib",
         "//python/venv:bzl_lib",
     ],
 )
