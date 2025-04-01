@@ -11,12 +11,15 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import List, Mapping
 
 # Template variables
 PY_RUNTIME = ""
 VENV_PROCESS_WRAPPER = ""
 VENV_CONFIG = ""
 MAIN = ""
+ARGS: List[str] = []
+ENV: Mapping[str, str] = {}
 
 
 def extract_zip(zip_file: Path, output_dir: Path) -> None:
@@ -61,16 +64,26 @@ def main() -> None:
         extract_zip(zip_file=Path(__file__).parent, output_dir=runfiles_dir)
         os.environ["RUNFILES_DIR"] = str(runfiles_dir)
 
-        args = [
-            str(runfiles_dir / PY_RUNTIME),
-            str(runfiles_dir / VENV_PROCESS_WRAPPER),
-            str(runfiles_dir / VENV_CONFIG),
-            str(runfiles_dir / MAIN),
-        ] + sys.argv[1:]
+        args = (
+            [
+                str(runfiles_dir / PY_RUNTIME),
+                str(runfiles_dir / VENV_PROCESS_WRAPPER),
+                str(runfiles_dir / VENV_CONFIG),
+                str(runfiles_dir / MAIN),
+            ]
+            + ARGS
+            + sys.argv[1:]
+        )
 
+        env = dict(os.environ)
+        env.update(ENV)
+
+        logging.debug("Injected args: %s", ARGS)
+        logging.debug("Injected env: %s", ENV)
         logging.debug("Spawning subprocess: %s", " ".join(args))
         result = subprocess.run(
             args,
+            env=env,
             check=False,
             capture_output=False,
         )

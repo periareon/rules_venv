@@ -44,11 +44,10 @@ def main() -> None:
 
     runfile = _rlocation(
         runfiles,
-        "rules_venv/python/venv/private/tests/python_zip_file/with_runfiles/data.txt",
+        "rules_venv/python/venv/private/tests/zipapp/with_generated_runfiles/data.txt",
     )
 
-    text = runfile.read_text(encoding="utf-8").strip()
-    args.output.write_bytes(f"{text}\n".encode("utf-8"))
+    args.output.write_bytes(runfile.read_bytes())
 
 
 if __name__ == "__main__":
