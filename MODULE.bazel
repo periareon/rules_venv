@@ -54,6 +54,7 @@ register_toolchains(
     "//python/black/toolchain",
     "//python/isort/toolchain",
     "//python/pylint/toolchain",
+    "//python/mypy/toolchain",
     "//python/wheel/toolchain",
     dev_dependency = True,
 )

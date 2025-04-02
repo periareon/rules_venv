@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from isort.main import main as isort_main
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 from python.isort.private.isort_runner import generate_config_with_projects
 

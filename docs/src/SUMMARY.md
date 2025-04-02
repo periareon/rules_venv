@@ -9,5 +9,6 @@
     - [global_venv](./global_venv.md)
     - [isort](./isort.md)
     - [module_extension](./module_extension.md)
+    - [mypy](./mypy.md)
     - [pylint](./pylint.md)
     - [wheel](./wheel.md)
