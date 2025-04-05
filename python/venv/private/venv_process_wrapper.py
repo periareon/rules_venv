@@ -314,7 +314,9 @@ def main() -> None:
             "RULES_VENV_PROCESS_WRAPPER_LEAK_VENV" in os.environ or skip_cleanup
         )
 
-        if not skip_cleanup:
+        if skip_cleanup:
+            logging.debug("Skipping cleanup of: %s", temp_dir)
+        else:
             try:
                 shutil.rmtree(temp_dir)
             except (PermissionError, OSError) as exc:

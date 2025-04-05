@@ -91,7 +91,18 @@ def main() -> None:
         sys.exit(result.returncode)
 
     finally:
-        if "TEST_TMPDIR" not in os.environ:
+        # https://bazel.build/reference/test-encyclopedia#initial-conditions
+        # TEST_TMPDIR: Is defined whenever running in under `bazel test`.
+        skip_cleanup = "TEST_TMPDIR" in os.environ
+
+        # Allow users to explicitly prevent cleanup
+        skip_cleanup = (
+            "RULES_VENV_ZIPAPP_LEAK_VENV" in os.environ or skip_cleanup
+        )
+
+        if skip_cleanup:
+            logging.debug("Skipping cleanup of: %s", runfiles_dir)
+        else:
             try:
                 shutil.rmtree(runfiles_dir)
             except (PermissionError, OSError) as exc:
