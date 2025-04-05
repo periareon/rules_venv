@@ -1,9 +1,8 @@
 """Bazel rules for building c extensions."""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
-load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("@rules_cc//cc/common:debug_package_info.bzl", "DebugPackageInfo")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_shared_library.bzl", "cc_shared_library")
 load("//python:defs.bzl", "PyInfo")
 
 def _compilation_mode_transition_impl(settings, attr):
@@ -112,11 +111,7 @@ def _extension_name(*, name, linux_cpu, linux_abi, extension, py_toolchain):
 def _py_cc_extension_library_impl(ctx):
     files = []
 
-    if ctx.attr.stripped:
-        extension = ctx.attr.extension[DebugPackageInfo].stripped_file
-    else:
-        extension = ctx.executable.extension
-
+    extension = ctx.file.extension
     py_toolchain = ctx.toolchains["//python:toolchain_type"]
     ext = ctx.actions.declare_file(_extension_name(
         linux_cpu = _linux_cpu(ctx),
@@ -136,7 +131,7 @@ def _py_cc_extension_library_impl(ctx):
         DefaultInfo(
             files = depset([ext]),
             runfiles = ctx.runfiles(
-                transitive_files = depset(files),
+                [ext],
             ).merge(
                 ctx.attr.extension[DefaultInfo].default_runfiles,
             ),
@@ -181,8 +176,7 @@ py_cc_extension_library = rule(
         "extension": attr.label(
             doc = "The module extension library.",
             cfg = "target",
-            providers = [CcInfo],
-            executable = True,
+            allow_single_file = True,
             mandatory = True,
         ),
         "imports": attr.string_list(
@@ -217,12 +211,10 @@ def py_cc_extension(
         data = [],
         defines = [],
         deps = [],
-        dynamic_deps = [],
         imports = [],
         includes = [],
         linkopts = [],
         local_defines = None,
-        malloc = None,
         compilation_mode = "opt",
         abi = _LINUX_ABI,
         stripped = None,
@@ -235,31 +227,27 @@ def py_cc_extension(
         name (str): The name of the target.
         srcs (list): he list of C and C++ files that are processed to create the library target. These
             are C/C++ source and header files, either non-generated (normal source code) or generated.
-            For more details see [cc_binary.srcs](https://bazel.build/reference/be/c-cpp#cc_binary.srcs)
+            For more details see [cc_library.srcs](https://bazel.build/reference/be/c-cpp#cc_library.srcs)
         conlyopts (list, optional): Add these options to the C compilation command.
-            For more details see [cc_binary.conlyopts](https://bazel.build/reference/be/c-cpp#cc_binary.conlyopts)
+            For more details see [cc_library.conlyopts](https://bazel.build/reference/be/c-cpp#cc_library.conlyopts)
         copts (list, optional): Add these options to the C/C++ compilation command.
-            For more details see [cc_binary.copts](https://bazel.build/reference/be/c-cpp#cc_binary.copts)
+            For more details see [cc_library.copts](https://bazel.build/reference/be/c-cpp#cc_library.copts)
         cxxopts (list, optional): Add these options to the C++ compilation command.
-            For more details see [cc_binary.cxxopts](https://bazel.build/reference/be/c-cpp#cc_binary.cxxopts)
+            For more details see [cc_library.cxxopts](https://bazel.build/reference/be/c-cpp#cc_library.cxxopts)
         data (list, optional): List of files used by this rule at compile time and runtime.
-            For more details see [cc_binary.data](https://bazel.build/reference/be/c-cpp#cc_binary.data)
+            For more details see [cc_library.data](https://bazel.build/reference/be/c-cpp#cc_library.data)
         defines (list, optional): List of defines to add to the compile line of this and all dependent targets
-            For more details see [cc_binary.defines](https://bazel.build/reference/be/c-cpp#cc_binary.defines)
+            For more details see [cc_library.defines](https://bazel.build/reference/be/c-cpp#cc_library.defines)
         deps (list, optional): The list of other libraries to be linked in to the binary target.
-            For more details see [cc_binary.deps](https://bazel.build/reference/be/c-cpp#cc_binary.deps)
-        dynamic_deps (list, optional): These are other cc_shared_library dependencies the current target depends on.
-            For more details see [cc_binary.dynamic_deps](https://bazel.build/reference/be/c-cpp#cc_binary.dynamic_deps)
+            For more details see [cc_library.deps](https://bazel.build/reference/be/c-cpp#cc_library.deps)
         imports (list, optional): List of import directories to be added to the `PYTHONPATH`.
             For more details see [py_library.imports](https://bazel.build/reference/be/python#py_binary.imports).
         includes (list, optional): List of include dirs to be added to the compile line.
-            For more details see [cc_binary.includes](https://bazel.build/reference/be/c-cpp#cc_binary.includes)
+            For more details see [cc_library.includes](https://bazel.build/reference/be/c-cpp#cc_library.includes)
         linkopts (list, optional): Add these flags to the C++ linker command.
-            For more details see [cc_binary.linkopts](https://bazel.build/reference/be/c-cpp#cc_binary.linkopts)
+            For more details see [cc_library.linkopts](https://bazel.build/reference/be/c-cpp#cc_library.linkopts)
         local_defines (list, optional): List of defines to add to the compile line.
-            For more details see [cc_binary.local_defines](https://bazel.build/reference/be/c-cpp#cc_binary.local_defines)
-        malloc (Label, optional): Override the default dependency on malloc.
-            For more details see [cc_binary.malloc](https://bazel.build/reference/be/c-cpp#cc_binary.malloc)
+            For more details see [cc_library.local_defines](https://bazel.build/reference/be/c-cpp#cc_library.local_defines)
         compilation_mode (str, optional): The [compilation_mode](https://bazel.build/reference/command-line-reference#flag--compilation_mode)
             value to build the extension for. If set to `"current"`, the current configuration will be used.
         abi (str, optional): The ABI value to use for the output library name.
@@ -269,8 +257,8 @@ def py_cc_extension(
     tags = kwargs.pop("tags", [])
     visibility = kwargs.pop("visibility", None)
 
-    cc_binary(
-        name = name + "_shared",
+    cc_library(
+        name = name + "_shared_lib",
         conlyopts = conlyopts,
         copts = copts,
         cxxopts = cxxopts,
@@ -280,15 +268,20 @@ def py_cc_extension(
             Label("@rules_python//python/cc:current_py_cc_headers"),
             Label("@rules_python//python/cc:current_py_cc_libs"),
         ] + deps,
-        dynamic_deps = dynamic_deps,
         includes = includes,
         linkopts = linkopts,
-        linkshared = True,
         local_defines = local_defines,
-        malloc = malloc,
         srcs = srcs,
         tags = depset(tags + ["manual"]).to_list(),
         visibility = ["//visibility:private"],
+        **kwargs
+    )
+
+    cc_shared_library(
+        name = name + "_shared",
+        deps = [name + "_shared_lib"],
+        visibility = ["//visibility:private"],
+        tags = depset(tags + ["manual"]).to_list(),
         **kwargs
     )
 
