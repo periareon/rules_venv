@@ -3,6 +3,7 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_cc//cc/common:debug_package_info.bzl", "DebugPackageInfo")
 load("//python:defs.bzl", "PyInfo")
 
 def _compilation_mode_transition_impl(settings, attr):
@@ -71,7 +72,7 @@ def _linux_cpu(ctx):
         return "aarch64"
 
     if target_platform_has_any_constraint(ctx, [ctx.attr._cpu_armv7]):
-        return "armv7l"
+        return "arm"
 
     return "x86_64"
 
@@ -111,7 +112,11 @@ def _extension_name(*, name, linux_cpu, linux_abi, extension, py_toolchain):
 def _py_cc_extension_library_impl(ctx):
     files = []
 
-    extension = ctx.executable.extension
+    if ctx.attr.stripped:
+        extension = ctx.attr.extension[DebugPackageInfo].stripped_file
+    else:
+        extension = ctx.executable.extension
+
     py_toolchain = ctx.toolchains["//python:toolchain_type"]
     ext = ctx.actions.declare_file(_extension_name(
         linux_cpu = _linux_cpu(ctx),
@@ -183,6 +188,10 @@ py_cc_extension_library = rule(
         "imports": attr.string_list(
             doc = "List of import directories to be added to the `PYTHONPATH`.",
         ),
+        "stripped": attr.bool(
+            doc = "Use the stripped output from `extension`.",
+            default = False,
+        ),
         "_cpu_aarch64": attr.label(
             default = Label("@platforms//cpu:aarch64"),
         ),
@@ -216,6 +225,7 @@ def py_cc_extension(
         malloc = None,
         compilation_mode = "opt",
         abi = _LINUX_ABI,
+        stripped = None,
         **kwargs):
     """Define a Python C extension module.
 
@@ -253,6 +263,7 @@ def py_cc_extension(
         compilation_mode (str, optional): The [compilation_mode](https://bazel.build/reference/command-line-reference#flag--compilation_mode)
             value to build the extension for. If set to `"current"`, the current configuration will be used.
         abi (str, optional): The ABI value to use for the output library name.
+        stripped (bool, optional): Use the stripped output of the c extension for the library.
         **kwargs (dict): Additional keyword arguments for common definition attributes.
     """
     tags = kwargs.pop("tags", [])
@@ -287,6 +298,7 @@ def py_cc_extension(
         abi = abi,
         compilation_mode = compilation_mode,
         imports = imports,
+        stripped = stripped,
         tags = tags,
         visibility = visibility,
         **kwargs
