@@ -9,12 +9,8 @@ import tempfile
 from pathlib import Path
 from typing import Optional, Sequence, TextIO, Union
 
-# Running pylint on the mypy import causes a crash
-# pylint: disable=all
 from mypy.main import main as mypy_main
 from python.runfiles import Runfiles
-
-# pylint: enable=all
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
@@ -103,7 +99,7 @@ def _mypy_path(workspace_name: str) -> str:
     return os.pathsep.join([str(runfiles_dir / workspace_name)] + mypy_path)
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-branches
     """Mypy test runner main entry point."""
     if "BAZEL_TEST" in os.environ and "PY_MYPY_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()

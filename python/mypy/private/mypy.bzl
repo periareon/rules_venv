@@ -82,12 +82,12 @@ py_mypy_test = rule(
         ),
         "_runner": attr.label(
             doc = "The process wrapper for running mypy.",
-            cfg = "exec",
+            cfg = "target",
             default = Label("//python/mypy/private:mypy_runner"),
         ),
         "_runner_main": attr.label(
             doc = "The main entrypoint for the mypy runner.",
-            cfg = "exec",
+            cfg = "target",
             allow_single_file = True,
             default = Label("//python/mypy/private:mypy_runner.py"),
         ),
