@@ -105,8 +105,12 @@ def install_runfiles(
     """
     with files_manifest.open("r", encoding="utf-8") as manifest_file:
         for line in manifest_file:
-            rlocation, real_path = line.strip().split(" ", 1)
-            dest_path = runfiles_dir / rlocation
+            rlocation, _, real_path = line.strip().partition(" ")
+
+            # Ensure spaces are expanded in the zip file. For more details see:
+            # https://github.com/bazelbuild/bazel/commit/c9115305cb81e7fe645f91ca790642cab136b2a1
+            dest_path = runfiles_dir / rlocation.replace(r"\s", " ")
+
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(real_path, dest_path)
 
