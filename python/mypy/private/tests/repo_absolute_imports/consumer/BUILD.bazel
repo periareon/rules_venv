@@ -1,0 +1,27 @@
+load("//python:defs.bzl", "py_library", "py_test")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "consumer",
+    srcs = ["consumer.py"],
+    visibility = ["//python/mypy/private/tests:__subpackages__"],
+    deps = [
+        "//python/mypy/private/tests/repo_absolute_imports/types_example",
+    ],
+)
+
+py_test(
+    name = "consumer_test",
+    srcs = ["consumer_test.py"],
+    deps = [":consumer"],
+)
+
+py_mypy_test(
+    name = "consumer_mypy_test",
+    target = ":consumer",
+)
+
+py_mypy_test(
+    name = "consumer_test_mypy_test",
+    target = ":consumer_test",
+)

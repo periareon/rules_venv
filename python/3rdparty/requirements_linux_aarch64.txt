@@ -38,10 +38,10 @@ click==8.1.8 \
     --hash=sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2
     # via black (>=8.0.0)
     # https://files.pythonhosted.org/packages/7e/d4/7ebdbd03970677812aac39c869717059dbb71a4cfc033ca6e5221787892c/click-8.1.8-py3-none-any.whl#sha256=63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2
-coverage==7.7.1 \
-    --hash=sha256:fbba59022e7c20124d2f520842b75904c7b9f16c854233fa46575c69949fb5b9
+coverage==7.8.0 \
+    --hash=sha256:a5761c70c017c1b0d21b0815a920ffb94a670c8d5d409d9b38857874c21f70d7
     # via pytest-cov (>=7.5 [toml])
-    # https://files.pythonhosted.org/packages/23/1a/570666f276815722f0a94f92b61e7123d66b166238e0f9f224f1a38f17cf/coverage-7.7.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl#sha256=fbba59022e7c20124d2f520842b75904c7b9f16c854233fa46575c69949fb5b9
+    # https://files.pythonhosted.org/packages/e9/ef/96a90c31d08a3f40c49dbe897df4f1fd51fb6583821a1a1c5ee30cc8f680/coverage-7.8.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl#sha256=a5761c70c017c1b0d21b0815a920ffb94a670c8d5d409d9b38857874c21f70d7
 cryptography==44.0.2 \
     --hash=sha256:d03806036b4f89e3b13b6218fefea8d5312e450935b1a2d55f0524e2ed7c59d9
     # via SecretStorage (>=2.0)
@@ -175,10 +175,10 @@ pytest==8.3.5 \
     #   _main/python/3rdparty/requirements.in
     #   pytest-cov (>=4.6)
     # https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl#sha256=c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820
-pytest-cov==6.0.0 \
-    --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35
+pytest-cov==6.1.0 \
+    --hash=sha256:cd7e1d54981d5185ef2b8d64b50172ce97e6f357e6df5cb103e828c7f993e201
     # via _main/python/3rdparty/requirements.in
-    # https://files.pythonhosted.org/packages/36/3b/48e79f2cd6a61dbbd4807b4ed46cb564b4fd50a76166b1c4ea5c1d9e2371/pytest_cov-6.0.0-py3-none-any.whl#sha256=eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35
+    # https://files.pythonhosted.org/packages/e1/c5/8d6ffe9fc8f7f57b3662156ae8a34f2b8e7a754c73b48e689ce43145e98c/pytest_cov-6.1.0-py3-none-any.whl#sha256=cd7e1d54981d5185ef2b8d64b50172ce97e6f357e6df5cb103e828c7f993e201
 readme_renderer==44.0 \
     --hash=sha256:2fbca89b81a08526aadf1357a8c2ae889ec05fb03f5da67f9769c9a592166151
     # via twine (>=35.0)

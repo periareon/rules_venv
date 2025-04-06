@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 # isort: off
 

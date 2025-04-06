@@ -7,7 +7,7 @@ expose this module at that location.
 
 from pathlib import Path
 
-from python.runfiles import Runfiles  # type: ignore
+from python.runfiles import Runfiles
 
 # pylint: disable-next=no-name-in-module
 from python.within_second_python.py_dep import generate_greeting  # type: ignore
@@ -28,7 +28,7 @@ def load_data() -> str:
         "rules_venv/python/venv/private/tests/import_duplicates/consumer/data.txt"
     )
     runfile = runfiles.Rlocation(rlocationpath)
-    if not runfiles:
+    if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
 
     return Path(runfile).read_text(encoding="utf-8")
