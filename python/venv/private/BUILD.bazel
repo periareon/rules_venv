@@ -23,6 +23,7 @@ bzl_library(
     srcs = glob(["*.bzl"]),
     visibility = ["//python/venv:__pkg__"],
     deps = [
+        "//python:py_info_bzl",
         "@bazel_skylib//lib:selects",
         "@bazel_skylib//rules:common_settings",
         "@rules_python//python:defs_bzl",

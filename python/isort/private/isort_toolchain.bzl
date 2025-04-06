@@ -1,6 +1,6 @@
 """isort toolchain rules."""
 
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 
 TOOLCHAIN_TYPE = str(Label("//python/isort:toolchain_type"))
 

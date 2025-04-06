@@ -1,6 +1,6 @@
 """Test rules for the `py_venv_common` API."""
 
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 load("//python/venv:defs.bzl", "py_venv_common")
 
 def _venv_action_aspect_impl(target, ctx):

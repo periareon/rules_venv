@@ -7,8 +7,20 @@ bzl_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":py_info_bzl",
         "//python/venv:bzl_lib",
         "@rules_python//python:defs_bzl",
+    ],
+)
+
+bzl_library(
+    name = "py_info_bzl",
+    srcs = [
+        "py_info.bzl",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@rules_python//python:py_info_bzl",
     ],
 )
 

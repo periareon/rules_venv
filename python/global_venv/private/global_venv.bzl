@@ -1,6 +1,6 @@
 """Utilities for setting up a venv with all available Bazel targets"""
 
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 load("//python/venv:defs.bzl", "py_venv_binary")
 
 def global_venv(name, **kwargs):

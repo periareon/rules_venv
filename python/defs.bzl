@@ -2,7 +2,6 @@
 
 load(
     "@rules_python//python:defs.bzl",
-    _PyInfo = "PyInfo",
     _PyRuntimeInfo = "PyRuntimeInfo",
     _py_import = "py_import",
     _py_runtime = "py_runtime",
@@ -12,6 +11,10 @@ load(
     "py_venv_binary",
     "py_venv_library",
     "py_venv_test",
+)
+load(
+    ":py_info.bzl",
+    _PyInfo = "PyInfo",
 )
 
 py_binary = py_venv_binary
