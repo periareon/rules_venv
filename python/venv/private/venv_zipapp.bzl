@@ -1,18 +1,21 @@
 """Rules for producing zipapps"""
 
-load("@rules_python//python:defs.bzl", "PyInfo")
-load(":venv.bzl", "PyMainInfo", "compute_main")
+load("//python:py_info.bzl", "PyInfo")
+load(":venv.bzl", "compute_main")
 load(":venv_common.bzl", "create_python_zip_file", venv_common = "py_venv_common")
 
-ArgvInheritInfo = provider(
-    doc = "A provider for extracting args and envs to imbed in zipapps.",
+PyMainInfo = provider(
+    doc = "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
     fields = {
         "args": "List[str]: Template variable expanded arguments",
+        "data": "list[Target]: Data targets from the binary.",
         "env": "Dict[str, str]: Template variable expanded environment variables.",
+        "main": "File: The main entrypoint for the target.",
+        "srcs": "list[File]: The list of source files that directly belong to the binary.",
     },
 )
 
-def _argv_inherit_aspect_impl(_target, ctx):
+def _py_main_aspect_impl(_target, ctx):
     targets = getattr(ctx.rule.attr, "data", [])
     known_variables = {}
     for target in getattr(ctx.rule.files, "toolchains", []):
@@ -46,14 +49,17 @@ def _argv_inherit_aspect_impl(_target, ctx):
     # Needed for bzlmod-aware runfiles resolution.
     expanded_env["REPOSITORY_NAME"] = workspace_name
 
-    return [ArgvInheritInfo(
+    return [PyMainInfo(
+        main = getattr(ctx.rule.file, "main", None),
+        srcs = getattr(ctx.rule.files, "srcs", []),
+        data = targets,
         args = expanded_args,
         env = expanded_env,
     )]
 
-_argv_inherit_aspect = aspect(
-    doc = "TODO",
-    implementation = _argv_inherit_aspect_impl,
+_py_main_aspect = aspect(
+    doc = "An aspect used to collect arguments and environment variables from zipapp binaries.",
+    implementation = _py_main_aspect_impl,
 )
 
 def _py_venv_zipapp_impl(ctx):
@@ -63,11 +69,10 @@ def _py_venv_zipapp_impl(ctx):
 
     inject_args = []
     inject_env = {}
-    argv_info = ctx.attr.binary[ArgvInheritInfo]
     if ctx.attr.inherit_args:
-        inject_args.extend(argv_info.args)
+        inject_args.extend(main_info.args)
     if ctx.attr.inherit_env:
-        inject_env.update(argv_info.env)
+        inject_env.update(main_info.env)
     inject_args.extend(ctx.attr.args)
     inject_env.update(ctx.attr.env)
 
@@ -120,7 +125,7 @@ py_venv_zipapp(
             providers = [PyInfo],
             executable = True,
             cfg = "target",
-            aspects = [_argv_inherit_aspect],
+            aspects = [_py_main_aspect],
         ),
         "env": attr.string_dict(
             doc = "Environment variables to inject into all invocations of the zipapp.",

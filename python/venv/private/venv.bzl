@@ -1,15 +1,7 @@
 """Bazel rules for Python venvs"""
 
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 load(":venv_common.bzl", venv_common = "py_venv_common")
-
-PyMainInfo = provider(
-    doc = "`rules_venv` internal provider to inform consumers of binaries about their main entrypoint.",
-    fields = {
-        "main": "(File) The main entrypoint for the target.",
-        "srcs": "(list[File]) The list of source files that directly belong to the binary.",
-    },
-)
 
 _COMMON_ATTRS = {
     "data": attr.label_list(
@@ -212,10 +204,6 @@ def _py_venv_binary_impl(ctx):
             env = ctx.attr.env,
             env_inherit = [],
             targets = ctx.attr.data,
-        ),
-        PyMainInfo(
-            main = ctx.file.main,
-            srcs = ctx.files.srcs,
         ),
     ]
 
