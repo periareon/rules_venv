@@ -20,7 +20,7 @@ class ActionTest(unittest.TestCase):
         )
 
         # pylint: disable-next=import-error,import-outside-toplevel,no-name-in-module
-        from python.venv.private.tests.common_api.aspect_dep.greeting import (  # type: ignore
+        from python.venv.private.tests.common_api.aspect_dep.greeting import (
             greeting as aspect_greeting,
         )
 

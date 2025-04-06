@@ -2,6 +2,7 @@
 
 -r ../black/requirements.in
 -r ../isort/requirements.in
+-r ../mypy/requirements.in
 -r ../pylint/requirements.in
 -r ../wheel/requirements.in
 
@@ -10,7 +11,3 @@ numpy
 tomlkit
 pytest
 pytest-cov
-
-# linters
-pylint
-mypy

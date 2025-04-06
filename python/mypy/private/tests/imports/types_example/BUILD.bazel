@@ -1,0 +1,15 @@
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "types_example",
+    srcs = ["types_example/__init__.py"],
+    data = ["types_example/py.typed"],
+    imports = ["."],
+    visibility = ["//python/mypy/private/tests:__subpackages__"],
+)
+
+py_mypy_test(
+    name = "types_example_mypy_test",
+    target = ":types_example",
+)

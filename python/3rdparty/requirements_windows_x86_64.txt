@@ -41,10 +41,10 @@ colorama==0.4.6 \
     #   pylint (>=0.4.5)
     #   pytest
     # https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl#sha256=4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
-coverage==7.7.1 \
-    --hash=sha256:1e6f867379fd033a0eeabb1be0cffa2bd660582b8b0c9478895c509d875a9d9e
+coverage==7.8.0 \
+    --hash=sha256:3043ba1c88b2139126fc72cb48574b90e2e0546d4c78b5299317f61b7f718b78
     # via pytest-cov (>=7.5 [toml])
-    # https://files.pythonhosted.org/packages/c1/fe/fef0a0201af72422fb9634b5c6079786bb405ac09cce5661fdd54a66e773/coverage-7.7.1-cp311-cp311-win_amd64.whl#sha256=1e6f867379fd033a0eeabb1be0cffa2bd660582b8b0c9478895c509d875a9d9e
+    # https://files.pythonhosted.org/packages/28/87/021189643e18ecf045dbe1e2071b2747901f229df302de01c998eeadf146/coverage-7.8.0-cp311-cp311-win_amd64.whl#sha256=3043ba1c88b2139126fc72cb48574b90e2e0546d4c78b5299317f61b7f718b78
 dill==0.3.9 \
     --hash=sha256:468dff3b89520b474c0397703366b7b95eebe6303f108adf9b19da1f702be87a
     # via pylint (>=0.3.6)
@@ -164,10 +164,10 @@ pytest==8.3.5 \
     #   _main/python/3rdparty/requirements.in
     #   pytest-cov (>=4.6)
     # https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl#sha256=c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820
-pytest-cov==6.0.0 \
-    --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35
+pytest-cov==6.1.0 \
+    --hash=sha256:cd7e1d54981d5185ef2b8d64b50172ce97e6f357e6df5cb103e828c7f993e201
     # via _main/python/3rdparty/requirements.in
-    # https://files.pythonhosted.org/packages/36/3b/48e79f2cd6a61dbbd4807b4ed46cb564b4fd50a76166b1c4ea5c1d9e2371/pytest_cov-6.0.0-py3-none-any.whl#sha256=eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35
+    # https://files.pythonhosted.org/packages/e1/c5/8d6ffe9fc8f7f57b3662156ae8a34f2b8e7a754c73b48e689ce43145e98c/pytest_cov-6.1.0-py3-none-any.whl#sha256=cd7e1d54981d5185ef2b8d64b50172ce97e6f357e6df5cb103e828c7f993e201
 pywin32-ctypes==0.2.3 \
     --hash=sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8
     # via keyring (>=0.2.0)

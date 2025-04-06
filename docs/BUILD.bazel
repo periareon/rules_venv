@@ -39,6 +39,15 @@ stardoc(
 )
 
 stardoc(
+    name = "mypy",
+    out = "src/mypy.md",
+    input = "//python/mypy:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/mypy:bzl_lib"],
+)
+
+stardoc(
     name = "pylint",
     out = "src/pylint.md",
     input = "//python/pylint:defs.bzl",
@@ -72,6 +81,7 @@ mdbook(
         ":global_venv",
         ":isort",
         ":module_extension",
+        ":mypy",
         ":pylint",
         ":venv",
         ":wheel",

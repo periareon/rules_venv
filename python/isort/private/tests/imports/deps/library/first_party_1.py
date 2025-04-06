@@ -7,8 +7,8 @@ target.
 
 import tomlkit
 
-import library.first_party_2  # type: ignore
-from library.first_party_3 import goodbye  # type: ignore
+import library.first_party_2
+from library.first_party_3 import goodbye
 
 
 def conversation() -> None:
