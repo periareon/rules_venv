@@ -1,7 +1,7 @@
 """A utility for collecting info from python targets useful for linting."""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 
 PySourcesInfo = provider(
     doc = "A container for info on a lintable python target.",

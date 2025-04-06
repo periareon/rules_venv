@@ -1,7 +1,7 @@
 """Interfaces for rule authors to use in custom rules"""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("//python:py_info.bzl", "PyInfo")
 
 _TOOLCHAIN_TYPE = str(Label("//python/venv:toolchain_type"))
 

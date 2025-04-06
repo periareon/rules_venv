@@ -7,8 +7,7 @@ are always considered third party.
 
 import pathlib
 
-# pylint: disable-next=no-name-in-module
-from python.within_second_python.py_dep import print_greeting  # type: ignore
+from python.within_second_python.py_dep import print_greeting
 from tomlkit import __name__ as toml_name
 
 
