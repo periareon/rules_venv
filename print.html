@@ -708,9 +708,101 @@ py_cc_extension(*, <a href="module_extension.html#py_cc_extension-name">name</a>
 <tr><td style="text-align: left"><a id="py_cc_extension-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for common definition attributes.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="rules_mypy"><a class="header" href="#rules_mypy">rules_mypy</a></h1>
+<p>Bazel rules for the Python linter <a href="https://mypy.readthedocs.io/">mypy</a>.</p>
+<h3 id="setup-3"><a class="header" href="#setup-3">Setup</a></h3>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
+<p>Next, the <code>mypy</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>mypy</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="mypy.html#py_mypy_toolchain">py_mypy_toolchain</a> will need to be configured:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/mypy:defs.bzl", "py_mypy_toolchain")
+
+py_library(
+    name = "mypy_deps",
+    deps = [
+        "@pip_deps//:mypy",
+
+        # Types libraries can also be added here.
+    ],
+)
+
+py_mypy_toolchain(
+    name = "toolchain_impl",
+    mypy = ":mypy_deps",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/mypy:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/mypy:toolchain")
+</code></pre>
+<p>From here, <a href="mypy.html#py_mypy_test">py_mypy_test</a> and the <a href="mypy.html#py_mypy_aspect">py_mypy_aspect</a>
+should now be usable. Both of these rules use a global flag to determine which mypy configuration
+file to use with in actions. The following snippet can be added to the <code>.bazelrc</code> file to chose the
+desired configuration file</p>
+<pre><code class="language-text">build --@rules_mypy//python/mypy:config=//:.mypyrc.toml
+</code></pre>
+<p>Note that these files will need to be available via <a href="https://bazel.build/reference/be/functions#exports_files">exports_files</a></p>
+<h2 id="rules-3"><a class="header" href="#rules-3">Rules</a></h2>
+<ul>
+<li><a href="mypy.html#py_mypy_test">py_mypy_test</a></li>
+<li><a href="mypy.html#py_mypy_toolchain">py_mypy_toolchain</a></li>
+</ul>
+<h2 id="aspects-3"><a class="header" href="#aspects-3">Aspects</a></h2>
+<ul>
+<li><a href="mypy.html#py_mypy_aspect">py_mypy_aspect</a></li>
+</ul>
+<p><a id="py_mypy_test"></a></p>
+<h2 id="py_mypy_test"><a class="header" href="#py_mypy_test">py_mypy_test</a></h2>
+<pre>
+load("@rules_venv//python/mypy:defs.bzl", "py_mypy_test")
+
+py_mypy_test(<a href="mypy.html#py_mypy_test-name">name</a>, <a href="mypy.html#py_mypy_test-config">config</a>, <a href="mypy.html#py_mypy_test-target">target</a>)
+</pre>
+<p>A rule for running mypy on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_mypy_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_test-config"></a>config</td><td style="text-align: left">The config file (<code>mypy.ini</code>) containing mypy settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/mypy:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_test-target"></a>target</td><td style="text-align: left">The target to run <code>mypy</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_mypy_toolchain"></a></p>
+<h2 id="py_mypy_toolchain"><a class="header" href="#py_mypy_toolchain">py_mypy_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/mypy:defs.bzl", "py_mypy_toolchain")
+
+py_mypy_toolchain(<a href="mypy.html#py_mypy_toolchain-name">name</a>, <a href="mypy.html#py_mypy_toolchain-mypy">mypy</a>)
+</pre>
+<p>A toolchain for the <a href="https://mypy.readthedocs.io/">mypy</a> formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_mypy_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_toolchain-mypy"></a>mypy</td><td style="text-align: left">The mypy <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_mypy_aspect"></a></p>
+<h2 id="py_mypy_aspect"><a class="header" href="#py_mypy_aspect">py_mypy_aspect</a></h2>
+<pre>
+load("@rules_venv//python/mypy:defs.bzl", "py_mypy_aspect")
+
+py_mypy_aspect()
+</pre>
+<p>An aspect for running mypy on targets with Python sources.</p>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="pylint"><a class="header" href="#pylint">Pylint</a></h1>
 <p>Bazel rules for the Python linter <a href="https://pylint.pycqa.org/en/latest/">Pylint</a>.</p>
-<h3 id="setup-3"><a class="header" href="#setup-3">Setup</a></h3>
+<h3 id="setup-4"><a class="header" href="#setup-4">Setup</a></h3>
 <p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
 <p>Next, the <code>pylint</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>pylint</code>)
 for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
@@ -741,12 +833,12 @@ desired configuration file</p>
 <pre><code class="language-text">build --@rules_pylint//python/pylint:config=//:.pylintrc.toml
 </code></pre>
 <p>Note that these files will need to be available via <a href="https://bazel.build/reference/be/functions#exports_files">exports_files</a></p>
-<h2 id="rules-3"><a class="header" href="#rules-3">Rules</a></h2>
+<h2 id="rules-4"><a class="header" href="#rules-4">Rules</a></h2>
 <ul>
 <li><a href="pylint.html#py_pylint_test">py_pylint_test</a></li>
 <li><a href="pylint.html#py_pylint_toolchain">py_pylint_toolchain</a></li>
 </ul>
-<h2 id="aspects-3"><a class="header" href="#aspects-3">Aspects</a></h2>
+<h2 id="aspects-4"><a class="header" href="#aspects-4">Aspects</a></h2>
 <ul>
 <li><a href="pylint.html#py_pylint_aspect">py_pylint_aspect</a></li>
 </ul>
@@ -802,7 +894,7 @@ build --output_groups=+py_pylint_checks
 <li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
 <li>Sources and data are automatically collected.</li>
 </ol>
-<h2 id="setup-4"><a class="header" href="#setup-4">Setup</a></h2>
+<h2 id="setup-5"><a class="header" href="#setup-5">Setup</a></h2>
 <p>Building wheels requires no setup, however, to activate all features of
 the wheel rules, a toolchain must be registered.</p>
 <p>First some external python requirements will be required. There is guidance on
@@ -833,7 +925,7 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
-<h2 id="rules-4"><a class="header" href="#rules-4">Rules</a></h2>
+<h2 id="rules-5"><a class="header" href="#rules-5">Rules</a></h2>
 <ul>
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
