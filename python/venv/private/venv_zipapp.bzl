@@ -19,6 +19,8 @@ def _py_main_aspect_impl(_target, ctx):
     targets = getattr(ctx.rule.attr, "data", [])
     known_variables = {}
     for target in getattr(ctx.rule.files, "toolchains", []):
+        if type(target) != "Target":
+            continue
         if platform_common.TemplateVariableInfo in target:
             variables = getattr(target[platform_common.TemplateVariableInfo], "variables", {})
             known_variables.update(variables)
