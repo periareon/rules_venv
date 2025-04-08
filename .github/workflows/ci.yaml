@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
@@ -57,7 +57,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
@@ -95,7 +95,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
@@ -133,7 +133,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
           - os: windows-2019
     steps:
@@ -149,11 +149,14 @@ jobs:
         run: |
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/black
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/isort
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/global_venv
         if: startswith(runner.os, 'Windows') != true
       - name: Format (Windows)
         run: |
           bazel $env:BAZEL_STARTUP_FLAGS run //python/black
           bazel $env:BAZEL_STARTUP_FLAGS run //python/isort
+          # TODO: https://github.com/periareon/rules_venv/issues/57
+          # bazel $env:BAZEL_STARTUP_FLAGS run //python/global_venv
         if: startswith(runner.os, 'Windows')
 
       - name: Git diff
@@ -165,7 +168,7 @@ jobs:
           fi
 
   ci-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       # Checkout the code
       - uses: actions/checkout@v4
