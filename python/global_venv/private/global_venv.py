@@ -123,7 +123,7 @@ def generate_global_venv_specs(
     args = [
         str(bazel),
         "build",
-        rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
+        rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
         "--output_groups=py_global_venv_info",
     ] + targets
     logging.debug(" ".join(args))
@@ -326,7 +326,7 @@ def query_global_venv_specs(
         "aquery",
         "--include_aspects",
         "--include_artifacts",
-        rf"--aspects={rules_venv_name}//python/venv:defs.bzl%py_global_venv_aspect",
+        rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
         "--output_groups=py_global_venv_info",
         "--output=jsonproto",
     ] + targets
@@ -484,7 +484,7 @@ def main() -> None:
     )
 
     logging.info(
-        "Generation complete, to activate run: `source %s/%s`",
+        "Generation complete, to activate run:\n\tsource %s/%s",
         venv_interpreter.parent,
         ("activate.bat" if platform.system() == "Windows" else "activate"),
     )
