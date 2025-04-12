@@ -4,11 +4,12 @@ SETLOCAL ENABLEEXTENSIONS
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 @REM Usage of rlocation function:
+@REM
 @REM        call :rlocation <runfile_path> <abs_path>
+@REM
 @REM        The rlocation function maps the given <runfile_path> to its absolute
-@REM        path and stores the result in a variable named <abs_path>.
-@REM        This function fails if the <runfile_path> doesn't exist in mainifest
-@REM        file.
+@REM        path and stores the result in a variable named <abs_path>. This
+@REM        function fails if the <runfile_path> doesn't exist in mainifest file.
 :: Start of rlocation
 goto :rlocation_end
 :rlocation
