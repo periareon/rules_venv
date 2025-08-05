@@ -7,6 +7,7 @@ py_library(
         "example.py",
     ],
     imports = ["."],
+    tags = ["no-mypy"],
     deps = [
         "//python/isort/private/tests/imports/deps:library",
     ],
