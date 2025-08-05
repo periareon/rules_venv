@@ -5,11 +5,17 @@ module(
     version = "0.3.1",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.1.1")
-bazel_dep(name = "rules_python", version = "1.3.0")
-bazel_dep(name = "rules_shell", version = "0.4.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.1.4")
+bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "rules_shell", version = "0.5.1")
+
+# TODO: https://github.com/bazelbuild/rules_cc/pull/448
+single_version_override(
+    module_name = "rules_cc",
+    version = "0.1.1",
+)
 
 register_toolchains(
     "//python/venv/toolchain",
@@ -17,7 +23,7 @@ register_toolchains(
 
 bazel_dep(name = "rules_req_compile", version = "1.0.0rc35", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
-bazel_dep(name = "rules_rust_mdbook", version = "0.59.2", dev_dependency = True)
+bazel_dep(name = "rules_rust_mdbook", version = "0.63.0", dev_dependency = True)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
@@ -59,4 +65,4 @@ register_toolchains(
     dev_dependency = True,
 )
 
-bazel_dep(name = "buildifier_prebuilt", version = "7.3.1", dev_dependency = True)
+bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2", dev_dependency = True)
