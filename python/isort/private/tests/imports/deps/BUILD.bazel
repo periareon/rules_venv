@@ -10,6 +10,7 @@ py_library(
         "library/first_party_2.py",
         "library/first_party_3.py",
     ],
+    data = ["library/py.typed"],
     imports = ["."],
     visibility = ["//python/isort/private/tests/imports:__subpackages__"],
     deps = ["@pip_deps//:tomlkit"],

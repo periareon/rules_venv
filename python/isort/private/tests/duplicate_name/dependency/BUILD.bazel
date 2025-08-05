@@ -7,6 +7,7 @@ py_library(
         "python/within_second_python/__init__.py",
         "python/within_second_python/py_dep.py",
     ],
+    data = ["python/within_second_python/py.typed"],
     # The `python` package here will conflict with the parent `python` package
     # in this repo. The rules need to be able to handle this case.
     imports = ["."],
