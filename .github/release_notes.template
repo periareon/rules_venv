@@ -1,18 +1,8 @@
 # {version}
 
-## bzlmod
+## Setup
 ```python
 bazel_dep(name = "rules_venv", version = "{version}")
-```
-
-## WORKSPACE
-```python
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-http_archive(
-    name = "rules_venv",
-    integrity = "sha256-{sha256_base64}",
-    urls = ["https://github.com/periareon/rules_venv/releases/download/{version}/rules_venv-{version}.tar.gz"],
-)
 ```
 
 Additional documentation can be found at: https://github.com/periareon/rules_venv
