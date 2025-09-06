@@ -202,8 +202,8 @@ def install_files(
             .read_text(encoding="utf-8")
             .splitlines()
         ):
-            rlocation, _, real_path = line.partition(" ")
-            runfiles[rlocation] = real_path
+            rlocation, _, real_path = line.strip().partition(" ")
+            runfiles[rlocation.replace("\\s", " ")] = real_path
 
         for dest in pairs.values():
             abs_src = Path(runfiles[dest])
