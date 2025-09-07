@@ -22,7 +22,7 @@ if [[ "{USE_RUNFILES}" == "1" ]]; then
     runfiles_export_envvars
 
     if [[ -n "{VENV_RUNFILES_COLLECTION}" ]]; then
-        export VENV_RUNFILES_COLLECTION="$(rlocation "{VENV_RUNFILES_COLLECTION}")"
+        export RULES_VENV_RUNFILES_COLLECTION="$(rlocation "{VENV_RUNFILES_COLLECTION}")"
     fi
 
     exec \
@@ -35,7 +35,7 @@ if [[ "{USE_RUNFILES}" == "1" ]]; then
 else
 
     if [[ -n "{VENV_RUNFILES_COLLECTION}" ]]; then
-        export VENV_RUNFILES_COLLECTION="{VENV_RUNFILES_COLLECTION}"
+        export RULES_VENV_RUNFILES_COLLECTION="{VENV_RUNFILES_COLLECTION}"
     fi
 
     exec \

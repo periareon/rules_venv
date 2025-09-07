@@ -187,11 +187,11 @@ def determinism_patch() -> Generator[None, None, None]:
 
 def _load_args() -> Sequence[str]:
     """Load command line arguments from the environment."""
-    if "BAZEL_TEST" in os.environ and "PY_ISORT_RUNNER_ARGS_FILE" in os.environ:
+    if "BAZEL_TEST" in os.environ and "RULES_VENV_ISORT_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
             raise EnvironmentError("Failed to locate runfiles")
-        arg_file = _rlocation(runfiles, os.environ["PY_ISORT_RUNNER_ARGS_FILE"])
+        arg_file = _rlocation(runfiles, os.environ["RULES_VENV_ISORT_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
     return sys.argv[1:]
@@ -200,8 +200,8 @@ def _load_args() -> Sequence[str]:
 def _get_runfiles_dir() -> Path:
     """Locate the runfiles directory from the environment."""
     # Determined by rules_venv
-    if "PY_VENV_RUNFILES_DIR" in os.environ:
-        return Path(os.environ["PY_VENV_RUNFILES_DIR"])
+    if "RULES_VENV_RUNFILES_DIR" in os.environ:
+        return Path(os.environ["RULES_VENV_RUNFILES_DIR"])
     if "RUNFILES_DIR" in os.environ:
         return Path(os.environ["RUNFILES_DIR"])
 

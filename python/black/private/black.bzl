@@ -62,7 +62,7 @@ def _py_black_test_impl(ctx):
         ),
         RunEnvironmentInfo(
             environment = {
-                "PY_BLACK_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
+                "RULES_VENV_BLACK_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
             },
         ),
     ]
