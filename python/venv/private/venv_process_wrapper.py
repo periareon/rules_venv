@@ -222,6 +222,21 @@ def install_files(
             install_fn(abs_src, abs_dest)
 
 
+def rmtree(path: Path | str) -> None:
+    """Attempt to delete a directory tree."""
+    # Here we use `TemporaryDirectory` to wrap the path to delete and delete it.
+    # Internally this will spawn an additional temp directory inside of `path`
+    # but this should not matter as the parent directory will immediately be cleaned up.
+    # pylint: disable-next=consider-using-with
+    wrapper = tempfile.TemporaryDirectory(dir=path)
+
+    # Override the path represented by `TemporaryDirectory`
+    wrapper.name = str(path)
+
+    # Cleanup the parent directory.
+    wrapper.cleanup()
+
+
 def main() -> None:
     """The main entrypoint."""
     args = parse_args()
@@ -318,7 +333,7 @@ def main() -> None:
             logging.debug("Skipping cleanup of: %s", temp_dir)
         else:
             try:
-                shutil.rmtree(temp_dir)
+                rmtree(temp_dir)
             except (PermissionError, OSError) as exc:
                 logging.warning(
                     "Error encountered while cleaning up venv %s: %s", temp_dir, exc
