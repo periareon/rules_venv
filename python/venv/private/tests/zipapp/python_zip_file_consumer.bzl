@@ -30,11 +30,11 @@ def _python_zip_file_consumer_impl(ctx):
     )]
 
 python_zip_file_consumer = rule(
-    doc = "A rule for invoking `python_zip_file` files from `py_venv_binary` targets.",
+    doc = "A rule for invoking the zipapp from `py_venv_zipapp` targets.",
     implementation = _python_zip_file_consumer_impl,
     attrs = {
         "zip_file": attr.label(
-            doc = "A zipapp extracted from `python_zip_file`.",
+            doc = "A `py_venv_zipapp` target.",
             mandatory = True,
             allow_single_file = True,
         ),

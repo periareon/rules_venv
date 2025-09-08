@@ -57,7 +57,7 @@ def _py_pylint_test_impl(ctx):
         ),
         RunEnvironmentInfo(
             environment = {
-                "PY_PYLINT_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
+                "RULES_VENV_PYLINT_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
             },
         ),
     ]

@@ -59,7 +59,7 @@ def _py_mypy_test_impl(ctx):
         ),
         RunEnvironmentInfo(
             environment = {
-                "PY_MYPY_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
+                "RULES_VENV_MYPY_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
             },
         ),
     ]

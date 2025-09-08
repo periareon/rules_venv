@@ -76,10 +76,12 @@ def main() -> Any:
     """The main entrypoint."""
     runfiles = Runfiles.Create()
 
-    if "PY_WHEEL_PUBLISHER_ARGS" not in os.environ:
-        raise EnvironmentError("PY_WHEEL_PUBLISHER_ARGS not defined in environment.")
+    if "RULES_VENV_WHEEL_PUBLISHER_ARGS" not in os.environ:
+        raise EnvironmentError(
+            "RULES_VENV_WHEEL_PUBLISHER_ARGS not defined in environment."
+        )
 
-    args_file = _rlocation(runfiles, os.environ["PY_WHEEL_PUBLISHER_ARGS"])
+    args_file = _rlocation(runfiles, os.environ["RULES_VENV_WHEEL_PUBLISHER_ARGS"])
     argv = args_file.read_text(encoding="utf-8").splitlines()
     args = parse_args(argv, runfiles)
 

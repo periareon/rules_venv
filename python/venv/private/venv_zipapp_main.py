@@ -40,6 +40,21 @@ def extract_zip(zip_file: Path, output_dir: Path) -> None:
                     os.chmod(extracted_path, unix_attributes)
 
 
+def rmtree(path: Path | str) -> None:
+    """Attempt to delete a directory tree."""
+    # Here we use `TemporaryDirectory` to wrap the path to delete and delete it.
+    # Internally this will spawn an additional temp directory inside of `path`
+    # but this should not matter as the parent directory will immediately be cleaned up.
+    # pylint: disable-next=consider-using-with
+    wrapper = tempfile.TemporaryDirectory(dir=path)
+
+    # Override the path represented by `TemporaryDirectory`
+    wrapper.name = str(path)
+
+    # Cleanup the parent directory.
+    wrapper.cleanup()
+
+
 def main() -> None:
     """The main entrypoint."""
 
@@ -96,15 +111,13 @@ def main() -> None:
         skip_cleanup = "TEST_TMPDIR" in os.environ
 
         # Allow users to explicitly prevent cleanup
-        skip_cleanup = (
-            "RULES_VENV_ZIPAPP_LEAK_VENV" in os.environ or skip_cleanup
-        )
+        skip_cleanup = "RULES_VENV_ZIPAPP_LEAK_VENV" in os.environ or skip_cleanup
 
         if skip_cleanup:
             logging.debug("Skipping cleanup of: %s", runfiles_dir)
         else:
             try:
-                shutil.rmtree(runfiles_dir)
+                rmtree(runfiles_dir)
             except (PermissionError, OSError) as exc:
                 logging.warning(
                     "Error encountered while cleaning up runfiles %s: %s",

@@ -97,8 +97,8 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
                 f"Failed to find site-packages directory at {site_packages}"
             )
 
-        if "PY_VENV_RUNFILES_DIR" in os.environ:
-            runfiles_path = Path(os.environ["PY_VENV_RUNFILES_DIR"])
+        if "RULES_VENV_RUNFILES_DIR" in os.environ:
+            runfiles_path = Path(os.environ["RULES_VENV_RUNFILES_DIR"])
         else:
             runfiles_path = Path(os.environ["RUNFILES_DIR"])
 
@@ -222,6 +222,21 @@ def install_files(
             install_fn(abs_src, abs_dest)
 
 
+def rmtree(path: Path | str) -> None:
+    """Attempt to delete a directory tree."""
+    # Here we use `TemporaryDirectory` to wrap the path to delete and delete it.
+    # Internally this will spawn an additional temp directory inside of `path`
+    # but this should not matter as the parent directory will immediately be cleaned up.
+    # pylint: disable-next=consider-using-with
+    wrapper = tempfile.TemporaryDirectory(dir=path)
+
+    # Override the path represented by `TemporaryDirectory`
+    wrapper.name = str(path)
+
+    # Cleanup the parent directory.
+    wrapper.cleanup()
+
+
 def main() -> None:
     """The main entrypoint."""
     args = parse_args()
@@ -252,12 +267,12 @@ def main() -> None:
 
     # If a runfiles collection was passed, always use it in place of any
     # pre-defined runfiles directories.
-    if "VENV_RUNFILES_COLLECTION" in os.environ:
+    if "RULES_VENV_RUNFILES_COLLECTION" in os.environ:
         runfiles_dir = temp_dir / "runfiles"
         runfiles_dir.mkdir(exist_ok=True, parents=True)
-        os.environ["PY_VENV_RUNFILES_DIR"] = str(runfiles_dir)
+        os.environ["RULES_VENV_RUNFILES_DIR"] = str(runfiles_dir)
 
-        runfiles_collection = os.environ["VENV_RUNFILES_COLLECTION"]
+        runfiles_collection = os.environ["RULES_VENV_RUNFILES_COLLECTION"]
         if runfiles_collection.endswith(".zip"):
             logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
             runfiles_dir.mkdir(exist_ok=True, parents=True)
@@ -270,7 +285,7 @@ def main() -> None:
             install_files(manifest=Path(runfiles_collection), output_dir=runfiles_dir)
         else:
             raise EnvironmentError(
-                f"Unexpected `VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
+                f"Unexpected `RULES_VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
             )
 
         logging.debug("Runfiles ready!")
@@ -318,7 +333,7 @@ def main() -> None:
             logging.debug("Skipping cleanup of: %s", temp_dir)
         else:
             try:
-                shutil.rmtree(temp_dir)
+                rmtree(temp_dir)
             except (PermissionError, OSError) as exc:
                 logging.warning(
                     "Error encountered while cleaning up venv %s: %s", temp_dir, exc

@@ -67,7 +67,7 @@ if {USE_RUNFILES}==1 (
     call :rlocation "{MAIN}" MAIN
 
     if "{VENV_RUNFILES_COLLECTION}" NEQ "" (
-        call :rlocation "{VENV_RUNFILES_COLLECTION}" VENV_RUNFILES_COLLECTION
+        call :rlocation "{VENV_RUNFILES_COLLECTION}" RULES_VENV_RUNFILES_COLLECTION
     )
 ) else (
     call :slocation "{PY_RUNTIME}" PY_RUNTIME
@@ -76,7 +76,7 @@ if {USE_RUNFILES}==1 (
     call :slocation "{MAIN}" MAIN
 
     if "{VENV_RUNFILES_COLLECTION}" NEQ "" (
-        call :slocation "{VENV_RUNFILES_COLLECTION}" VENV_RUNFILES_COLLECTION
+        call :slocation "{VENV_RUNFILES_COLLECTION}" RULES_VENV_RUNFILES_COLLECTION
     )
 )
 
