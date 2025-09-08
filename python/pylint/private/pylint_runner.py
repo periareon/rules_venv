@@ -101,11 +101,16 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def _load_args() -> Sequence[str]:
     """Load command line arguments from the environment."""
-    if "BAZEL_TEST" in os.environ and "PY_PYLINT_RUNNER_ARGS_FILE" in os.environ:
+    if (
+        "BAZEL_TEST" in os.environ
+        and "RULES_VENV_PYLINT_RUNNER_ARGS_FILE" in os.environ
+    ):
         runfiles = Runfiles.Create()
         if not runfiles:
             raise EnvironmentError("Failed to locate runfiles")
-        arg_file = _rlocation(runfiles, os.environ["PY_PYLINT_RUNNER_ARGS_FILE"])
+        arg_file = _rlocation(
+            runfiles, os.environ["RULES_VENV_PYLINT_RUNNER_ARGS_FILE"]
+        )
         return arg_file.read_text(encoding="utf-8").splitlines()
 
     return sys.argv[1:]

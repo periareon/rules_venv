@@ -64,7 +64,7 @@ def _py_isort_test_impl(ctx):
         ),
         RunEnvironmentInfo(
             environment = {
-                "PY_ISORT_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
+                "RULES_VENV_ISORT_RUNNER_ARGS_FILE": _rlocationpath(args_file, ctx.workspace_name),
             },
         ),
     ]

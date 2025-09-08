@@ -89,8 +89,8 @@ def _mypy_path(workspace_name: str) -> str:
     """Compute the `MYPYPATH` variable from the current environment."""
     mypy_path = os.getenv("MYPYPATH", "").split(os.pathsep)
 
-    if "PY_VENV_RUNFILES_DIR" in os.environ:
-        runfiles_dir = Path(os.environ["PY_VENV_RUNFILES_DIR"])
+    if "RULES_VENV_RUNFILES_DIR" in os.environ:
+        runfiles_dir = Path(os.environ["RULES_VENV_RUNFILES_DIR"])
     elif "RUNFILES_DIR" in os.environ:
         runfiles_dir = Path(os.environ["RUNFILES_DIR"])
     else:
@@ -101,11 +101,11 @@ def _mypy_path(workspace_name: str) -> str:
 
 def main() -> None:  # pylint: disable=too-many-branches
     """Mypy test runner main entry point."""
-    if "BAZEL_TEST" in os.environ and "PY_MYPY_RUNNER_ARGS_FILE" in os.environ:
+    if "BAZEL_TEST" in os.environ and "RULES_VENV_MYPY_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
             raise EnvironmentError("Failed to locate runfiles")
-        arg_file = _rlocation(runfiles, os.environ["PY_MYPY_RUNNER_ARGS_FILE"])
+        arg_file = _rlocation(runfiles, os.environ["RULES_VENV_MYPY_RUNNER_ARGS_FILE"])
         args = parse_args(arg_file.read_text(encoding="utf-8").splitlines())
     else:
         args = parse_args()

@@ -297,7 +297,7 @@ def _py_wheel_publisher_impl(ctx):
         ),
         RunEnvironmentInfo(
             environment = {
-                "PY_WHEEL_PUBLISHER_ARGS": _rlocationpath(args_file, ctx.workspace_name),
+                "RULES_VENV_WHEEL_PUBLISHER_ARGS": _rlocationpath(args_file, ctx.workspace_name),
             },
         ),
     ]

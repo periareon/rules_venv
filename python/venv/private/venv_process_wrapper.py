@@ -97,8 +97,8 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
                 f"Failed to find site-packages directory at {site_packages}"
             )
 
-        if "PY_VENV_RUNFILES_DIR" in os.environ:
-            runfiles_path = Path(os.environ["PY_VENV_RUNFILES_DIR"])
+        if "RULES_VENV_RUNFILES_DIR" in os.environ:
+            runfiles_path = Path(os.environ["RULES_VENV_RUNFILES_DIR"])
         else:
             runfiles_path = Path(os.environ["RUNFILES_DIR"])
 
@@ -267,12 +267,12 @@ def main() -> None:
 
     # If a runfiles collection was passed, always use it in place of any
     # pre-defined runfiles directories.
-    if "VENV_RUNFILES_COLLECTION" in os.environ:
+    if "RULES_VENV_RUNFILES_COLLECTION" in os.environ:
         runfiles_dir = temp_dir / "runfiles"
         runfiles_dir.mkdir(exist_ok=True, parents=True)
-        os.environ["PY_VENV_RUNFILES_DIR"] = str(runfiles_dir)
+        os.environ["RULES_VENV_RUNFILES_DIR"] = str(runfiles_dir)
 
-        runfiles_collection = os.environ["VENV_RUNFILES_COLLECTION"]
+        runfiles_collection = os.environ["RULES_VENV_RUNFILES_COLLECTION"]
         if runfiles_collection.endswith(".zip"):
             logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
             runfiles_dir.mkdir(exist_ok=True, parents=True)
@@ -285,7 +285,7 @@ def main() -> None:
             install_files(manifest=Path(runfiles_collection), output_dir=runfiles_dir)
         else:
             raise EnvironmentError(
-                f"Unexpected `VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
+                f"Unexpected `RULES_VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
             )
 
         logging.debug("Runfiles ready!")
