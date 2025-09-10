@@ -269,12 +269,12 @@ py_pytest_test(
         ),
         "_runner": attr.label(
             doc = "The process wrapper for running pytest.",
-            cfg = "exec",
+            cfg = "target",
             default = Label("//python/pytest/private:pytest_process_wrapper"),
         ),
         "_runner_main": attr.label(
             doc = "The main entrypoint for the pytest process.",
-            cfg = "exec",
+            cfg = "target",
             allow_single_file = True,
             default = Label("//python/pytest/private:pytest_process_wrapper.py"),
         ),
@@ -286,8 +286,9 @@ py_pytest_test(
 def _py_pytest_toolchain_impl(ctx):
     pytest_target = ctx.attr.pytest
 
-    # TODO: Default info changes behavior when it's simply forwarded.
-    # To avoid this a new one is recreated.
+    # For some reason, simply forwarding `DefaultInfo` from
+    # the target results in a loss of data. To avoid this a
+    # new provider is created with teh same info.
     default_info = DefaultInfo(
         files = pytest_target[DefaultInfo].files,
         runfiles = pytest_target[DefaultInfo].default_runfiles,
@@ -320,8 +321,9 @@ def _current_py_pytest_toolchain_impl(ctx):
 
     pytest_target = toolchain.pytest
 
-    # TODO: Default info changes behavior when it's simply forwarded.
-    # To avoid this a new one is recreated.
+    # For some reason, simply forwarding `DefaultInfo` from
+    # the target results in a loss of data. To avoid this a
+    # new provider is created with teh same info.
     default_info = DefaultInfo(
         files = pytest_target[DefaultInfo].files,
         runfiles = pytest_target[DefaultInfo].default_runfiles,
