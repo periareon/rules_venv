@@ -11,4 +11,5 @@
     - [module_extension](./module_extension.md)
     - [mypy](./mypy.md)
     - [pylint](./pylint.md)
+    - [pytest](./pytest.md)
     - [wheel](./wheel.md)
