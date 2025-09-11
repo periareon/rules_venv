@@ -1,0 +1,45 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "string_list_flag")
+load(":defs.bzl", "current_py_pytest_toolchain")
+
+exports_files([
+    "coveragerc",
+    "pyproject.toml",
+    "defs.bzl",
+    "requirements.in",
+])
+
+label_flag(
+    name = "config",
+    build_setting_default = ":pyproject.toml",
+    visibility = ["//visibility:public"],
+)
+
+label_flag(
+    name = "coverage_rc",
+    build_setting_default = ":coveragerc",
+    visibility = ["//visibility:public"],
+)
+
+string_list_flag(
+    name = "extra_args",
+    build_setting_default = [],
+    visibility = ["//visibility:public"],
+)
+
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+current_py_pytest_toolchain(
+    name = "current_py_pytest_toolchain",
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//visibility:public"],
+    deps = ["//python/pytest/private:bzl_lib"],
+)

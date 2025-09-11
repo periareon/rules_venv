@@ -5,6 +5,7 @@ bzl_library(
     srcs = glob(["*.bzl"]),
     visibility = ["//python:__subpackages__"],
     deps = [
-        "//python:bzl_lib",
+        "//python:py_info_bzl",
+        "@bazel_skylib//lib:paths",
     ],
 )

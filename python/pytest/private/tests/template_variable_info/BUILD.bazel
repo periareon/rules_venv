@@ -1,0 +1,15 @@
+load("//python/pytest:defs.bzl", "py_pytest_test")
+load(":template_variable_info_test.bzl", "template_variable_test_toolchain")
+
+template_variable_test_toolchain(
+    name = "template_variable_test_toolchain",
+)
+
+py_pytest_test(
+    name = "template_variable_info_test",
+    srcs = ["template_variable_info_test.py"],
+    env = {
+        "EXPANDED_VAR": "$(LA_LI_LU_LE_LO)",
+    },
+    toolchains = [":template_variable_test_toolchain"],
+)

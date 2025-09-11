@@ -1,0 +1,49 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_binary", "py_library")
+load(":pytest_utils.bzl", "pytest_entrypoint_wrapper")
+
+# A wrapper around the runfiles dependency to avoid conflicts
+# in users of the python rules defining it as a dependency as
+# well.
+py_library(
+    name = "runfiles_wrapper",
+    srcs = [],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//python/runfiles",
+    ],
+)
+
+py_library(
+    name = "pytest_process_wrapper",
+    srcs = [
+        "pytest_process_wrapper.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":runfiles_wrapper",
+        "//python/pytest:current_py_pytest_toolchain",
+    ],
+)
+
+py_binary(
+    name = "entrypoint_sanitizer",
+    srcs = ["entrypoint_sanitizer.py"],
+)
+
+pytest_entrypoint_wrapper(
+    name = "pytest_process_wrapper_entrypoint",
+    out = "process_wrapper.py",
+    entrypoint = "pytest_process_wrapper.py",
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/pytest:__pkg__"],
+    deps = [
+        "//python:defs_bzl",
+        "//python/venv:bzl_lib",
+    ],
+)

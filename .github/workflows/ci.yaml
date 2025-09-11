@@ -89,6 +89,47 @@ jobs:
         run: bazel $env:BAZEL_STARTUP_FLAGS test //...
         if: startswith(runner.os, 'Windows')
 
+  ci-coverage:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
+          # TODO: https://github.com/bazelbuild/bazel/issues/26649
+          # - os: windows-2022
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+
+      - uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Setup Bazelrc (Windows)
+        run: |
+          echo "TEMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "TMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "startup --output_user_root=D:/bzl" > ./user.bazelrc
+        if: startswith(runner.os, 'Windows')
+      - name: Setup Bazelrc
+        run: |
+          echo "common --keep_going" >> ./user.bazelrc
+
+      # Build and Test the code
+      - name: Coverage (Unix)
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} coverage //...
+        if: startswith(runner.os, 'Windows') != true
+      - name: Coverage (Windows)
+        run: bazel $env:BAZEL_STARTUP_FLAGS coverage //...
+        if: startswith(runner.os, 'Windows')
+
+      - name: Check Coverage
+        run: python3 tools/coverage/coverage_checker.py
+
   ci-bazel-run:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -180,8 +221,8 @@ jobs:
 
       - uses: DoozyX/clang-format-lint-action@v0.14
         with:
-          source: '.'
-          extensions: 'h,c,cc'
+          source: "."
+          extensions: "h,c,cc"
           clangFormatVersion: 14
 
       - name: Format (unix)

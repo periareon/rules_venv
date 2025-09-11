@@ -4,10 +4,9 @@
 -r ../isort/requirements.in
 -r ../mypy/requirements.in
 -r ../pylint/requirements.in
+-r ../pytest/requirements.in
 -r ../wheel/requirements.in
 
 # Test requirements
 numpy
 tomlkit
-pytest
-pytest-cov

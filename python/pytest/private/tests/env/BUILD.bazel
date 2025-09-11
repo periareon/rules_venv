@@ -1,0 +1,6 @@
+load("//python/pytest:defs.bzl", "py_pytest_test")
+
+py_pytest_test(
+    name = "env_test",
+    srcs = ["env_test.py"],
+)

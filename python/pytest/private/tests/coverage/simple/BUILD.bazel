@@ -1,0 +1,21 @@
+# py_pytest_test simple coverage
+#
+# This test shows that coverage reports can be collected for a library
+# from a `py_pytest_test` target.
+
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/pytest:defs.bzl", "py_pytest_test_suite")
+
+py_library(
+    name = "coverage",
+    srcs = glob(["lib/**/*.py"]),
+    imports = ["."],
+)
+
+py_pytest_test_suite(
+    name = "coverage_test",
+    coverage_rc = ".coveragerc",
+    tests = ["tests/coverage_test.py"],
+    visibility = ["//python/pytest/private/tests/coverage:__pkg__"],
+    deps = [":coverage"],
+)
