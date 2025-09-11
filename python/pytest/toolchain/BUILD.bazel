@@ -1,0 +1,24 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_library(
+    name = "pip_deps",
+    deps = [
+        "@pip_deps//:pytest",
+        "@pip_deps//:pytest_cov",
+        "@pip_deps//:pytest_shard",
+        "@pip_deps//:pytest_xdist",
+    ],
+)
+
+py_pytest_toolchain(
+    name = "pytest_toolchain",
+    pytest = ":pip_deps",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":pytest_toolchain",
+    toolchain_type = "//python/pytest:toolchain_type",
+    visibility = ["//visibility:public"],
+)

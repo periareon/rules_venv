@@ -1,0 +1,12 @@
+load("//python/pytest:defs.bzl", "py_pytest_test")
+
+py_pytest_test(
+    name = "xdist_test",
+    srcs = ["xdist_test.py"],
+    args = [
+        # Show that pytest-xdist args are accepted
+        "--dist",
+        "loadgroup",
+    ],
+    numprocesses = 2,
+)

@@ -1,0 +1,11 @@
+filegroup(
+    name = "collect_coverage",
+    srcs = ["@bazel_tools//tools/test:collect_coverage"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "collect_cc_coverage",
+    srcs = ["@bazel_tools//tools/test:collect_cc_coverage"],
+    visibility = ["//visibility:public"],
+)

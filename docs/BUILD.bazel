@@ -66,6 +66,15 @@ stardoc(
 )
 
 stardoc(
+    name = "pytest",
+    out = "src/pytest.md",
+    input = "//python/pytest:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/pytest:bzl_lib"],
+)
+
+stardoc(
     name = "wheel",
     out = "src/wheel.md",
     input = "//python/wheel:defs.bzl",
@@ -83,6 +92,7 @@ mdbook(
         ":module_extension",
         ":mypy",
         ":pylint",
+        ":pytest",
         ":venv",
         ":wheel",
     ],

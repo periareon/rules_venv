@@ -1,0 +1,35 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/pytest:defs.bzl", "py_pytest_test")
+
+py_library(
+    name = "lib",
+    srcs = glob(["lib/**/*.py"]),
+    imports = ["."],
+)
+
+py_library(
+    name = "lib_testonly",
+    testonly = True,
+    srcs = glob(["lib_testonly/**/*.py"]),
+)
+
+py_library(
+    name = "with_args_test_lib",
+    srcs = ["tests/conftest.py"],
+    deps = ["//python/pytest:current_py_pytest_toolchain"],
+)
+
+py_pytest_test(
+    name = "with_args_test",
+    srcs = ["tests/with_args_test.py"],
+    args = [
+        # Show show that custom flags are accepted
+        "--custom_arg",
+        "La-Li-Lu-Le-Lo",
+    ],
+    deps = [
+        ":lib",
+        ":lib_testonly",
+        ":with_args_test_lib",
+    ],
+)

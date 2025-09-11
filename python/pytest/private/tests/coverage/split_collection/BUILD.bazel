@@ -1,0 +1,51 @@
+# py_pytest_test simple split collection
+#
+# This test shows that coverage reports can be collected for a library
+# from multiple `py_pytest_test` targets.
+
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/pytest:defs.bzl", "py_pytest_test_suite")
+
+py_library(
+    name = "coverage",
+    srcs = glob(["lib/**/*.py"]),
+    imports = ["."],
+)
+
+py_pytest_test_suite(
+    name = "coverage_test",
+    coverage_rc = ".coveragerc",
+    tests = glob(["tests/**/*_test.py"]),
+    visibility = ["//python/pytest/private/tests/coverage:__pkg__"],
+    deps = [":coverage"],
+)
+
+# The targets below ensures the expected number of tests is produced by `py_pytest_test_suite`.
+genquery(
+    name = "defined_tests",
+    testonly = True,
+    expression = "tests(deps(//python/pytest/private/tests/coverage/split_collection:coverage_test))",
+    scope = [":coverage_test"],
+)
+
+write_file(
+    name = "expected",
+    testonly = True,
+    out = "expected.txt",
+    content = [
+        "//python/pytest/private/tests/coverage/split_collection:tests/a_test",
+        "//python/pytest/private/tests/coverage/split_collection:tests/b_test",
+        "",
+    ],
+)
+
+diff_test(
+    name = "test_suite_test",
+    file1 = ":expected",
+    file2 = ":defined_tests",
+    # The `diff` tool is not installed in the remote image.
+    # See https://github.com/bazelbuild/bazel-skylib/issues/481
+    tags = ["no-remote-exec"],
+)

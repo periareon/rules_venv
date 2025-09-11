@@ -1,0 +1,7 @@
+# Pytest requirements.
+
+pytest-cov
+pytest-xdist
+pytest-shard
+pytest>=7.0.1  # Required to avoid realpathing during startup
+coverage>=7.6
