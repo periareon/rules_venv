@@ -1,0 +1,373 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>pytest - rules_venv</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">rules_venv</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/periareon/rules_venv" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="pytest"><a class="header" href="#pytest">Pytest</a></h1>
+<p>Bazel rules for the python test framework <a href="https://docs.pytest.org/en/stable/">Pytest</a>.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
+<ul>
+<li><a href="#current_py_pytest_toolchain">current_py_pytest_toolchain</a></li>
+<li><a href="#py_pytest_test">py_pytest_test</a></li>
+<li><a href="#py_pytest_toolchain">py_pytest_toolchain</a></li>
+</ul>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="#py_pytest_test_suite">py_pytest_test_suite</a></li>
+</ul>
+<p><a id="current_py_pytest_toolchain"></a></p>
+<h2 id="current_py_pytest_toolchain"><a class="header" href="#current_py_pytest_toolchain">current_py_pytest_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/pytest:defs.bzl", "current_py_pytest_toolchain")
+
+current_py_pytest_toolchain(<a href="#current_py_pytest_toolchain-name">name</a>)
+</pre>
+<p>A rule for exposing the current registered <code>py_pytest_toolchain</code>.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="current_py_pytest_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_pytest_test"></a></p>
+<h2 id="py_pytest_test"><a class="header" href="#py_pytest_test">py_pytest_test</a></h2>
+<pre>
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_test")
+
+py_pytest_test(<a href="#py_pytest_test-name">name</a>, <a href="#py_pytest_test-deps">deps</a>, <a href="#py_pytest_test-srcs">srcs</a>, <a href="#py_pytest_test-data">data</a>, <a href="#py_pytest_test-config">config</a>, <a href="#py_pytest_test-coverage_rc">coverage_rc</a>, <a href="#py_pytest_test-env">env</a>, <a href="#py_pytest_test-env_inherit">env_inherit</a>, <a href="#py_pytest_test-numprocesses">numprocesses</a>)
+</pre>
+<p>A rule which runs python tests using <a href="https://docs.pytest.org/en/latest/">pytest</a> as the <a href="https://docs.bazel.build/versions/master/be/python.html#py_test">py_test</a> test runner.</p>
+<p>This rule also supports a build setting for globally applying extra flags to test invocations.
+Users can add something similar to the following to their <code>.bazelrc</code> files:</p>
+<pre><code class="language-text">build --@rules_venv//python/pytest:extra_args=--color=yes,-vv
+</code></pre>
+<p>The example above will add <code>--colors=yes</code> and <code>-vv</code> arguments to the end of the pytest invocation.</p>
+<p>Tips:</p>
+<ul>
+<li>It's common for tests to have some utility code that does not live in a test source file.
+To account for this. A <code>py_library</code> can be created that contains only these sources which are then
+passed to <code>py_pytest_test</code> via <code>deps</code>.</li>
+</ul>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_test")
+
+py_library(
+    name = "test_utils",
+    srcs = [
+        "tests/__init__.py",
+        "tests/conftest.py",
+    ],
+    deps = ["@rules_venv//python/pytest:current_py_pytest_toolchain"],
+    testonly = True,
+)
+
+py_pytest_test(
+    name = "test",
+    srcs = ["tests/example_test.py"],
+    deps = [":test_utils"],
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_pytest_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-deps"></a>deps</td><td style="text-align: left">The list of other libraries to be linked in to the binary target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-srcs"></a>srcs</td><td style="text-align: left">An explicit list of source files to test.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-config"></a>config</td><td style="text-align: left">The pytest configuration file to use.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/pytest:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-coverage_rc"></a>coverage_rc</td><td style="text-align: left">The pytest-cov configuration file to use.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/pytest:coverage_rc"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-env_inherit"></a>env_inherit</td><td style="text-align: left">Specifies additional environment variables to inherit from the external environment when the test is executed by <code>bazel test</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test-numprocesses"></a>numprocesses</td><td style="text-align: left">If set the <a href="https://pypi.org/project/pytest-xdist/">pytest-xdist</a> argument <code>--numprocesses</code> (<code>-n</code>) will be passed to the test. Note that the a value 0 or less indicates this flag should not be passed.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>0</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_pytest_toolchain"></a></p>
+<h2 id="py_pytest_toolchain"><a class="header" href="#py_pytest_toolchain">py_pytest_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_pytest_toolchain(<a href="#py_pytest_toolchain-name">name</a>, <a href="#py_pytest_toolchain-pytest">pytest</a>)
+</pre>
+<p>A toolchain for the <a href="https://python/pytest.readthedocs.io/en/stable/">pytest</a> rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_pytest_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_toolchain-pytest"></a>pytest</td><td style="text-align: left">The pytest <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_pytest_test_suite"></a></p>
+<h2 id="py_pytest_test_suite"><a class="header" href="#py_pytest_test_suite">py_pytest_test_suite</a></h2>
+<pre>
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_test_suite")
+
+py_pytest_test_suite(<a href="#py_pytest_test_suite-name">name</a>, <a href="#py_pytest_test_suite-tests">tests</a>, <a href="#py_pytest_test_suite-args">args</a>, <a href="#py_pytest_test_suite-data">data</a>, <a href="#py_pytest_test_suite-kwargs">**kwargs</a>)
+</pre>
+<p>Generates a <a href="https://docs.bazel.build/versions/master/be/general.html#test_suite">test_suite</a> which groups various test targets for a set of python sources.</p>
+<p>Given an idiomatic python project structure:</p>
+<pre><code class="language-text">BUILD.bazel
+my_lib/
+    __init__.py
+    mod_a.py
+    mod_b.py
+    mod_c.py
+requirements.in
+requirements.txt
+tests/
+    __init__.py
+    fixtures.py
+    test_mod_a.py
+    test_mod_b.py
+    test_mod_c.py
+</code></pre>
+<p>This rule can be used to easily define test targets:</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_test_suite")
+
+py_library(
+    name = "my_lib",
+    srcs = glob(["my_lib/**/*.py"])
+    imports = ["."],
+)
+
+py_pytest_test_suite(
+    name = "my_lib_test_suite",
+    # Source files containing test helpers should go here.
+    # Note that the test sources are excluded. This avoids
+    # a test to be updated without invalidating all other
+    # targets.
+    srcs = glob(
+        include = ["tests/**/*.py"],
+        exclude = ["tests/**/*_test.py"],
+    ),
+    # Any data files the tests may need would be passed here
+    data = glob(["tests/**/*.json"]),
+    # This field is used for dedicated test files.
+    tests = glob(["tests/**/*_test.py"]),
+    deps = [
+        ":my_lib",
+    ],
+)
+</code></pre>
+<p>For each file passed to <code>tests</code>, a <a href="#py_pytest_test">py_pytest_test</a> target will be created. From the example above,
+the user should expect to see the following test targets:</p>
+<pre><code class="language-text">//:my_lib_test_suite
+//:tests/test_mod_a
+//:tests/test_mod_b
+//:tests/test_mod_c
+</code></pre>
+<p>Additional Notes:</p>
+<ul>
+<li>No file passed to <code>tests</code> should be passed found in the <code>srcs</code> or <code>data</code> attributes or tests will not be able
+to be individually cached.</li>
+</ul>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_pytest_test_suite-name"></a>name</td><td style="text-align: left">The name of the test suite</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test_suite-tests"></a>tests</td><td style="text-align: left">A list of source files, typically <code>glob(["tests/**/*_test.py"])</code>, which are converted into test targets.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test_suite-args"></a>args</td><td style="text-align: left">Arguments for the underlying <code>py_pytest_test</code> targets.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test_suite-data"></a>data</td><td style="text-align: left">A list of additional data for the test. This field would also include python files containing test helper functionality.</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_test_suite-kwargs"></a>kwargs</td><td style="text-align: left">Keyword arguments passed to the underlying <code>py_test</code> rule.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="pylint.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="wheel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="pylint.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="wheel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
