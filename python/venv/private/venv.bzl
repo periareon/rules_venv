@@ -65,7 +65,6 @@ A library of Python code that can be depended upon.
     implementation = _py_venv_library_impl,
     attrs = _COMMON_ATTRS,
     provides = [PyInfo],
-    toolchains = [venv_common.TOOLCHAIN_TYPE],
 )
 
 def _create_run_environment_info(ctx, env, env_inherit, targets):
