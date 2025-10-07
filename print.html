@@ -167,7 +167,7 @@ suffers from a few issues which this repo aims to solve:</p>
 <ol>
 <li>
 <p>Use of <code>PYTHONPATH</code> to construct the python environment leads to operating system limitations.</p>
-<p>Some details on <code>MAX_ARG_STRLEN</code> and <code>ARG_MAX</code> can be found here: https://unix.stackexchange.com/a/120842</p>
+<p>Some details on <code>MAX_ARG_STRLEN</code> and <code>ARG_MAX</code> can be found here: <a href="https://unix.stackexchange.com/a/120842">https://unix.stackexchange.com/a/120842</a></p>
 </li>
 <li>
 <p>Slow startup on windows systems that do not support symlinks.</p>
@@ -177,28 +177,7 @@ more expensive than systems which support runfiles.</p>
 </li>
 </ol>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
-<h3 id="bzlmod"><a class="header" href="#bzlmod">bzlmod</a></h3>
 <pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
-</code></pre>
-<h3 id="workspacebazel"><a class="header" href="#workspacebazel">WORKSPACE.bazel</a></h3>
-<pre><code class="language-python">load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-# See releases for urls and checksums
-http_archive(
-    name = "rules_venv",
-    sha256 = "{sha256}",
-    urls = ["https://github.com/periareon/rules_venv/releases/download/{version}/rules_venv-v{version}.tar.gz"],
-)
-
-load("@rules_venv//venv:repositories.bzl", "venv_register_toolchains", "rules_venv_dependencies")
-
-rules_venv_dependencies()
-
-venv_register_toolchains()
-
-load("@rules_venv//python/venv:repositories_transitive.bzl", "rules_venv_transitive_deps")
-
-rules_venv_transitive_deps()
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="venv"><a class="header" href="#venv">Venv</a></h1>
