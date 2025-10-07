@@ -13,7 +13,7 @@ suffers from a few issues which this repo aims to solve:
 
 1. Use of `PYTHONPATH` to construct the python environment leads to operating system limitations.
 
-    Some details on `MAX_ARG_STRLEN` and `ARG_MAX` can be found here: https://unix.stackexchange.com/a/120842
+    Some details on `MAX_ARG_STRLEN` and `ARG_MAX` can be found here: <https://unix.stackexchange.com/a/120842>
 
 2. Slow startup on windows systems that do not support symlinks.
 
@@ -23,31 +23,6 @@ suffers from a few issues which this repo aims to solve:
 
 ## Setup
 
-### bzlmod
-
 ```python
 bazel_dep(name = "rules_venv", version = "{version}")
-```
-
-### WORKSPACE.bazel
-
-```python
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-# See releases for urls and checksums
-http_archive(
-    name = "rules_venv",
-    sha256 = "{sha256}",
-    urls = ["https://github.com/periareon/rules_venv/releases/download/{version}/rules_venv-v{version}.tar.gz"],
-)
-
-load("@rules_venv//venv:repositories.bzl", "venv_register_toolchains", "rules_venv_dependencies")
-
-rules_venv_dependencies()
-
-venv_register_toolchains()
-
-load("@rules_venv//python/venv:repositories_transitive.bzl", "rules_venv_transitive_deps")
-
-rules_venv_transitive_deps()
 ```
