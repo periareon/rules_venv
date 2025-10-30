@@ -1,0 +1,28 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_binary")
+
+exports_files([
+    "pex_process_wrapper.py",
+])
+
+py_binary(
+    name = "pex_process_wrapper",
+    srcs = ["pex_process_wrapper.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "update_scie_science_versions",
+    srcs = ["update_scie_science_versions.py"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/pex:__subpackages__"],
+    deps = [
+        "//python:bzl_lib",
+        "//python/private:bzl_lib",
+        "//python/venv:bzl_lib",
+    ],
+)

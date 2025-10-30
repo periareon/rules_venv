@@ -15,6 +15,15 @@ register_toolchains(
     "//python/venv/toolchain",
 )
 
+pex = use_extension("//python/pex:extensions.bzl", "pex")
+pex.scie_science(
+    name = "scie_science",
+)
+use_repo(
+    pex,
+    "scie_science",
+)
+
 bazel_dep(name = "rules_req_compile", version = "1.0.0rc35", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 bazel_dep(name = "rules_rust_mdbook", version = "0.63.0", dev_dependency = True)
@@ -54,6 +63,7 @@ register_toolchains(
     "//python/black/toolchain",
     "//python/isort/toolchain",
     "//python/mypy/toolchain",
+    "//python/pex/toolchain",
     "//python/pylint/toolchain",
     "//python/pytest/toolchain",
     "//python/wheel/toolchain",

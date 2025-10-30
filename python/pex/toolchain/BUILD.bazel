@@ -1,0 +1,31 @@
+load("//python/pex:defs.bzl", "py_pex_toolchain")
+
+py_pex_toolchain(
+    name = "py_pex_toolchain",
+    pex = "@pip_deps//:pex",
+    platform = select({
+        "//python/pex/constraints:linux-aarch64": "linux-aarch64",
+        "//python/pex/constraints:linux-armv7l": "linux-armv7l",
+        "//python/pex/constraints:linux-powerpc64": "linux-powerpc64",
+        "//python/pex/constraints:linux-riscv64": "linux-riscv64",
+        "//python/pex/constraints:linux-s390x": "linux-s390x",
+        "//python/pex/constraints:linux-x86_64": "linux-x86_64",
+        "//python/pex/constraints:macos-aarch64": "macos-aarch64",
+        "//python/pex/constraints:macos-x86_64": "macos-x86_64",
+        "//conditions:default": "",
+    }),
+    scie_science = "@scie_science",
+    # Pex is not supported on windows:
+    # https://github.com/pex-tool/pex/issues/2658
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_pex_toolchain",
+    toolchain_type = "//python/pex:toolchain_type",
+    visibility = ["//visibility:public"],
+)

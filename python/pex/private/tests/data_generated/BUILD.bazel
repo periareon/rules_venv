@@ -1,0 +1,58 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_binary")
+load("//python/pex:defs.bzl", "py_pex_binary", "py_scie_binary")
+
+write_file(
+    name = "data_txt",
+    out = "data_file.txt",
+    content = [
+        "La-Li-Lu-Le-Lo",
+        "",
+    ],
+    newline = "unix",
+)
+
+py_binary(
+    name = "data_bin",
+    srcs = ["data.py"],
+    data = [":data_txt"],
+    deps = ["@rules_python//python/runfiles"],
+)
+
+py_scie_binary(
+    name = "data_scie",
+    binary = ":data_bin",
+)
+
+py_pex_binary(
+    name = "data_pex",
+    binary = ":data_bin",
+)
+
+run_binary(
+    name = "data_scie_output",
+    outs = ["data_scie_output.txt"],
+    args = ["--output=$(execpath :data_scie_output.txt)"],
+    tool = ":data_scie",
+)
+
+run_binary(
+    name = "data_pex_output",
+    outs = ["data_pex_output.txt"],
+    args = ["--output=$(execpath :data_pex_output.txt)"],
+    tool = ":data_pex",
+)
+
+diff_test(
+    name = "data_scie_diff_test",
+    file1 = ":data_txt",
+    file2 = ":data_scie_output.txt",
+)
+
+diff_test(
+    name = "data_pex_diff_test",
+    file1 = ":data_txt",
+    file2 = ":data_pex_output.txt",
+)

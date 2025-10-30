@@ -10,6 +10,7 @@
     - [isort](./isort.md)
     - [module_extension](./module_extension.md)
     - [mypy](./mypy.md)
+    - [pex](./pex.md)
     - [pylint](./pylint.md)
     - [pytest](./pytest.md)
     - [wheel](./wheel.md)

@@ -3,6 +3,7 @@
 -r ../black/requirements.in
 -r ../isort/requirements.in
 -r ../mypy/requirements.in
+-r ../pex/requirements.in
 -r ../pylint/requirements.in
 -r ../pytest/requirements.in
 -r ../wheel/requirements.in

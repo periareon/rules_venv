@@ -11,19 +11,9 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Mapping
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 RlocationPath = str
-
-
-def _srcs_pair_arg_file(arg: str) -> Tuple[Path, RlocationPath]:
-    """Parse a command line argument into a pairing of file paths to rlocationpath."""
-    if arg.startswith("'") and arg.endswith("'"):
-        arg = arg[1:-1]
-    src, _, dest = arg.partition("=")
-    if not src or not dest:
-        raise ValueError(f"Unexpected src pair: {arg}")
-    return Path(src), dest
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:

@@ -1,0 +1,7 @@
+load("//python:defs.bzl", "py_library")
+
+py_library(
+    name = "dep_a",
+    srcs = ["dep_a.py"],
+    visibility = ["//python/pex/private/tests:__subpackages__"],
+)

@@ -9,3 +9,7 @@ local_path_override(
     module_name = "rules_venv",
     path = "../..",
 )
+
+register_toolchains(
+    "@rules_venv//python/pex/toolchain",
+)

@@ -1,0 +1,56 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_binary")
+load("//python/pex:defs.bzl", "py_pex_binary", "py_scie_binary")
+
+py_binary(
+    name = "basic",
+    srcs = ["basic.py"],
+)
+
+py_scie_binary(
+    name = "basic_scie",
+    binary = ":basic",
+)
+
+py_pex_binary(
+    name = "basic_pex",
+    binary = ":basic",
+)
+
+run_binary(
+    name = "basic_scie_output",
+    outs = ["basic_scie_output.txt"],
+    args = ["--output=$(execpath :basic_scie_output.txt)"],
+    tool = ":basic_scie",
+)
+
+run_binary(
+    name = "basic_pex_output",
+    outs = ["basic_pex_output.txt"],
+    args = ["--output=$(execpath :basic_pex_output.txt)"],
+    tool = ":basic_pex",
+)
+
+write_file(
+    name = "basic_expected",
+    out = "basic_expected.txt",
+    content = [
+        "La-Li-Lu-Le-Lo",
+        "",
+    ],
+    newline = "unix",
+)
+
+diff_test(
+    name = "basic_scie_diff_test",
+    file1 = ":basic_expected.txt",
+    file2 = ":basic_scie_output.txt",
+)
+
+diff_test(
+    name = "basic_pex_diff_test",
+    file1 = ":basic_expected.txt",
+    file2 = ":basic_pex_output.txt",
+)

@@ -1,0 +1,64 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_binary")
+load("//python/pex:defs.bzl", "py_pex_binary", "py_scie_binary")
+
+# Test with direct dependency
+py_binary(
+    name = "bin",
+    srcs = ["bin.py"],
+    deps = [
+        # Note that `dep_c` comes from `dep_b`
+        "//python/pex/private/tests/deps/dep_a",
+        "//python/pex/private/tests/deps/dep_b",
+    ],
+)
+
+py_scie_binary(
+    name = "bin_scie",
+    binary = ":bin",
+)
+
+py_pex_binary(
+    name = "bin_pex",
+    binary = ":bin",
+)
+
+run_binary(
+    name = "deps_scie_output",
+    outs = ["deps_scie_output.txt"],
+    args = ["--output=$(execpath :deps_scie_output.txt)"],
+    tool = ":bin_scie",
+)
+
+run_binary(
+    name = "deps_pex_output",
+    outs = ["deps_pex_output.txt"],
+    args = ["--output=$(execpath :deps_pex_output.txt)"],
+    tool = ":bin_pex",
+)
+
+write_file(
+    name = "deps_expected",
+    out = "deps_expected.txt",
+    content = [
+        "Message from dep_a",
+        "Special message from dep_b",
+        "Message from dep_c",
+        "",
+    ],
+    newline = "unix",
+)
+
+diff_test(
+    name = "deps_scie_diff_test",
+    file1 = ":deps_expected.txt",
+    file2 = ":deps_scie_output.txt",
+)
+
+diff_test(
+    name = "deps_pex_diff_test",
+    file1 = ":deps_expected.txt",
+    file2 = ":deps_pex_output.txt",
+)

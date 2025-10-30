@@ -30,6 +30,15 @@ stardoc(
 )
 
 stardoc(
+    name = "isort",
+    out = "src/isort.md",
+    input = "//python/isort:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/isort:bzl_lib"],
+)
+
+stardoc(
     name = "module_extension",
     out = "src/module_extension.md",
     input = "//python/module_extension:defs.bzl",
@@ -48,21 +57,21 @@ stardoc(
 )
 
 stardoc(
+    name = "pex",
+    out = "src/pex.md",
+    input = "//python/pex:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/pex:bzl_lib"],
+)
+
+stardoc(
     name = "pylint",
     out = "src/pylint.md",
     input = "//python/pylint:defs.bzl",
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
     tags = ["manual"],
     deps = ["//python/pylint:bzl_lib"],
-)
-
-stardoc(
-    name = "isort",
-    out = "src/isort.md",
-    input = "//python/isort:defs.bzl",
-    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
-    tags = ["manual"],
-    deps = ["//python/isort:bzl_lib"],
 )
 
 stardoc(
@@ -91,6 +100,7 @@ mdbook(
         ":isort",
         ":module_extension",
         ":mypy",
+        ":pex",
         ":pylint",
         ":pytest",
         ":venv",
