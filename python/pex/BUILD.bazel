@@ -14,7 +14,11 @@ toolchain_type(
 
 current_py_pex_toolchain(
     name = "current_py_pex_toolchain",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-format",
+        "no-lint",
+    ],
 )
 
 bzl_library(

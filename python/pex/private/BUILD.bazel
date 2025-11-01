@@ -12,8 +12,23 @@ py_binary(
 )
 
 py_binary(
-    name = "update_scie_science_versions",
-    srcs = ["update_scie_science_versions.py"],
+    name = "scie_cache_generator",
+    srcs = ["scie_cache_generator.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "update_pex_versions",
+    srcs = ["update_pex_versions.py"],
+)
+
+py_binary(
+    name = "update_python_versions",
+    srcs = ["update_python_versions.py"],
+    data = ["//python/pex:current_py_pex_toolchain"],
+    env = {"SCIE_SCIENCE_BINARY": "$(SCIE_SCIENCE_RLOCATIONPATH)"},
+    toolchains = ["//python/pex:current_py_pex_toolchain"],
+    deps = ["//python/runfiles"],
 )
 
 bzl_library(

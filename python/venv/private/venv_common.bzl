@@ -235,7 +235,12 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
             return None
         return "{}={}".format(file.path, _rlocationpath(file, workspace_name))
 
-    runfiles_args.add_all(runfiles.files, map_each = _runfiles_filter_map, allow_closure = True)
+    runfiles_args.add_all(
+        runfiles.files,
+        map_each = _runfiles_filter_map,
+        allow_closure = True,
+        expand_directories = False,
+    )
 
     ctx.actions.run(
         mnemonic = "PyVenvRunfiles",

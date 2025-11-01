@@ -102,34 +102,33 @@ def _py_pex_binary_common(ctx, mnemonic, scie):
         args.add("--scie")
         args.add("--scie_platform", platform)
         args.add("--scie_science", pex_toolchain.scie_science)
+        args.add("--scie_jump", pex_toolchain.scie_jump)
+        args.add("--scie_ptex", pex_toolchain.scie_ptex)
+        args.add("--scie_python_archive", pex_toolchain.scie_python_interpreter)
+        args.add("--scie_python_version", pex_toolchain.scie_python_version)
+        args.add("--scie_cache_dir", pex_toolchain.scie_cache_dir.path)
     args.add("--output", output)
     args.add("--cpus", cpus)
     args.add("--main", _rlocationpath(main_file, ctx.workspace_name))
     args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
     args.add_all(py_info.imports, format_each = "--import=%s")
 
-    # External repos always fall into the `../` branch of `_rlocationpath`.
-    workspace_name = ctx.workspace_name
+    # Pass the pex binary
+    args.add("--pex", pex)
 
-    def _srcs_map(file):
-        return "--pex_src={}={}".format(_rlocationpath(file, workspace_name), file.path)
-
-    # Additionally insert pex as an import.
-    args.add_all(pex[PyInfo].imports, format_each = "--pex_import=%s")
-    args.add_all(pex[DefaultInfo].default_runfiles.files, map_each = _srcs_map, allow_closure = True)
+    input_files = [
+        files_to_run.runfiles_manifest,
+        files_to_run.repo_mapping_manifest,
+    ]
 
     inputs = depset(
-        [
-            files_to_run.runfiles_manifest,
-            files_to_run.repo_mapping_manifest,
-        ],
+        input_files,
         transitive = [
-            pex_toolchain.pex[DefaultInfo].default_runfiles.files,
             binary[DefaultInfo].default_runfiles.files,
         ],
     )
 
-    tools = depset([pex_toolchain.scie_science], transitive = [py_runtime.files])
+    tools = depset(transitive = [py_runtime.files, pex_toolchain.all_files])
 
     ctx.actions.run(
         mnemonic = mnemonic,

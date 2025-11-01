@@ -15,18 +15,10 @@ register_toolchains(
     "//python/venv/toolchain",
 )
 
-pex = use_extension("//python/pex:extensions.bzl", "pex")
-pex.scie_science(
-    name = "scie_science",
-)
-use_repo(
-    pex,
-    "scie_science",
-)
-
+bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2", dev_dependency = True)
 bazel_dep(name = "rules_req_compile", version = "1.0.0rc35", dev_dependency = True)
-bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 bazel_dep(name = "rules_rust_mdbook", version = "0.63.0", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
@@ -63,11 +55,93 @@ register_toolchains(
     "//python/black/toolchain",
     "//python/isort/toolchain",
     "//python/mypy/toolchain",
-    "//python/pex/toolchain",
     "//python/pylint/toolchain",
     "//python/pytest/toolchain",
     "//python/wheel/toolchain",
     dev_dependency = True,
 )
 
-bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2", dev_dependency = True)
+pex = use_extension("//python/pex:extensions.bzl", "pex", dev_dependency = True)
+pex.toolchain(
+    name = "pex_toolchains",
+    pex_version = "2.67.3",
+    python_version = "3.11",
+    scie_jump_version = "0.14.0",
+    scie_ptex_version = "1.7.0",
+    scie_science_version = "0.15.0",
+)
+use_repo(
+    pex,
+    "pex_toolchains",
+)
+
+# Register all pex toolchains (combinations of scie_platform × python_platform)
+# For each scie platform and python platform combination, we register:
+# @pex_toolchains//:toolchain_{scie_platform}_{python_platform}
+register_toolchains(
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-aarch64_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-aarch64_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-aarch64_macos-x86_64",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-armv7l_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-armv7l_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-armv7l_macos-x86_64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-powerpc64_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-powerpc64_macos-x86_64",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-riscv64_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-riscv64_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-riscv64_macos-x86_64",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-s390x_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-s390x_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-s390x_macos-x86_64",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-aarch64",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-armv7l",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-riscv64",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-s390x",
+    "@pex_toolchains//:toolchain_linux-x86_64_linux-x86_64",
+    "@pex_toolchains//:toolchain_linux-x86_64_macos-aarch64",
+    "@pex_toolchains//:toolchain_linux-x86_64_macos-x86_64",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-aarch64",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-armv7l",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-riscv64",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-s390x",
+    "@pex_toolchains//:toolchain_macos-aarch64_linux-x86_64",
+    "@pex_toolchains//:toolchain_macos-aarch64_macos-aarch64",
+    "@pex_toolchains//:toolchain_macos-aarch64_macos-x86_64",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-aarch64",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-armv7l",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-powerpc64",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-riscv64",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-s390x",
+    "@pex_toolchains//:toolchain_macos-x86_64_linux-x86_64",
+    "@pex_toolchains//:toolchain_macos-x86_64_macos-aarch64",
+    "@pex_toolchains//:toolchain_macos-x86_64_macos-x86_64",
+    dev_dependency = True,
+)

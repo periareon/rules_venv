@@ -57,21 +57,10 @@ def parse_args() -> argparse.Namespace:
         help="Import paths required by the binary.",
     )
     parser.add_argument(
-        "--pex_import",
-        dest="pex_imports",
-        type=str,
-        default=[],
-        action="append",
-        help="Import paths required by the pex.",
-    )
-    parser.add_argument(
-        "--pex_src",
-        dest="pex_srcs",
-        type=_srcs_pair_arg_file,
-        default=[],
+        "--pex",
+        type=Path,
         required=True,
-        action="append",
-        help="Pex source files.",
+        help="The pex binary to use.",
     )
     parser.add_argument(
         "--cpus", type=int, required=True, help="The number of cores to use"
@@ -92,6 +81,31 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="The scie science binary to use for scie targets.",
     )
+    parser.add_argument(
+        "--scie_python_archive",
+        type=Path,
+        help="The python archive to use for scie targets.",
+    )
+    parser.add_argument(
+        "--scie_jump",
+        type=Path,
+        help="The scie jump binary to use.",
+    )
+    parser.add_argument(
+        "--scie_ptex",
+        type=Path,
+        help="The scie ptex binary to use.",
+    )
+    parser.add_argument(
+        "--scie_cache_dir",
+        type=Path,
+        help="Path to a pre-generated scie download cache directory.",
+    )
+    parser.add_argument(
+        "--scie_python_version",
+        type=str,
+        help="The Python version string to pass to pex for scie builds (e.g., '3.11').",
+    )
 
     if len(sys.argv) == 2 and sys.argv[1].startswith("@"):
         argv = Path(sys.argv[1][1:]).read_text(encoding="utf-8").splitlines()
@@ -99,8 +113,34 @@ def parse_args() -> argparse.Namespace:
     else:
         args = parser.parse_args()
 
-    if args.scie_platform and not args.scie:
-        parser.error("`--platform` requires `--scie` to be passed.")
+    if args.scie:
+        if not all(
+            (
+                bool(args.scie_platform),
+                bool(args.scie_science),
+                bool(args.scie_python_archive),
+                bool(args.scie_python_version),
+                bool(args.scie_jump),
+                bool(args.scie_ptex),
+                bool(args.scie_cache_dir),
+            )
+        ):
+            parser.error("`--scie` requires all `--scie_*` arguments to be passed.")
+    else:
+        if any(
+            (
+                bool(args.scie_platform),
+                bool(args.scie_science),
+                bool(args.scie_python_archive),
+                bool(args.scie_python_version),
+                bool(args.scie_jump),
+                bool(args.scie_ptex),
+                bool(args.scie_cache_dir),
+            )
+        ):
+            parser.error(
+                "No `--scie_*` argument should be passed if `--scie` is not also provided."
+            )
 
     return args
 
@@ -247,14 +287,12 @@ def install_files(
             install_fn(abs_src.absolute(), abs_dest)
 
 
-def install_pex(srcs: list[tuple[RLocationPath, Path]], runfiles_dir: Path) -> None:
-    """Install additional pex sources into a runfiles directory."""
-    install_fn = get_install_fn()
+def install_scie_cache(cache_dir: Path, pex_root: Path) -> None:
+    """Install the scie-science cache directory into the pex root."""
 
-    for rlocation, execpath in srcs:
-        abs_dest = runfiles_dir / rlocation
-        abs_dest.parent.mkdir(exist_ok=True, parents=True)
-        install_fn(execpath.absolute(), abs_dest)
+    dest = pex_root / "scies"
+    logging.debug("Copying scie cache `%s` -> `%s`", cache_dir, dest)
+    shutil.copytree(cache_dir, dest)
 
 
 def main() -> None:
@@ -288,20 +326,11 @@ def main() -> None:
             runfiles_manifest=args.runfiles_manifest,
         )
 
-        logging.debug("Creating pex to: %s", runfiles_dir)
-        install_pex(args.pex_srcs, runfiles_dir)
-
         venv_dir = temp_dir / "venv"
         venv_dir.mkdir(exist_ok=True, parents=True)
 
-        # Collect combined pth values.
+        # Collect pth values for the venv
         pth = [f"{runfiles_dir}/{i}" for i in args.imports]
-        pth.extend(
-            [
-                f"{runfiles_dir}/{i}"
-                for i in [i for i in args.pex_imports if i not in args.imports]
-            ]
-        )
 
         logging.debug("Creating venv at: %s", venv_dir)
         venv_interpreter = create_venv(
@@ -314,11 +343,13 @@ def main() -> None:
         pex_root = temp_dir / "pex_root"
         pex_root.mkdir(exist_ok=True, parents=True)
 
+        home = temp_dir / "home"
+        home.mkdir(exist_ok=True, parents=True)
+
         # Build pex command with hermetic settings
-        # Use venv interpreter for pex execution to ensure compatibility
+        # Run pex binary directly
         pex_cmd = [
-            str(venv_interpreter),
-            "-m",
+            str(args.pex),
             "pex",
             "--output",
             str(args.output),
@@ -326,7 +357,7 @@ def main() -> None:
             str(runfiles_dir / args.main),
             "--venv-repository",
             str(venv_dir),
-            "--no-index",  # Don't use PyPI, only use venv packages
+            "--no-index",
             "--sh-boot",
             "--jobs",
             str(args.cpus),
@@ -338,7 +369,14 @@ def main() -> None:
             str(pex_root),
         ]
 
+        # Ensure all normal imports are added
+        for path in args.imports:
+            pex_cmd.extend(["--sources-directory", str(runfiles_dir / path)])
+
         if args.scie:
+            install_scie_cache(args.scie_cache_dir, pex_root)
+
+            # Science will use default GitHub URLs, which will be found in the hash cache
             pex_cmd.extend(
                 [
                     "--scie-only",
@@ -348,18 +386,18 @@ def main() -> None:
                     str(args.scie_science),
                     "--scie-platform",
                     args.scie_platform,
+                    "--scie-python-version",
+                    args.scie_python_version,
                 ]
             )
-
-        # Ensure all normal imports are added
-        for path in args.imports:
-            pex_cmd.extend(["--sources-directory", str(runfiles_dir / path)])
 
         if is_debug:
             pex_cmd.append("-vvv")
 
         env = dict(os.environ)
         env["PEX_ROOT"] = str(pex_root)
+        env["HOME"] = str(home)
+        env["USERPROFILE"] = str(home)
 
         logging.debug("Running pex command: %s", " ".join(pex_cmd))
         result = subprocess.run(
