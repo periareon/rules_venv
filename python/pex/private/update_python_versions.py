@@ -9,8 +9,9 @@ import os
 import platform
 import subprocess
 import tempfile
+from enum import IntEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from python.runfiles import Runfiles
 
@@ -28,6 +29,23 @@ PROVIDERS = [
     # "PyPy",
     "PythonBuildStandalone",
 ]
+
+
+class LibcPreference(IntEnum):
+    """Preference order for libc/ABI variants (higher is more preferred)."""
+
+    MUSL = 0  # Fallback
+    GNUEABI = 1  # Soft-float ABI for ARM
+    GNU = 2  # Standard gnu libc (preferred for most platforms)
+    GNUEABIHF = 3  # Hard-float ABI for ARM (most preferred)
+
+
+class PlatformInfo(NamedTuple):
+    """Platform identification and preference."""
+
+    platform: str
+    preference: LibcPreference
+
 
 BUILD_TEMPLATE = """\"\"\"Python Build Standalone Versions
 
@@ -106,14 +124,16 @@ def integrity(hex_str: str) -> str:
     return f"sha256-{encoded}"
 
 
-def _platform_from_asset_name(asset_name: str) -> str | None:
+def _platform_from_asset_name(asset_name: str) -> PlatformInfo | None:
     """Extract platform identifier from Python Build Standalone asset name.
 
     Examples:
-    - cpython-3.11.14+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz -> linux-x86_64
-    - cpython-3.11.14+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz -> linux-aarch64
-    - cpython-3.11.14+20251028-x86_64-apple-darwin-install_only.tar.gz -> macos-x86_64
-    - cpython-3.11.14+20251028-aarch64-apple-darwin-install_only.tar.gz -> macos-aarch64
+    - cpython-3.11.14+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz -> PlatformInfo("linux-x86_64", LibcPreference.GNU)
+    - cpython-3.11.14+20251028-x86_64-unknown-linux-musl-install_only.tar.gz -> PlatformInfo("linux-x86_64", LibcPreference.MUSL)
+    - cpython-3.11.14+20251028-armv7-unknown-linux-gnueabihf-install_only.tar.gz -> PlatformInfo("linux-armv7l", LibcPreference.GNUEABIHF)
+
+    Returns:
+        PlatformInfo with platform name and libc preference, or None if not recognized.
     """
     # Map of (OS indicators, arch indicators) -> platform name
     platform_mappings = [
@@ -132,7 +152,17 @@ def _platform_from_asset_name(asset_name: str) -> str | None:
         if any(os_ind in asset_name for os_ind in os_indicators) and any(
             arch_ind in asset_name for arch_ind in arch_indicators
         ):
-            return result
+            # Determine preference based on libc/ABI variant
+            if "gnueabihf" in asset_name:
+                preference = LibcPreference.GNUEABIHF
+            elif "linux-gnu" in asset_name:
+                preference = LibcPreference.GNU
+            elif "gnueabi" in asset_name:
+                preference = LibcPreference.GNUEABI
+            else:
+                preference = LibcPreference.MUSL
+
+            return PlatformInfo(platform=result, preference=preference)
 
     return None
 
@@ -169,7 +199,10 @@ def _process_version(
     base_url_obj = distributions.get("base_url", "")
     base_url = base_url_obj if isinstance(base_url_obj, str) else ""
 
-    # Process each distribution asset
+    # Process each distribution asset, preferring gnu builds for Linux
+    # Track builds with preference: gnueabihf > gnu > gnueabi > musl
+    platform_assets: dict[str, tuple[dict[str, str], LibcPreference]] = {}
+
     assets = distributions.get("assets", [])
     if isinstance(assets, list):
         for asset in assets:
@@ -177,11 +210,22 @@ def _process_version(
                 continue
             result = _process_asset(asset, base_url)
             if result:
-                plat, asset_data = result
-                version_data[plat] = asset_data
-                logging.debug(
-                    "Added %s for %s: %s", plat, python_version, asset_data["url"]
-                )
+                plat, asset_data, preference = result
+                # Use this asset if we haven't seen the platform, or if it has higher preference
+                if plat not in platform_assets or preference > platform_assets[plat][1]:
+                    platform_assets[plat] = (asset_data, preference)
+                    logging.debug(
+                        "Selected %s (%s) for %s: %s",
+                        plat,
+                        preference.name.lower(),
+                        python_version,
+                        asset_data["url"],
+                    )
+
+    # Extract just the asset data (without preference value)
+    version_data = {
+        plat: asset_data for plat, (asset_data, _) in platform_assets.items()
+    }
 
     if version_data:
         logging.info(
@@ -192,7 +236,7 @@ def _process_version(
 
 def _process_asset(
     asset: dict[str, object], base_url: str
-) -> tuple[str, dict[str, str]] | None:
+) -> tuple[str, dict[str, str], LibcPreference] | None:
     """Process a single distribution asset.
 
     Args:
@@ -200,7 +244,8 @@ def _process_asset(
         base_url: Base URL for downloads
 
     Returns:
-        Tuple of (platform, asset_data) or None if asset should be skipped
+        Tuple of (platform, asset_data, preference) or None if asset should be skipped.
+        preference indicates build quality: GNUEABIHF > GNU > GNUEABI > MUSL.
     """
     asset_name = asset.get("name", "")
     if (
@@ -210,8 +255,8 @@ def _process_asset(
     ):
         return None
 
-    plat = _platform_from_asset_name(asset_name)
-    if not plat:
+    platform_info = _platform_from_asset_name(asset_name)
+    if not platform_info:
         logging.debug("Could not determine platform for asset: %s", asset_name)
         return None
 
@@ -231,10 +276,14 @@ def _process_asset(
     # URL is {base_url}/{rel_path}
     url = f"{base_url}/{rel_path}"
 
-    return plat, {
-        "url": url,
-        "integrity": integrity(sha256_hash),
-    }
+    return (
+        platform_info.platform,
+        {
+            "url": url,
+            "integrity": integrity(sha256_hash),
+        },
+        platform_info.preference,
+    )
 
 
 def download_provider_info(

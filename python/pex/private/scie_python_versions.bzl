@@ -14,8 +14,8 @@ A mapping of Python version to platform to integrity and URL for Python Build St
 PYTHON_BUILD_STANDALONE_VERSIONS = {
     "3.10": {
         "linux-aarch64": {
-            "integrity": "sha256-K97dXb3+QM32Y6tQi4gnqXf8ayFeZrnxQNND9o7hB2k=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.10.19+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-SJdOefXlmLCREPfUBe+szuEawC8XeBF3/j1aEA1LrSw=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.10.19+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-ukyhD2/e3jtcwwVQrWPwZiOBseKjnKMTgSQQzJRsPeE=",
@@ -34,8 +34,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.10.19+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-R7H7b4CTyvLl7UKgqrak3ci90pdXWXav4HEHUHSCyGI=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.10.19+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-crALF+W+gm+2P/gaBAYi6kaQtCk9bjJ8PlNsK7wAt9c=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.10.19+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-DRQ3uDunml5OAYKtSiNN/FocW2v7L6tQGUXtXbbl4JI=",
@@ -52,8 +52,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
     },
     "3.11": {
         "linux-aarch64": {
-            "integrity": "sha256-7szoky+tzbXUZM/dpZulWhOoPZGadMu9AUf0i34ZnBo=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.11.14+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-CBQdMfldhqI/I+THQbcm3gBV8S+DIA0dSGe06ObpZ8U=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.11.14+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-8mwQ9N6PqsuAI3EKWu1fX6r75BxrAcm0ORcdkObIJwo=",
@@ -72,8 +72,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.11.14+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-bFnCjzOZ/ENJUmOvTrx8mFZU5A/wy29/epDzVkwqD50=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.11.14+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-7djRGqU4lT0Sgi+rQYNZppL9HuTKJnVXn78Pox42iPE=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.11.14+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-AbTiPjXPP5rruMoUJEUtoRNgcEac2S9E8Mrdglws/Mc=",
@@ -90,8 +90,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
     },
     "3.12": {
         "linux-aarch64": {
-            "integrity": "sha256-gQGSx7aqROcC8vxfASUseGLpTSUySeN3jBGNtLmAt+E=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.12.12+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-bku8m93UYfDdZIWzF9Sht1JVBZous7zH+BEckyXa2FA=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.12.12+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-OMpu/E5cbof28nVUtPQMh8A35ycuu54XdZuNo/dLYdc=",
@@ -110,8 +110,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.12.12+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-O00c7qGhMCbqBWdgAJzVjy54GOANzUQVaBLNbftWqf0=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.12.12+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-Kutsu50A9iTC32JKJzlI/YGx2xXM/SYcoV4PKZ5mbew=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.12.12+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-YlavDjlTQXoexDq6JfjvmWOMXDForP0x5L5OIzq82Ns=",
@@ -128,8 +128,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
     },
     "3.13": {
         "linux-aarch64": {
-            "integrity": "sha256-aNCM4q/qUXztN+ydQfae7huvi15k5wI/Ph2Xdhzmu8w=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.13.9+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-1MOpduFTdEGoQkAsnBiO/j1ijBlDIOROBs8SGaJkpv4=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.13.9+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-uq96nb6AIt3tbFXdbt28S1m0NP+3qfB+d9gQCZG8m2o=",
@@ -148,8 +148,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.13.9+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-P0WNnQ7H4XrAQvhuuY15UxpECh2xQy8WQdoznhkMKBY=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.13.9+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-Ij2MDde2/3cKFiiNBpCfjGH0rat6RcD9qlyrzTAWH9Y=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.13.9+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-PsK15fbYjeZUbfgf21pXcUsDrkkkopsrQlQsflXnQpQ=",
@@ -166,8 +166,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
     },
     "3.14": {
         "linux-aarch64": {
-            "integrity": "sha256-ISFdLC9rSqZK0V0it/I4T0bHu98ibH1H5AP84eXtGAU=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.14.0+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-7j7QiZuu6gI/mV9vGpD8lj7db1gzgRyUxhhfBJyJ2Qw=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.14.0+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-t6+POe2Q2XW0em69WxbzNAbdds/VEsv3oMTerHMjJWg=",
@@ -186,8 +186,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.14.0+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-eKB3MbmkGQClG23TmV8hA+Lk4ekg9ff5P563Tw4uMaE=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.14.0+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-DYTC3f8z3dFRzzDU8LYQ0eKwTN//SMH3MmWBZKxquPM=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.14.0+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-Fj1amovejclFXfDVGsS/E+fDkymGsIO9Shi5zbTYyzs=",
@@ -204,8 +204,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
     },
     "3.9": {
         "linux-aarch64": {
-            "integrity": "sha256-Jn7TdZrXOauEP3ZyeAGkuiW8X0XLU7ShafeC9s6zry0=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.9.24+20251028-aarch64-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-/Uo8gG2NEAqW/DL5bX9fkNLuDg4CHrRF9cEOpSkopgE=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.9.24+20251028-aarch64-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-armv7l": {
             "integrity": "sha256-EgOwqG6FRk82Sj0pKobtKTOTMtJ2uTU+LYI8t+GC/Dc=",
@@ -224,8 +224,8 @@ PYTHON_BUILD_STANDALONE_VERSIONS = {
             "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.9.24+20251028-s390x-unknown-linux-gnu-install_only.tar.gz",
         },
         "linux-x86_64": {
-            "integrity": "sha256-tkKwE7WtDpJYdrX3XFuHrOsybfhgtlVOf3eCbljszO4=",
-            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.9.24+20251028-x86_64_v4-unknown-linux-musl-install_only.tar.gz",
+            "integrity": "sha256-fpC34E7fETD4MCFlN24EtfyZ9vJzgbrdwyVFFOM45ag=",
+            "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20251028/cpython-3.9.24+20251028-x86_64-unknown-linux-gnu-install_only.tar.gz",
         },
         "macos-aarch64": {
             "integrity": "sha256-c6lc1FosH7lepOTpubtb3sXhUzzn40tgbCQo4xhHkBs=",
