@@ -102,7 +102,7 @@ def _create_py_info(*, ctx, imports, srcs, dep_info = None):
         ),
     )
 
-def _create_venv_config_info(*, label, name, imports):
+def create_venv_config_info(*, label, name, imports):
     """Construct info used to create venvs.
 
     Args:
@@ -132,7 +132,7 @@ def _rlocationpath(file, workspace_name):
 def _path(file, _workspace_name):
     return file.path
 
-def _create_python_startup_args(*, ctx, version_info):
+def create_python_startup_args(*, ctx, version_info):
     """Construct an Args object for running python scripts.
 
     A python script can be added to the resulting Args object to spawn
@@ -154,7 +154,16 @@ def _create_python_startup_args(*, ctx, version_info):
 
     return python_args
 
-def _zip_resource_set(_os_name, inputs):
+def zip_resource_set(_os_name, inputs):
+    """A `ctx.actions.run.resource_set` function intended for python zipfile actions.
+
+    Args:
+        _os_name (str): The name of the exec operating system.
+        inputs (int): The number if inputs to the action
+
+    Returns:
+        dict: A mapping of resource name to their desired values.
+    """
     return {
         # A somewhat arbitrary value but chosen to handle a 1GB zip
         # with 37000 files in it. Some of which are C extensions
@@ -195,7 +204,7 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
 
     if use_zip:
         output = ctx.actions.declare_file("{}.venv_runfiles.zip".format(name))
-        resource_set = _zip_resource_set
+        resource_set = zip_resource_set
         inputs = runfiles.files
 
         # When creating zips, the zip should be the only runfile required.
@@ -208,7 +217,7 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
         # When creating json manifests, all other runfiles will be required.
         output_runfiles = runfiles
 
-    python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
+    python_args = create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
 
     python_args.add(venv_toolchain.runfiles_maker)
 
@@ -226,7 +235,12 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
             return None
         return "{}={}".format(file.path, _rlocationpath(file, workspace_name))
 
-    runfiles_args.add_all(runfiles.files, map_each = _runfiles_filter_map, allow_closure = True)
+    runfiles_args.add_all(
+        runfiles.files,
+        map_each = _runfiles_filter_map,
+        allow_closure = True,
+        expand_directories = False,
+    )
 
     ctx.actions.run(
         mnemonic = "PyVenvRunfiles",
@@ -303,7 +317,7 @@ def _create_venv_entrypoint(
     is_windows = venv_toolchain.entrypoint.basename.endswith(".bat")
     entrypoint = ctx.actions.declare_file("{}.{}".format(name, "bat" if is_windows else "sh"))
 
-    venv_config_info = _create_venv_config_info(
+    venv_config_info = create_venv_config_info(
         label = ctx.label,
         name = name.replace("/", "_"),
         imports = py_info.imports.to_list(),
@@ -396,123 +410,12 @@ def _get_py_venv_toolchain(ctx, *, cfg = "target"):
         cfg,
     ))
 
-def create_python_zip_file(
-        *,
-        ctx,
-        venv_toolchain,
-        py_info,
-        main,
-        inject_args,
-        inject_env,
-        runfiles,
-        files_to_run,
-        py_toolchain = None,
-        py_toolchain_exec = None,
-        shebang = None):
-    """Create a zipapp.
-
-    Args:
-        ctx (ctx): The rule's context object.
-        venv_toolchain (ToolchainInfo): A `py_venv_toolchain` toolchain.
-        py_info (PyInfo): The `PyInfo` provider for the current target.
-        main (File): The main python entrypoint.
-        inject_args (list): A list of arguments to inject to the beginning of all zipapp invocations.
-        inject_env (dict): A map of arguments to inject to the beginning of all zipapp invocations.
-        runfiles (Runfiles): Runfiles associated with the executable.
-        files_to_run (FilesToRunProvider): Files to run associated with the executable.
-        py_toolchain (ToolchainInfo, optional): A `py_toolchain` toolchain. If one is not
-            provided one will be acquired via `py_venv_toolchain`.
-        py_toolchain_exec (ToolchainInfo, optional): A `py_toolchain` toolchain for the execution
-            platform. If one is not provided one will be acquired via `py_venv_toolchain`.
-        shebang (str, optional): Optional shebang contents to include, overriding the toolchain.
-    Returns:
-        File: The generated zip file.
-    """
-    if py_toolchain == None:
-        py_toolchain = venv_toolchain.py_toolchain
-
-    if py_toolchain_exec == None:
-        py_toolchain_exec = venv_toolchain.py_toolchain_exec
-
-    py_runtime = py_toolchain.py3_runtime
-    interpreter = None
-    if py_runtime.interpreter:
-        interpreter = py_runtime.interpreter
-
-    if not interpreter:
-        fail("Unable to locate interpreter from py_toolchain: {}".format(py_toolchain))
-
-    name = ctx.label.name
-    if not name.endswith(".pyz"):
-        name += ".pyz"
-
-    venv_config_info = _create_venv_config_info(
-        label = ctx.label,
-        name = name.replace("/", "_"),
-        imports = py_info.imports.to_list(),
-    )
-
-    venv_runfiles = depset([
-        main,
-        venv_toolchain.process_wrapper,
-        venv_toolchain.zipapp_main,
-        files_to_run.runfiles_manifest,
-        files_to_run.repo_mapping_manifest,
-    ], transitive = [
-        py_runtime.files,
-        py_info.transitive_sources,
-        runfiles.files,
-    ])
-
-    python_zip_file = ctx.actions.declare_file(name)
-
-    python_args = _create_python_startup_args(ctx = ctx, version_info = py_runtime.interpreter_version_info)
-    python_args.add(venv_toolchain.zipapp_maker)
-    args = ctx.actions.args()
-    args.add("--zipapp_main_template", venv_toolchain.zipapp_main)
-    args.add("--main", _rlocationpath(main, ctx.workspace_name))
-    args.add("--py_runtime", _rlocationpath(interpreter, ctx.workspace_name))
-    args.add("--venv_process_wrapper", _rlocationpath(venv_toolchain.process_wrapper, ctx.workspace_name))
-    optional_shebang = shebang or venv_toolchain.zipapp_shebang
-    if optional_shebang:
-        args.add("--shebang", optional_shebang)
-    args.add("--output", python_zip_file)
-    args.add("--venv_config_info", json.encode(venv_config_info))
-    args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
-    args.add("--inject_args", json.encode(inject_args))
-    args.add("--inject_env", json.encode(inject_env))
-
-    py_runtime_exec = py_toolchain_exec.py3_runtime
-    interpreter_exec = None
-    if py_runtime_exec.interpreter:
-        interpreter_exec = py_runtime_exec.interpreter
-
-    if not interpreter_exec:
-        fail("Unable to locate interpreter (exec) from py_toolchain: {}".format(py_toolchain_exec))
-
-    ctx.actions.run(
-        mnemonic = "PyVenvZipapp",
-        executable = interpreter_exec,
-        arguments = [python_args, args],
-        outputs = [python_zip_file],
-        inputs = depset(transitive = [
-            venv_runfiles,
-            py_runtime_exec.files,
-        ]),
-        tools = [venv_toolchain.zipapp_maker],
-        env = ctx.configuration.default_shell_env,
-        resource_set = _zip_resource_set,
-        toolchain = _TOOLCHAIN_TYPE,
-    )
-
-    return python_zip_file
-
 py_venv_common = struct(
     create_dep_info = _create_dep_info,
     create_py_info = _create_py_info,
     create_runfiles_collection = _create_runfiles_collection,
     create_venv_attrs = _create_venv_attrs,
-    create_venv_config_info = _create_venv_config_info,
+    create_venv_config_info = create_venv_config_info,
     create_venv_entrypoint = _create_venv_entrypoint,
     get_toolchain = _get_py_venv_toolchain,
     TOOLCHAIN_TYPE = _TOOLCHAIN_TYPE,

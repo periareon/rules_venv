@@ -111,11 +111,11 @@ def _create_run_environment_info(ctx, env, env_inherit, targets):
         inherited_environment = env_inherit,
     )
 
-def compute_main(ctx, srcs, main = None):
+def compute_main(label, srcs, main = None):
     """Determine the main entrypoint for executable rules.
 
     Args:
-        ctx (ctx): The rule's context object.
+        label (label): The label of the srcs owner.
         srcs (list): A list of File objects.
         main (File, optional): An explicit contender for the main entrypoint.
 
@@ -126,7 +126,7 @@ def compute_main(ctx, srcs, main = None):
         if main not in srcs:
             fail("`main` was not found in `srcs`. Please add `{}` to `srcs` for {}".format(
                 main.path,
-                ctx.label,
+                label,
             ))
         return main
 
@@ -136,16 +136,16 @@ def compute_main(ctx, srcs, main = None):
         for src in srcs:
             if main:
                 fail("Multiple files match candidates for `main`. Please explicitly specify which to use for {}".format(
-                    ctx.label,
+                    label,
                 ))
 
             basename = src.basename[:-len(".py")]
-            if basename == ctx.label.name:
+            if basename == label.name:
                 main = src
 
     if not main:
         fail("`main` and no `srcs` were specified. Please update {}".format(
-            ctx.label,
+            label,
         ))
 
     return main
@@ -179,7 +179,7 @@ def _py_venv_binary_impl(ctx):
         venv_toolchain = venv_toolchain,
         py_info = py_info,
         main = compute_main(
-            ctx = ctx,
+            label = ctx.label,
             main = ctx.file.main,
             srcs = ctx.files.srcs,
         ),
@@ -279,7 +279,7 @@ def _py_venv_test_impl(ctx):
         venv_toolchain = venv_toolchain,
         py_info = py_info,
         main = compute_main(
-            ctx = ctx,
+            label = ctx.label,
             main = ctx.file.main,
             srcs = ctx.files.srcs,
         ),
