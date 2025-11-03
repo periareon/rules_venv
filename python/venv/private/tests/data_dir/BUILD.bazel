@@ -4,7 +4,7 @@ load("//python/venv/private/tests/data_dir/private:directory_maker.bzl", "direct
 # Create a directory with nested files using declare_directory
 directory_maker(
     name = "test_data_directory",
-    content = "Hello from nested directory!",
+    content = "La-Li-Lu-Le-Lo",
 )
 
 # Test that accesses the directory via runfiles

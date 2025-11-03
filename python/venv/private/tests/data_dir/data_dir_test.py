@@ -65,7 +65,7 @@ class DataDirectoryAccessTests(unittest.TestCase):
 
         # Read and assert on the content
         text = nested_file.read_text(encoding="utf-8")
-        self.assertEqual("Hello from nested directory!", text.strip())
+        self.assertEqual("La-Li-Lu-Le-Lo", text.strip())
 
     def test_top_level_file_in_directory(self) -> None:
         """Test access to a top-level file within a declared directory."""
