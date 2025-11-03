@@ -1,12 +1,10 @@
 # rules_venv
 
-## Overview
+This repository implements Bazel rules for [Python](https://www.python.org/) and is designed to be a drop-in
+replacement for the existing [rules_python](https://github.com/bazelbuild/rules_python) where uses of
+`@rules_python//python:defs.bzl` can be replaced with `@rules_venv//python:defs.bzl`.
 
-This repository implements Bazel rules for Python and is designed to be a drop-in replacement for the existing
-[rules_python](https://github.com/bazelbuild/rules_python) where uses of `@rules_python//python:defs.bzl` can
-be replaced with `@rules_venv//python:defs.bzl`.
-
-### Improvements over `rules_python`
+## Improvements over `rules_python`
 
 While `rules_python` has fantastic toolchain infrastructure which this repo relies on, `rules_python` ultimately
 suffers from a few issues which this repo aims to solve:
