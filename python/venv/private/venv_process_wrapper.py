@@ -182,7 +182,10 @@ def install_files(
 
     def copy(src: Path, dest: Path) -> None:
         """Copy `src` to `dest`."""
-        shutil.copy2(src, dest)
+        if src.is_dir():
+            shutil.copytree(src, dest)
+        else:
+            shutil.copy2(src, dest)
 
     install_fn = link
 

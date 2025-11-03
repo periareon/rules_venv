@@ -1,6 +1,6 @@
 # rules_venv
 
-Bazel rules for Python.
+Bazel rules for [Python](https://www.python.org/).
 
 ## Documentation
 

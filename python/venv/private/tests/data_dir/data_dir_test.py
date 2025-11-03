@@ -8,21 +8,6 @@ from pathlib import Path
 from python.runfiles import Runfiles
 
 
-def _rlocationpath_env(name: str) -> str:
-    """Get `rlocationpath` values from the environment.
-
-    Bazel wraps `rlocationpath` values with `'` characters which are required
-    to be stripped if they're to be used by the Runfiles API.
-
-    Args:
-        name: The name of the environment variable.
-
-    Returns:
-        The value of the environment variable.
-    """
-    return os.environ[name].strip("'")
-
-
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
     """Look up a runfile and ensure the file exists
 
@@ -64,7 +49,7 @@ class DataDirectoryAccessTests(unittest.TestCase):
     def test_nested_file_in_directory(self) -> None:
         """Test access to a nested file within a declared directory."""
         # Get the directory path from runfiles
-        dir_path = _rlocation(self.runfiles, _rlocationpath_env("DATA_DIR"))
+        dir_path = _rlocation(self.runfiles, os.environ["DATA_DIR"])
 
         # Verify the directory exists
         self.assertTrue(dir_path.exists(), f"Directory does not exist: {dir_path}")
@@ -85,7 +70,7 @@ class DataDirectoryAccessTests(unittest.TestCase):
     def test_top_level_file_in_directory(self) -> None:
         """Test access to a top-level file within a declared directory."""
         # Get the directory path from runfiles
-        dir_path = _rlocation(self.runfiles, _rlocationpath_env("DATA_DIR"))
+        dir_path = _rlocation(self.runfiles, os.environ["DATA_DIR"])
 
         # Access the top-level file
         top_file = dir_path / "top_level.txt"
