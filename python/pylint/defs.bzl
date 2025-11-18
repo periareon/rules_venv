@@ -17,7 +17,7 @@ load("@rules_venv//python/pylint:defs.bzl", "py_pylint_toolchain")
 
 py_pylint_toolchain(
     name = "toolchain_impl",
-    pylint = "@pip_deps//:pylint",
+    pylint = "@pip_deps//pylint",
     visibility = ["//visibility:public"]
 )
 

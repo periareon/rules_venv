@@ -5,8 +5,8 @@ py_test(
     srcs = ["pytest_process_wrapper_test.py"],
     deps = [
         "//python/pytest/private:pytest_process_wrapper",
-        "@pip_deps//:coverage",
-        "@pip_deps//:pytest_cov",
-        "@pip_deps//:pytest_xdist",
+        "@pip_deps//coverage",
+        "@pip_deps//pytest_cov",
+        "@pip_deps//pytest_xdist",
     ],
 )

@@ -4,10 +4,10 @@ load("//python/pytest:defs.bzl", "py_pytest_toolchain")
 py_library(
     name = "pip_deps",
     deps = [
-        "@pip_deps//:pytest",
-        "@pip_deps//:pytest_cov",
-        "@pip_deps//:pytest_shard",
-        "@pip_deps//:pytest_xdist",
+        "@pip_deps//pytest",
+        "@pip_deps//pytest_cov",
+        "@pip_deps//pytest_shard",
+        "@pip_deps//pytest_xdist",
     ],
 )
 

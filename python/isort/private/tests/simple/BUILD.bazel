@@ -9,7 +9,7 @@ py_library(
         ":first_party_1",
         ":first_party_2",
         ":first_party_3",
-        "@pip_deps//:tomlkit",
+        "@pip_deps//tomlkit",
     ],
 )
 
@@ -39,7 +39,7 @@ py_test(
         ":first_party_1",
         ":first_party_2",
         ":first_party_3",
-        "@pip_deps//:tomlkit",
+        "@pip_deps//tomlkit",
     ],
 )
 

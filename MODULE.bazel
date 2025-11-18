@@ -5,19 +5,19 @@ module(
     version = "0.7.0",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
-bazel_dep(name = "rules_python", version = "1.5.1")
-bazel_dep(name = "rules_shell", version = "0.5.1")
+bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 
 register_toolchains(
     "//python/venv/toolchain",
 )
 
-bazel_dep(name = "rules_req_compile", version = "1.0.0rc35", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.0.0rc40", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
-bazel_dep(name = "rules_rust_mdbook", version = "0.63.0", dev_dependency = True)
+bazel_dep(name = "rules_rust_mdbook", version = "0.67.0", dev_dependency = True)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(

@@ -13,7 +13,7 @@ py_library(
     data = ["library/py.typed"],
     imports = ["."],
     visibility = ["//python/isort/private/tests/imports:__subpackages__"],
-    deps = ["@pip_deps//:tomlkit"],
+    deps = ["@pip_deps//tomlkit"],
 )
 
 isort_regex_test(

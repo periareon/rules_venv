@@ -10,7 +10,7 @@ py_library(
     imports = ["."],
     deps = [
         "//python/isort/private/tests/namespaces/library",
-        "@pip_deps//:tomlkit",
+        "@pip_deps//tomlkit",
     ],
 )
 

@@ -4,16 +4,16 @@ py_venv_test(
     name = "pytest_test",
     srcs = ["pytest_test.py"],
     deps = [
-        "@pip_deps//:pytest",
-        "@pip_deps//:pytest_cov",
+        "@pip_deps//pytest",
+        "@pip_deps//pytest_cov",
     ],
 )
 
 py_venv_library(
     name = "pytest_wrapper",
     deps = [
-        "@pip_deps//:pytest",
-        "@pip_deps//:pytest_cov",
+        "@pip_deps//pytest",
+        "@pip_deps//pytest_cov",
     ],
 )
 

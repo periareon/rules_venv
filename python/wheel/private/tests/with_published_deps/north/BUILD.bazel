@@ -7,6 +7,6 @@ py_library(
     tags = [package_tag("compass")],
     visibility = ["//python/wheel/private/tests/with_published_deps:__subpackages__"],
     deps = [
-        "@pip_deps//:twine",
+        "@pip_deps//twine",
     ],
 )

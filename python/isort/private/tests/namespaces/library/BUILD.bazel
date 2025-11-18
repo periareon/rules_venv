@@ -10,7 +10,7 @@ py_library(
         "first_party_3.py",
     ],
     visibility = ["//python/isort/private/tests/namespaces:__subpackages__"],
-    deps = ["@pip_deps//:tomlkit"],
+    deps = ["@pip_deps//tomlkit"],
 )
 
 isort_regex_test(
