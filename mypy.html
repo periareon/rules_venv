@@ -170,7 +170,7 @@ load("@rules_venv//python/mypy:defs.bzl", "py_mypy_toolchain")
 py_library(
     name = "mypy_deps",
     deps = [
-        "@pip_deps//:mypy",
+        "@pip_deps//mypy",
 
         # Types libraries can also be added here.
     ],

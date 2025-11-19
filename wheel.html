@@ -177,7 +177,7 @@ toolchain can be defined in a <code>BUILD.bazel</code> file.</p>
 py_wheel_toolchain(
     name = "py_wheel_toolchain_impl",
     # Definable using bzlmod modules like: https://github.com/periareon/req-compile
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 
@@ -235,7 +235,7 @@ py_wheel_toolchain(<a href="#py_wheel_toolchain-name">name</a>, <a href="#py_whe
 py_wheel_toolchain(
     name = "py_wheel_toolchain_impl",
     # Definable using bzlmod modules like: https://github.com/periareon/req-compile
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 

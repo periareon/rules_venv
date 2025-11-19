@@ -450,7 +450,7 @@ for the process wrappers. Users will want to make sure they have a way to get th
 
 py_black_toolchain(
     name = "toolchain_impl",
-    black = "@pip_deps//:black",
+    black = "@pip_deps//black",
     visibility = ["//visibility:public"]
 )
 
@@ -557,7 +557,7 @@ for the process wrappers. Users will want to make sure they have a way to get th
 
 py_isort_toolchain(
     name = "toolchain_impl",
-    isort = "@pip_deps//:isort",
+    isort = "@pip_deps//isort",
     visibility = ["//visibility:public"]
 )
 
@@ -700,7 +700,7 @@ load("@rules_venv//python/mypy:defs.bzl", "py_mypy_toolchain")
 py_library(
     name = "mypy_deps",
     deps = [
-        "@pip_deps//:mypy",
+        "@pip_deps//mypy",
 
         # Types libraries can also be added here.
     ],
@@ -790,7 +790,7 @@ for the process wrappers. Users will want to make sure they have a way to get th
 
 py_pylint_toolchain(
     name = "toolchain_impl",
-    pylint = "@pip_deps//:pylint",
+    pylint = "@pip_deps//pylint",
     visibility = ["//visibility:public"]
 )
 
@@ -1049,7 +1049,7 @@ toolchain can be defined in a <code>BUILD.bazel</code> file.</p>
 py_wheel_toolchain(
     name = "py_wheel_toolchain_impl",
     # Definable using bzlmod modules like: https://github.com/periareon/req-compile
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 
@@ -1107,7 +1107,7 @@ py_wheel_toolchain(<a href="wheel.html#py_wheel_toolchain-name">name</a>, <a hre
 py_wheel_toolchain(
     name = "py_wheel_toolchain_impl",
     # Definable using bzlmod modules like: https://github.com/periareon/req-compile
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 
