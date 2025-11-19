@@ -29,7 +29,7 @@ load("@rules_venv//python/wheel:defs.bzl", "py_wheel_toolchain")
 py_wheel_toolchain(
     name = "py_wheel_toolchain_impl",
     # Definable using bzlmod modules like: https://github.com/periareon/req-compile
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 

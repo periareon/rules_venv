@@ -22,7 +22,7 @@ py_wheel_library(
     deps = [
         "//python/wheel/private/tests/with_published_deps/north",
         "//python/wheel/private/tests/with_published_deps/west",
-        "@pip_deps//:black",
+        "@pip_deps//black",
     ],
 )
 

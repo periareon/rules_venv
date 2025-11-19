@@ -7,7 +7,7 @@ py_binary(
     srcs = ["consumer.py"],
     deps = [
         "//python/isort/private/tests/duplicate_name/dependency",
-        "@pip_deps//:tomlkit",
+        "@pip_deps//tomlkit",
     ],
 )
 

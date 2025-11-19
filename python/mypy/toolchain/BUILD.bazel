@@ -2,7 +2,7 @@ load("//python/mypy:defs.bzl", "py_mypy_toolchain")
 
 py_mypy_toolchain(
     name = "py_mypy_toolchain",
-    mypy = "@pip_deps//:mypy",
+    mypy = "@pip_deps//mypy",
 )
 
 toolchain(

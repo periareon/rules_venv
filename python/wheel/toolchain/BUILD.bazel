@@ -2,7 +2,7 @@ load("//python/wheel:defs.bzl", "py_wheel_toolchain")
 
 py_wheel_toolchain(
     name = "toolchain_impl",
-    twine = "@pip_deps//:twine",
+    twine = "@pip_deps//twine",
     visibility = ["//visibility:public"],
 )
 

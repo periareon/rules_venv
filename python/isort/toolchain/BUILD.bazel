@@ -2,7 +2,7 @@ load("//python/isort:defs.bzl", "py_isort_toolchain")
 
 py_isort_toolchain(
     name = "py_isort_toolchain",
-    isort = "@pip_deps//:isort",
+    isort = "@pip_deps//isort",
 )
 
 toolchain(

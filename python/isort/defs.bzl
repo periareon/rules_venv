@@ -17,7 +17,7 @@ load("@rules_venv//python/isort:defs.bzl", "py_isort_toolchain")
 
 py_isort_toolchain(
     name = "toolchain_impl",
-    isort = "@pip_deps//:isort",
+    isort = "@pip_deps//isort",
     visibility = ["//visibility:public"]
 )
 

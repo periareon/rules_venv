@@ -17,7 +17,7 @@ load("@rules_venv//python/black:defs.bzl", "py_black_toolchain")
 
 py_black_toolchain(
     name = "toolchain_impl",
-    black = "@pip_deps//:black",
+    black = "@pip_deps//black",
     visibility = ["//visibility:public"]
 )
 

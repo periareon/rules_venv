@@ -3,5 +3,5 @@ load("//python/venv:defs.bzl", "py_venv_test")
 py_venv_test(
     name = "numpy_test",
     srcs = ["numpy_test.py"],
-    deps = ["@pip_deps//:numpy"],
+    deps = ["@pip_deps//numpy"],
 )
