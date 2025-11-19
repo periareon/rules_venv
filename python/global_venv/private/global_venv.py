@@ -483,11 +483,20 @@ def main() -> None:
         ),
     )
 
-    logging.info(
-        "Generation complete, to activate run:\n\tsource %s/%s",
-        venv_interpreter.parent,
-        ("activate.bat" if platform.system() == "Windows" else "activate"),
-    )
+    is_windows = platform.system() == "Windows"
+    activate_script = "activate.bat" if is_windows else "activate"
+    activate_path = venv_interpreter.parent / activate_script
+
+    if is_windows:
+        logging.info(
+            "Generation complete, to activate run:\n\t%s",
+            activate_path,
+        )
+    else:
+        logging.info(
+            "Generation complete, to activate run:\n\tsource %s",
+            activate_path,
+        )
 
 
 if __name__ == "__main__":

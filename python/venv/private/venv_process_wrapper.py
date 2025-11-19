@@ -49,7 +49,7 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
         self,
         name: str,
         pth: Sequence[str],
-    ):
+    ) -> None:
         """Constructor.
 
         Args:
