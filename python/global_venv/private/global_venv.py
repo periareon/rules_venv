@@ -10,6 +10,9 @@ from dataclasses import Field, dataclass, fields
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+import sys
+print(json.dumps(sys.path, indent=4))
+
 # pylint: disable-next=import-error,no-name-in-module
 from python.venv.private.venv_process_wrapper import create_venv
 
