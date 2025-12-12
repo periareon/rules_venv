@@ -6,12 +6,12 @@ import logging
 import os
 import platform
 import subprocess
+import sys
+import venv
 from dataclasses import Field, dataclass, fields
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence
-
-# pylint: disable-next=import-error,no-name-in-module
-from python.venv.private.venv_process_wrapper import create_venv
 
 SPEC_FILE_SUFFIX = ".py_global_venv_info.json"
 
@@ -36,6 +36,110 @@ def parse_args() -> argparse.Namespace:
     )
 
     return parser.parse_args()
+
+
+class ExtendedEnvBuilder(venv.EnvBuilder):
+    """https://docs.python.org/3/library/venv.html"""
+
+    def __init__(
+        self,
+        name: str,
+        pth: Sequence[str],
+    ) -> None:
+        """Constructor.
+
+        Args:
+            name: The name of the venv (prompt).
+            pth: The `pth` values to add to PYTHONPATH. Note that each value
+                can contain a format string `{runfiles_dir}` that will be
+                substituted out.
+        """
+        self.bazel_pth = pth
+        self.interpreter: Optional[Path] = None
+
+        super().__init__(
+            system_site_packages=False,
+            clear=False,
+            upgrade=False,
+            with_pip=False,
+            symlinks=True,
+            prompt=name,
+            upgrade_deps=False,
+        )
+
+    def post_setup(self, context: SimpleNamespace) -> None:
+        """
+        Set up any packages which need to be pre-installed into the
+        virtual environment being created.
+
+        https://docs.python.org/3/library/site.html
+
+        Args:
+            context: The information for the virtual environment
+                creation request being processed.
+        """
+        self.interpreter = Path(context.env_exe)
+
+        major_minor = f"{sys.version_info.major}.{sys.version_info.minor}"
+        if platform.system() == "Windows":
+            site_packages = Path(context.env_dir) / "Lib/site-packages"
+        else:
+            site_packages = (
+                Path(context.env_dir) / f"lib/python{major_minor}/site-packages"
+            )
+
+        if not site_packages:
+            raise FileNotFoundError(
+                f"Failed to find site-packages directory at {site_packages}"
+            )
+
+        if "RULES_VENV_RUNFILES_DIR" in os.environ:
+            runfiles_path = Path(os.environ["RULES_VENV_RUNFILES_DIR"])
+        else:
+            runfiles_path = Path(os.environ["RUNFILES_DIR"])
+
+        if not runfiles_path.is_absolute():
+            runfiles_path = Path.cwd() / runfiles_path
+
+        pth_data = []
+        for pth in self.bazel_pth:
+            abs_pth = Path(pth.format(runfiles_dir=runfiles_path))
+            pth_data.append(str(abs_pth))
+
+        pth_file = site_packages / "rules_venv.pth"
+        pth_file.write_text(
+            "\n".join(pth_data) + "\n",
+            encoding="utf-8",
+        )
+
+
+def create_venv(
+    venv_name: str,
+    venv_dir: Path | str,
+    pth: Sequence[str],
+) -> Path:
+    """Construct a new Python venv at the requested location.
+
+    Args:
+        venv_name: The name (prompt) of the venv.
+        venv_dir: The location where the venv should be created
+        pth: Values to add to the a `pth` file for import resolution.
+
+    Returns:
+        The path to the new venv interpreter.
+    """
+    builder = ExtendedEnvBuilder(
+        name=venv_name,
+        pth=pth,
+    )
+
+    builder.create(venv_dir)
+
+    interpreter = builder.interpreter
+    if not interpreter:
+        raise RuntimeError("Failed to locate venv interpreter")
+
+    return interpreter
 
 
 def _bazel_env() -> Dict[str, str]:
@@ -483,11 +587,20 @@ def main() -> None:
         ),
     )
 
-    logging.info(
-        "Generation complete, to activate run:\n\tsource %s/%s",
-        venv_interpreter.parent,
-        ("activate.bat" if platform.system() == "Windows" else "activate"),
-    )
+    is_windows = platform.system() == "Windows"
+    activate_script = "activate.bat" if is_windows else "activate"
+    activate_path = venv_interpreter.parent / activate_script
+
+    if is_windows:
+        logging.info(
+            "Generation complete, to activate run:\n\t%s",
+            activate_path,
+        )
+    else:
+        logging.info(
+            "Generation complete, to activate run:\n\tsource %s",
+            activate_path,
+        )
 
 
 if __name__ == "__main__":

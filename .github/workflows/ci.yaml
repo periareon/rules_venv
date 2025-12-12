@@ -196,8 +196,7 @@ jobs:
         run: |
           bazel $env:BAZEL_STARTUP_FLAGS run //python/black
           bazel $env:BAZEL_STARTUP_FLAGS run //python/isort
-          # TODO: https://github.com/periareon/rules_venv/issues/57
-          # bazel $env:BAZEL_STARTUP_FLAGS run //python/global_venv
+          bazel $env:BAZEL_STARTUP_FLAGS run //python/global_venv
         if: startswith(runner.os, 'Windows')
 
       - name: Git diff
