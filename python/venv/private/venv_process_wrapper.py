@@ -4,11 +4,6 @@ This script is responsible for building a venv and running the
 main entrypoint provided by the Bazel rule.
 """
 
-# TODO: The venv creation logic is not importable on windows due to lack of
-# symlinks and actually needs to be different for creating repo level venvs
-# For now this lint is disabled and the code a snapshot.
-# pylint: disable=duplicate-code
-
 import json
 import logging
 import os
