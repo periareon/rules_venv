@@ -1,0 +1,104 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
+
+write_file(
+    name = "generated",
+    out = "generated/__init__.py",
+    content = """\
+\"\"\"A module for generating greeting messages.\"\"\"
+
+
+def greeting(name: str) -> str:
+    \"\"\"Generate a greeting message.
+
+    Args:
+        name: The name of the entity to greet.
+
+    Returns:
+        The greeting.
+    \"\"\"
+    return f"Hello, {name}"
+
+""".splitlines(),
+    newline = "unix",
+)
+
+py_venv_library(
+    name = "generated_srcs",
+    srcs = [
+        "generated/__init__.py",
+        "source.py",
+    ],
+    tags = ["no-mypy"],
+)
+
+py_venv_test(
+    name = "generated_srcs_test",
+    srcs = ["source_test.py"],
+    main = "source_test.py",
+    tags = ["no-mypy"],
+    deps = [":generated_srcs"],
+)
+
+py_venv_library(
+    name = "generated_srcs_imports",
+    srcs = [
+        "generated/__init__.py",
+        "source_imports.py",
+    ],
+    imports = ["."],
+    tags = ["no-mypy"],
+)
+
+py_venv_test(
+    name = "generated_srcs_imports_test",
+    srcs = ["source_imports_test.py"],
+    main = "source_imports_test.py",
+    tags = ["no-mypy"],
+    deps = [":generated_srcs_imports"],
+)
+
+write_file(
+    name = "generated_test_py",
+    out = "generated_test.py",
+    content = """\
+\"\"\"Python example code.\"\"\"
+
+import unittest
+
+
+class TestStringMethods(unittest.TestCase):
+    \"\"\"Test basic functionality of Python strings.\"\"\"
+
+    def test_upper(self) -> None:
+        \"\"\"Test the `str.upper` method\"\"\"
+        self.assertEqual("foo".upper(), "FOO")
+
+    def test_isupper(self) -> None:
+        \"\"\"Test the `str.isupper` method.\"\"\"
+        self.assertTrue("FOO".isupper())
+        self.assertFalse("Foo".isupper())
+
+    def test_split(self) -> None:
+        \"\"\"Test the `str.split` method.\"\"\"
+        s = "hello world"
+        self.assertEqual(s.split(), ["hello", "world"])
+        # check that s.split fails when the separator is not a string
+        with self.assertRaises(TypeError):
+            s.split(2)  # type: ignore
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+""".splitlines(),
+    newline = "unix",
+)
+
+py_venv_test(
+    name = "generated_test",
+    srcs = [":generated_test.py"],
+    main = ":generated_test.py",
+    tags = ["no-mypy"],
+)
