@@ -3,7 +3,7 @@
 load("//python:py_info.bzl", "PyInfo")
 load("//python/venv:defs.bzl", "py_venv_binary")
 
-def global_venv(name, **kwargs):
+def global_venv(*, name, **kwargs):
     """Define a "global venv" executable.
 
     Args:
@@ -14,10 +14,7 @@ def global_venv(name, **kwargs):
 
     py_venv_binary(
         name = name,
-        srcs = [
-            main,
-            Label("//python/venv/private:venv_process_wrapper.py"),
-        ],
+        srcs = [main],
         main = main,
         **kwargs
     )

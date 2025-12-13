@@ -1,15 +1,11 @@
 """Generates a venv which includes all active python Bazel targets in a workspace."""
 
-# TODO: The venv creation logic is not importable on windows due to lack of
-# symlinks and actually needs to be different for creating repo level venvs
-# For now this lint is disabled and the code a snapshot.
-# pylint: disable=duplicate-code
-
 import argparse
 import json
 import logging
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import venv
@@ -38,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Enable verbose logging."
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="If set, any existing venv will be deleted.",
     )
 
     return parser.parse_args()
@@ -98,17 +99,12 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
                 f"Failed to find site-packages directory at {site_packages}"
             )
 
-        if "RULES_VENV_RUNFILES_DIR" in os.environ:
-            runfiles_path = Path(os.environ["RULES_VENV_RUNFILES_DIR"])
-        else:
-            runfiles_path = Path(os.environ["RUNFILES_DIR"])
-
-        if not runfiles_path.is_absolute():
-            runfiles_path = Path.cwd() / runfiles_path
+        # `BUILD_WORKSPACE_DIRECTORY` is checked in `main`
+        repo_root = Path(os.environ["BUILD_WORKSPACE_DIRECTORY"])
 
         pth_data = []
         for pth in self.bazel_pth:
-            abs_pth = Path(pth.format(runfiles_dir=runfiles_path))
+            abs_pth = Path(pth.format(runfiles_dir=repo_root))
             pth_data.append(str(abs_pth))
 
         pth_file = site_packages / "rules_venv.pth"
@@ -503,21 +499,19 @@ def get_pth(
     pth: Dict[str, None] = {}
     for spec in specs:
         for i in spec.imports:
-            import_path = Path(i)
-            if spec.bin_dir:
-                parents = import_path.parents
-                if len(parents) >= 1:
-                    stem = import_path.parents[-1]
-                else:
-                    stem = import_path.parent
-                pth[str(execution_root / spec.bin_dir / stem)] = None
-
             if i == workspace_name:
                 pth[str(workspace_dir)] = None
+                if spec.bin_dir:
+                    pth[str(execution_root / spec.bin_dir)] = None
             elif i.startswith(f"{workspace_name}/"):
-                pth[str(workspace_dir.parent / i)] = None
+                _, _, i = i.partition("/")
+                pth[str(workspace_dir / i)] = None
+                if spec.bin_dir:
+                    pth[str(execution_root / spec.bin_dir / i)] = None
             else:
                 pth[str(output_base / "external" / i)] = None
+                if spec.bin_dir:
+                    pth[str(execution_root / spec.bin_dir / "external" / i)] = None
 
     return list(pth.keys())
 
@@ -548,6 +542,10 @@ def main() -> None:
             venv_dir = cwd / args.dir
         else:
             venv_dir = args.dir
+
+    if venv_dir.exists() and args.clean:
+        logging.debug("Cleaning existing venv: %s", venv_dir)
+        shutil.rmtree(venv_dir)
 
     bazel_info = get_bazel_info(bazel=bazel, workspace_dir=workspace)
 
