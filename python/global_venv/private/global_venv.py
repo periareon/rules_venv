@@ -8,6 +8,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import tempfile
 import venv
 from dataclasses import Field, dataclass, fields
 from pathlib import Path
@@ -425,28 +426,33 @@ def query_global_venv_specs(
         if remove in env:
             del env[remove]
 
-    logging.debug("Querying specs...")
-    args = [
-        str(bazel),
-        "aquery",
-        "--include_aspects",
-        "--include_artifacts",
-        rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
-        "--output_groups=py_global_venv_info",
-        "--output=jsonproto",
-    ] + targets
-    logging.debug(" ".join(args))
-    result = subprocess.run(
-        args,
-        env=_bazel_env(),
-        check=True,
-        encoding="utf-8",
-        cwd=workspace_dir,
-        capture_output=True,
-    )
-    logging.debug("Done.")
+    with tempfile.TemporaryDirectory(prefix="rules_venv_global-") as tmp:
+        tmp_log = Path(tmp) / "aquery_log.json"
+        logging.debug("Querying specs...")
+        args = [
+            str(bazel),
+            "aquery",
+            "--include_aspects",
+            "--include_artifacts",
+            rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
+            "--noinclude_commandline",
+            "--output_groups=py_global_venv_info",
+            "--output=jsonproto",
+            f"--output_file={tmp_log}",
+        ] + targets
+        logging.debug(" ".join(args))
+        subprocess.run(
+            args,
+            env=_bazel_env(),
+            check=True,
+            encoding="utf-8",
+            cwd=workspace_dir,
+            capture_output=True,
+        )
+        logging.debug("Done.")
 
-    aquery_output = deserialize_aquery_output(jsonproto=json.loads(result.stdout))
+        with tmp_log.open() as log:
+            aquery_output = deserialize_aquery_output(jsonproto=json.load(log))
 
     path_fragments = {frag.id: frag for frag in aquery_output.path_fragments}
 
