@@ -345,6 +345,31 @@ def deserialize_aquery_output(jsonproto: Dict[str, Any]) -> ActionGraphContainer
     Returns:
         Deserialized aquery output.
     """
+    if not jsonproto:
+        raise ValueError("The jsonproto cannot be empty.")
+    if "actions" not in jsonproto:
+        logging.warning(
+            "Aquery jsonproto has no `actions` key. Results may be affected"
+        )
+    if "artifacts" not in jsonproto:
+        logging.warning(
+            "Aquery jsonproto has no `artifacts` key. Results may be affected"
+        )
+    if "pathFragments" not in jsonproto:
+        logging.warning(
+            "Aquery jsonproto has no `pathFragments` key. Results may be affected"
+        )
+    raw_actions = jsonproto.get("actions", [])
+    raw_artifacts = jsonproto.get("artifacts", [])
+    raw_fragments = jsonproto.get("pathFragments", [])
+    if not raw_actions:
+        logging.warning("Aquery jsonproto has `actions`. Results may be affected")
+    if not raw_artifacts:
+        logging.warning("Aquery jsonproto has `artifacts`. Results may be affected")
+    if not raw_fragments:
+        logging.warning(
+            "Aquery jsonproto has no `pathFragments`. Results may be affected"
+        )
     actions = [
         Action(**Action.map_fields(entry)) for entry in jsonproto.get("actions", [])
     ]
@@ -454,16 +479,26 @@ def query_global_venv_specs(
         with tmp_log.open() as log:
             aquery_output = deserialize_aquery_output(jsonproto=json.load(log))
 
-    path_fragments = {frag.id: frag for frag in aquery_output.path_fragments}
+        path_fragments = {frag.id: frag for frag in aquery_output.path_fragments}
 
-    spec_paths = [
-        Path(execution_root)
-        / path_from_fragments(artifact.path_fragment_id, path_fragments)
-        for artifact in aquery_output.artifacts
-        if path_fragments[artifact.path_fragment_id].label.endswith(SPEC_FILE_SUFFIX)
-    ]
+        spec_paths = [
+            Path(execution_root)
+            / path_from_fragments(artifact.path_fragment_id, path_fragments)
+            for artifact in aquery_output.artifacts
+            if path_fragments[artifact.path_fragment_id].label.endswith(
+                SPEC_FILE_SUFFIX
+            )
+        ]
 
-    return sorted(set(spec_paths))
+        # This can occur if there are no python targets or if targets are using the native
+        # `PyInfo` which will not match the expectations of the aspect. `rules_python >= 1.5.0`
+        # should be used to provide `PyInfo`.
+        if not spec_paths:
+            logging.warning(
+                "No spec paths were found which means the venv will be empty."
+            )
+
+        return sorted(set(spec_paths))
 
 
 def load_specs(spec_paths: Sequence[Path]) -> Sequence[PyGlobalVenvInfo]:
