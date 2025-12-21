@@ -55,10 +55,19 @@ This will ensure all features of the wheel rules are available and usable.
 """
 
 load(
-    "//python/wheel/private:wheel.bzl",
+    ":package_tag.bzl",
     _package_tag = "package_tag",
+)
+load(
+    ":py_wheel_library.bzl",
     _py_wheel_library = "py_wheel_library",
+)
+load(
+    ":py_wheel_publisher.bzl",
     _py_wheel_publisher = "py_wheel_publisher",
+)
+load(
+    ":py_wheel_toolchain.bzl",
     _py_wheel_toolchain = "py_wheel_toolchain",
 )
 

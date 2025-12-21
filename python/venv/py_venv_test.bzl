@@ -5,27 +5,21 @@ Core Bazel rules for defining Python targets.
 """
 
 load(
-    ":py_venv_binary.bzl",
+    "//python/venv/private:venv.bzl",
     _py_venv_binary = "py_venv_binary",
-)
-load(
-    ":py_venv_common.bzl",
-    _py_venv_common = "py_venv_common",
-)
-load(
-    ":py_venv_library.bzl",
     _py_venv_library = "py_venv_library",
-)
-load(
-    ":py_venv_test.bzl",
     _py_venv_test = "py_venv_test",
 )
 load(
-    ":py_venv_toolchain.bzl",
+    "//python/venv/private:venv_common.bzl",
+    _py_venv_common = "py_venv_common",
+)
+load(
+    "//python/venv/private:venv_toolchain.bzl",
     _py_venv_toolchain = "py_venv_toolchain",
 )
 load(
-    ":py_venv_zipapp.bzl",
+    "//python/venv/private:venv_zipapp.bzl",
     _py_venv_zipapp = "py_venv_zipapp",
 )
 

@@ -40,21 +40,21 @@ build --sandbox_default_allow_network=false
 ###############################################################################
 
 # Enable black for all targets in the workspace
-build:black --aspects=//python/black:defs.bzl%py_black_aspect
+build:black --aspects=//python/black:py_black_aspect.bzl%py_black_aspect
 build:black --output_groups=+py_black_checks
 
 # Enable isort for all targets in the workspace
-build:isort --aspects=//python/isort:defs.bzl%py_isort_aspect
+build:isort --aspects=//python/isort:py_isort_aspect.bzl%py_isort_aspect
 build:isort --output_groups=+py_isort_checks
 build --//python/isort:config=//:.isort.cfg
 
 # Enable mypy for all targets in the workspace
-build:mypy --aspects=//python/mypy:defs.bzl%py_mypy_aspect
+build:mypy --aspects=//python/mypy:py_mypy_aspect.bzl%py_mypy_aspect
 build:mypy --output_groups=+py_mypy_checks
 build --//python/mypy:config=//:.mypy.ini
 
 # Enable pylint for all targets in the workspace
-build:pylint --aspects=//python/pylint:defs.bzl%py_pylint_aspect
+build:pylint --aspects=//python/pylint:py_pylint_aspect.bzl%py_pylint_aspect
 build:pylint --output_groups=+py_pylint_checks
 build --//python/pylint:config=//:.pylintrc.toml
 

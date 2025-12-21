@@ -48,7 +48,7 @@ In addition to this formatter, a check can be added to `bazel build` invocations
 aspect. Simply add the following to a `.bazelrc` file to enable this check.
 
 ```text
-build --aspects=@rules_venv//python/black:defs.bzl%py_black_aspect
+build --aspects=@rules_venv//python/black:py_black_aspect.bzl%py_black_aspect
 build --output_groups=+py_black_checks
 ```
 
@@ -56,12 +56,15 @@ build --output_groups=+py_black_checks
 """
 
 load(
-    "//python/black/private:black.bzl",
+    ":py_black_aspect.bzl",
     _py_black_aspect = "py_black_aspect",
+)
+load(
+    ":py_black_test.bzl",
     _py_black_test = "py_black_test",
 )
 load(
-    "//python/black/private:black_toolchain.bzl",
+    ":py_black_toolchain.bzl",
     _py_black_toolchain = "py_black_toolchain",
 )
 

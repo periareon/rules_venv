@@ -3,6 +3,12 @@ load("//python/venv/private:venv_toolchain.bzl", "current_py_venv_toolchain")
 
 exports_files([
     "defs.bzl",
+    "py_venv_binary.bzl",
+    "py_venv_zipapp.bzl",
+    "py_venv_library.bzl",
+    "py_venv_test.bzl",
+    "py_venv_toolchain.bzl",
+    "py_venv_common.bzl",
 ])
 
 toolchain_type(

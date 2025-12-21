@@ -6,6 +6,10 @@ exports_files([
     "coveragerc",
     "pyproject.toml",
     "defs.bzl",
+    "current_py_pytest_toolchain.bzl",
+    "py_pytest_test.bzl",
+    "py_pytest_test_suite.bzl",
+    "py_pytest_toolchain.bzl",
     "requirements.in",
 ])
 
