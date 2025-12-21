@@ -188,7 +188,7 @@ toolchain(
 </code></pre>
 <p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="#py_isort_aspect">py_isort_aspect</a>
 aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/isort:defs.bzl%py_isort_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/isort:py_isort_aspect.bzl%py_isort_aspect
 build --output_groups=+py_isort_checks
 </code></pre>
 <h2 id="sections-and-ordering"><a class="header" href="#sections-and-ordering">Sections and Ordering</a></h2>

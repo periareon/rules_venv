@@ -470,7 +470,7 @@ toolchain(
 </code></pre>
 <p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="black.html#py_black_aspect">py_black_aspect</a>
 aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/black:defs.bzl%py_black_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/black:py_black_aspect.bzl%py_black_aspect
 build --output_groups=+py_black_checks
 </code></pre>
 <h2 id="rules-1"><a class="header" href="#rules-1">Rules</a></h2>
@@ -577,7 +577,7 @@ toolchain(
 </code></pre>
 <p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="isort.html#py_isort_aspect">py_isort_aspect</a>
 aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/isort:defs.bzl%py_isort_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/isort:py_isort_aspect.bzl%py_isort_aspect
 build --output_groups=+py_isort_checks
 </code></pre>
 <h2 id="sections-and-ordering"><a class="header" href="#sections-and-ordering">Sections and Ordering</a></h2>
@@ -858,7 +858,7 @@ py_pylint_aspect()
 </pre>
 <p>An aspect for running pylint on targets with Python sources.</p>
 <p>This aspect can be configured by adding the following snippet to a workspace's <code>.bazelrc</code> file:</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/pylint:defs.bzl%py_pylint_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/pylint:py_pylint_aspect.bzl%py_pylint_aspect
 build --output_groups=+py_pylint_checks
 </code></pre>
 <p><strong>ASPECT ATTRIBUTES</strong></p>

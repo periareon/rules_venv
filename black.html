@@ -188,7 +188,7 @@ toolchain(
 </code></pre>
 <p>In addition to this formatter, a check can be added to <code>bazel build</code> invocations using the <a href="#py_black_aspect">py_black_aspect</a>
 aspect. Simply add the following to a <code>.bazelrc</code> file to enable this check.</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/black:defs.bzl%py_black_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/black:py_black_aspect.bzl%py_black_aspect
 build --output_groups=+py_black_checks
 </code></pre>
 <h2 id="rules"><a class="header" href="#rules">Rules</a></h2>

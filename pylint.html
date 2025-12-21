@@ -236,7 +236,7 @@ py_pylint_aspect()
 </pre>
 <p>An aspect for running pylint on targets with Python sources.</p>
 <p>This aspect can be configured by adding the following snippet to a workspace's <code>.bazelrc</code> file:</p>
-<pre><code class="language-text">build --aspects=@rules_venv//python/pylint:defs.bzl%py_pylint_aspect
+<pre><code class="language-text">build --aspects=@rules_venv//python/pylint:py_pylint_aspect.bzl%py_pylint_aspect
 build --output_groups=+py_pylint_checks
 </code></pre>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
