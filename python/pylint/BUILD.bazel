@@ -6,6 +6,9 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "pylintrc.toml",
     "defs.bzl",
+    "py_pylint_aspect.bzl",
+    "py_pylint_test.bzl",
+    "py_pylint_toolchain.bzl",
     "requirements.in",
 ])
 

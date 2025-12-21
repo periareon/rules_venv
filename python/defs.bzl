@@ -1,15 +1,27 @@
 """`rules_venv` exports to match the `rules_python` interface."""
 
 load(
-    "@rules_python//python:defs.bzl",
-    _PyRuntimeInfo = "PyRuntimeInfo",
+    "@rules_python//python:py_import.bzl",
     _py_import = "py_import",
+)
+load(
+    "@rules_python//python:py_runtime.bzl",
     _py_runtime = "py_runtime",
 )
 load(
-    "//python/venv:defs.bzl",
+    "@rules_python//python:py_runtime_info.bzl",
+    _PyRuntimeInfo = "PyRuntimeInfo",
+)
+load(
+    "//python/venv:py_venv_binary.bzl",
     "py_venv_binary",
+)
+load(
+    "//python/venv:py_venv_library.bzl",
     "py_venv_library",
+)
+load(
+    "//python/venv:py_venv_test.bzl",
     "py_venv_test",
 )
 load(

@@ -48,7 +48,7 @@ In addition to this formatter, a check can be added to `bazel build` invocations
 aspect. Simply add the following to a `.bazelrc` file to enable this check.
 
 ```text
-build --aspects=@rules_venv//python/isort:defs.bzl%py_isort_aspect
+build --aspects=@rules_venv//python/isort:py_isort_aspect.bzl%py_isort_aspect
 build --output_groups=+py_isort_checks
 ```
 
@@ -80,12 +80,15 @@ and consistent behavior, this value should always be `0` or if the default of `-
 """
 
 load(
-    "//python/isort/private:isort.bzl",
+    ":py_isort_aspect.bzl",
     _py_isort_aspect = "py_isort_aspect",
+)
+load(
+    ":py_isort_test.bzl",
     _py_isort_test = "py_isort_test",
 )
 load(
-    "//python/isort/private:isort_toolchain.bzl",
+    ":py_isort_toolchain.bzl",
     _py_isort_toolchain = "py_isort_toolchain",
 )
 

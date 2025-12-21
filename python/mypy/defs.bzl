@@ -61,12 +61,15 @@ Note that these files will need to be available via [exports_files](https://baze
 """
 
 load(
-    "//python/mypy/private:mypy.bzl",
+    ":py_mypy_aspect.bzl",
     _py_mypy_aspect = "py_mypy_aspect",
+)
+load(
+    ":py_mypy_test.bzl",
     _py_mypy_test = "py_mypy_test",
 )
 load(
-    "//python/mypy/private:mypy_toolchain.bzl",
+    ":py_mypy_toolchain.bzl",
     _py_mypy_toolchain = "py_mypy_toolchain",
 )
 

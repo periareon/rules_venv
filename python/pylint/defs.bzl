@@ -51,12 +51,15 @@ Note that these files will need to be available via [exports_files](https://baze
 """
 
 load(
-    "//python/pylint/private:pylint.bzl",
+    ":py_pylint_aspect.bzl",
     _py_pylint_aspect = "py_pylint_aspect",
+)
+load(
+    ":py_pylint_test.bzl",
     _py_pylint_test = "py_pylint_test",
 )
 load(
-    "//python/pylint/private:pylint_toolchain.bzl",
+    ":py_pylint_toolchain.bzl",
     _py_pylint_toolchain = "py_pylint_toolchain",
 )
 

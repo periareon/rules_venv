@@ -3,6 +3,7 @@ load("//python/global_venv/private:global_venv.bzl", "global_venv")
 
 exports_files([
     "defs.bzl",
+    "py_global_venv_aspect.bzl",
 ])
 
 global_venv(

@@ -6,6 +6,9 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "isort.cfg",
     "defs.bzl",
+    "py_isort_aspect.bzl",
+    "py_isort_test.bzl",
+    "py_isort_toolchain.bzl",
     "requirements.in",
 ])
 

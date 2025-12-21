@@ -6,6 +6,9 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "pyproject.toml",
     "defs.bzl",
+    "py_black_aspect.bzl",
+    "py_black_test.bzl",
+    "py_black_toolchain.bzl",
     "requirements.in",
 ])
 
