@@ -404,7 +404,7 @@ def _get_py_venv_toolchain(ctx, *, cfg = "target"):
     """Access the `py_venv_toolchain` from the current configuration.
 
     Note that for `cfg = "exec"` toolchains, the rule must have the attributes from
-    [`py_venv_common.create_venv_attrs`](#create_venv_attrs).
+    [`py_venv_common.create_venv_attrs`](#py_venv_commoncreate_venv_attrs).
 
     Args:
         ctx (ctx): The rule's context object.
