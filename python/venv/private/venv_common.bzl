@@ -387,6 +387,11 @@ def _create_venv_entrypoint(
     return entrypoint, venv_runfiles
 
 def _create_venv_attrs():
+    """Create attributes for consumers of `py_venv_common`.
+
+    Returns:
+        dict: Attributes unique to `rules_venv` rules.
+    """
     return {
         "_py_venv_toolchain": attr.label(
             doc = "A py_venv_toolchain in the exec configuration.",
@@ -396,6 +401,18 @@ def _create_venv_attrs():
     }
 
 def _get_py_venv_toolchain(ctx, *, cfg = "target"):
+    """Access the `py_venv_toolchain` from the current configuration.
+
+    Note that for `cfg = "exec"` toolchains, the rule must have the attributes from
+    [`py_venv_common.create_venv_attrs`](#create_venv_attrs).
+
+    Args:
+        ctx (ctx): The rule's context object.
+        cfg (str, optional): What configuration to access the toolchain from (`exec` or `target`).
+
+    Returns:
+        py_venv_toolchain: The accessed toolchain.
+    """
     if cfg == "target":
         return ctx.toolchains[_TOOLCHAIN_TYPE]
     if cfg == "exec":
