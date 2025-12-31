@@ -35,23 +35,21 @@ def _py_isort_test_impl(ctx):
 
     srcs_info = ctx.attr.target[PySourcesInfo]
 
+    args = ctx.actions.args()
+    args.set_param_file_format("multiline")
+    args.add("--settings-path", _rlocationpath(ctx.file.config, ctx.workspace_name))
+    for path in srcs_info.imports.to_list():
+        args.add("--import", path)
+    for src in srcs_info.srcs.to_list():
+        args.add("--src", _rlocationpath(src, ctx.workspace_name))
+    args.add("--")
+    args.add("--check-only")
+    args.add("--diff")
+
     args_file = ctx.actions.declare_file("{}.isort_args.txt".format(ctx.label.name))
     ctx.actions.write(
         output = args_file,
-        content = "\n".join([
-            "--settings-path",
-            _rlocationpath(ctx.file.config, ctx.workspace_name),
-        ] + [
-            "--import={}".format(path)
-            for path in srcs_info.imports.to_list()
-        ] + [
-            "--src={}".format(_rlocationpath(src, ctx.workspace_name))
-            for src in srcs_info.srcs.to_list()
-        ] + [
-            "--",
-            "--check-only",
-            "--diff",
-        ]),
+        content = args,
     )
 
     return [
