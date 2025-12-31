@@ -30,17 +30,16 @@ def find_srcs(target, aspect_ctx = None):
     if target.label.workspace_root.startswith("external"):
         return depset()
 
-    if aspect_ctx:
+    if PySourcesInfo in target:
+        # Use previous results of the `target_sources_aspect`.
+        srcs = target[PySourcesInfo].srcs
+    elif aspect_ctx:
         # If running in an aspect, we can directly check attributes
         srcs = depset([
             src
             for src in getattr(aspect_ctx.rule.files, "srcs", [])
             if src.is_source
         ])
-
-    elif PySourcesInfo in target:
-        # Use previous results of the `target_sources_aspect`.
-        srcs = target[PySourcesInfo].srcs
     else:
         # No sources can be found.
         srcs = depset()
@@ -84,6 +83,9 @@ def _get_imports(target, aspect_ctx):
     return result
 
 def _target_sources_impl(target, ctx):
+    if PySourcesInfo in target:
+        return []
+
     srcs = find_srcs(target, aspect_ctx = ctx)
 
     # Targets from external workspaces are ignored and given empty results.
@@ -107,5 +109,4 @@ def _target_sources_impl(target, ctx):
 target_sources_aspect = aspect(
     implementation = _target_sources_impl,
     doc = "An aspect for gathering additional data on a lintable target.",
-    provides = [PySourcesInfo],
 )
