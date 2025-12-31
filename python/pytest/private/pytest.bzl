@@ -281,6 +281,9 @@ py_pytest_test(
     } | COVERAGE_ATTRS | py_venv_common.create_venv_attrs(),
     toolchains = [py_venv_common.TOOLCHAIN_TYPE],
     test = True,
+    provides = [
+        PyInfo,
+    ],
 )
 
 def _py_pytest_toolchain_impl(ctx):

@@ -35,18 +35,17 @@ def _py_mypy_test_impl(ctx):
 
     srcs = find_srcs(ctx.attr.target)
 
+    args = ctx.actions.args()
+    args.set_param_file_format("multiline")
+    args.add("--config-file", _rlocationpath(ctx.file.config, ctx.workspace_name))
+    args.add("--workspace_name", ctx.workspace_name)
+    for src in srcs.to_list():
+        args.add("--file", _rlocationpath(src, ctx.workspace_name))
+
     args_file = ctx.actions.declare_file("{}.mypy_args.txt".format(ctx.label.name))
     ctx.actions.write(
         output = args_file,
-        content = "\n".join([
-            "--config-file",
-            _rlocationpath(ctx.file.config, ctx.workspace_name),
-            "--workspace_name",
-            ctx.workspace_name,
-        ] + [
-            "--file={}".format(_rlocationpath(src, ctx.workspace_name))
-            for src in srcs.to_list()
-        ]),
+        content = args,
     )
 
     return [
