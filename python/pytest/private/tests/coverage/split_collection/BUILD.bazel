@@ -39,6 +39,7 @@ write_file(
         "//python/pytest/private/tests/coverage/split_collection:tests/b_test",
         "",
     ],
+    newline = "unix",
 )
 
 diff_test(
