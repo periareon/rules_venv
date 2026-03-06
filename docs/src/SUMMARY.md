@@ -12,4 +12,5 @@
     - [mypy](./mypy.md)
     - [pylint](./pylint.md)
     - [pytest](./pytest.md)
+    - [ruff](./ruff.md)
     - [wheel](./wheel.md)

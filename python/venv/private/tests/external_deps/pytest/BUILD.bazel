@@ -3,6 +3,7 @@ load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
 py_venv_test(
     name = "pytest_test",
     srcs = ["pytest_test.py"],
+    tags = ["no-ruff-format"],
     deps = [
         "@pip_deps//pytest",
         "@pip_deps//pytest_cov",
@@ -23,5 +24,6 @@ py_venv_test(
     name = "wrapped_pytest_test",
     srcs = ["pytest_test.py"],
     main = "pytest_test.py",
+    tags = ["no-ruff-format"],
     deps = [":pytest_wrapper"],
 )

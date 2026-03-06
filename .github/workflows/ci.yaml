@@ -191,12 +191,16 @@ jobs:
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/black
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/isort
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/global_venv
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/ruff/format
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/ruff/fix
         if: startswith(runner.os, 'Windows') != true
       - name: Format (Windows)
         run: |
           bazel $env:BAZEL_STARTUP_FLAGS run //python/black
           bazel $env:BAZEL_STARTUP_FLAGS run //python/isort
           bazel $env:BAZEL_STARTUP_FLAGS run //python/global_venv
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/ruff/format
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //python/ruff/fix
         if: startswith(runner.os, 'Windows')
 
       - name: Git diff

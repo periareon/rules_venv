@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_library")
+load("//python:defs.bzl", "py_library")
 load("//python/pytest:defs.bzl", "py_pytest_toolchain")
 
 py_library(

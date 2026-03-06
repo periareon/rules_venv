@@ -1,0 +1,5 @@
+alias(
+    name = "fix",
+    actual = "//python/ruff/private:ruff_fixer",
+    visibility = ["//visibility:public"],
+)

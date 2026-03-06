@@ -1,0 +1,16 @@
+load("//python:defs.bzl", "py_binary")
+load("//python/ruff:defs.bzl", "py_ruff_test")
+
+py_binary(
+    name = "printer",
+    srcs = ["printer.py"],
+    deps = [
+        "//python/ruff/private/tests/greeting",
+        "//python/ruff/private/tests/imports:fibonacci",
+    ],
+)
+
+py_ruff_test(
+    name = "py_binary_lint",
+    target = ":printer",
+)

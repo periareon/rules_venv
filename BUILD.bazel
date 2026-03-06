@@ -11,6 +11,7 @@ exports_files(
         ".isort.cfg",
         ".mypy.ini",
         ".pylintrc.toml",
+        ".ruff.toml",
     ],
     visibility = ["//visibility:private"],
 )

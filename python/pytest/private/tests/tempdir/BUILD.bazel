@@ -3,4 +3,5 @@ load("//python/pytest:defs.bzl", "py_pytest_test")
 py_pytest_test(
     name = "tempdir_test",
     srcs = ["tempdir_test.py"],
+    tags = ["no-ruff-format"],
 )

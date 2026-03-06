@@ -3,4 +3,5 @@ load("//python:py_binary.bzl", "py_binary")
 py_binary(
     name = "coverage_checker",
     srcs = ["coverage_checker.py"],
+    tags = ["no-ruff-format"],
 )

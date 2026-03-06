@@ -75,6 +75,15 @@ stardoc(
 )
 
 stardoc(
+    name = "ruff",
+    out = "src/ruff.md",
+    input = "//python/ruff:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/ruff:bzl_lib"],
+)
+
+stardoc(
     name = "wheel",
     out = "src/wheel.md",
     input = "//python/wheel:defs.bzl",
@@ -93,6 +102,7 @@ mdbook(
         ":mypy",
         ":pylint",
         ":pytest",
+        ":ruff",
         ":venv",
         ":wheel",
     ],

@@ -2,7 +2,7 @@
 
 load("//python:defs.bzl", "py_test")
 
-def isort_regex_test(*, name, src, expectation, **kwargs):
+def isort_regex_test(*, name, src, expectation, tags = [], **kwargs):
     """Test that a particular string exists within a given source file.
 
     This test is useful for ensuring imports are in the correct order.
@@ -11,6 +11,7 @@ def isort_regex_test(*, name, src, expectation, **kwargs):
         name (str): The name of the target.
         src (Label): The source file to check.
         expectation (str): A string of the expected import order.
+        tags (list[str]): Tags to apply to the target.
         **kwargs (dict): Additional keyword arguments.
     """
     main = Label("//python/isort/private/tests:isort_regex_test.py")
@@ -30,5 +31,6 @@ def isort_regex_test(*, name, src, expectation, **kwargs):
             "@platforms//os:windows": ["@platforms//:incompatible"],
             "//conditions:default": [],
         }),
+        tags = tags + ["no-ruff-format"],
         **kwargs
     )

@@ -1,0 +1,5 @@
+alias(
+    name = "format",
+    actual = "//python/ruff/private:ruff_formatter",
+    visibility = ["//visibility:public"],
+)

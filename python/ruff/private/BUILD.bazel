@@ -1,0 +1,54 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:py_binary.bzl", "py_binary")
+load("//python:py_library.bzl", "py_library")
+
+exports_files([
+    "ruff_runner.py",
+])
+
+py_library(
+    name = "ruff_runner",
+    srcs = ["ruff_runner.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//python/ruff:current_py_ruff_toolchain",
+        "//python/runfiles",
+    ],
+)
+
+[
+    py_binary(
+        name = "ruff_{}".format("fixer" if mode == "check" else "formatter"),
+        srcs = ["ruff_fixer.py"],
+        data = [
+            "//python/ruff:config",
+        ],
+        env = {
+            "RUFF_MODE": mode,
+            "RUFF_RLOCATIONPATH": "$(RUFF_RLOCATIONPATH)",
+            "RUFF_SETTINGS_PATH": "$(rlocationpath //python/ruff:config)",
+        },
+        toolchains = ["//python/ruff:current_py_ruff_toolchain"],
+        visibility = ["//visibility:public"],
+        deps = [
+            ":ruff_runner",
+            "//python/ruff:current_py_ruff_toolchain",
+            "//python/runfiles",
+        ],
+    )
+    for mode in [
+        "check",
+        "format",
+    ]
+]
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/ruff:__subpackages__"],
+    deps = [
+        "//python:bzl_lib",
+        "//python/private:bzl_lib",
+        "//python/venv:bzl_lib",
+    ],
+)

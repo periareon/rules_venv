@@ -15,9 +15,9 @@ register_toolchains(
     "//python/venv/toolchain",
 )
 
-bazel_dep(name = "rules_req_compile", version = "1.0.0rc41", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.1.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
-bazel_dep(name = "rules_rust_mdbook", version = "0.68.1", dev_dependency = True)
+bazel_dep(name = "rules_rust_mdbook", version = "0.68.0", dev_dependency = True)
 
 python = use_extension("//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
@@ -56,6 +56,7 @@ register_toolchains(
     "//python/mypy/toolchain",
     "//python/pylint/toolchain",
     "//python/pytest/toolchain",
+    "//python/ruff/toolchain",
     "//python/wheel/toolchain",
     dev_dependency = True,
 )

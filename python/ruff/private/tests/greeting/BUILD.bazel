@@ -1,0 +1,14 @@
+load("//python:defs.bzl", "py_library")
+load("//python/ruff:defs.bzl", "py_ruff_test")
+
+py_library(
+    name = "greeting",
+    srcs = ["greeting/__init__.py"],
+    imports = ["."],
+    visibility = ["//python/ruff/private/tests:__subpackages__"],
+)
+
+py_ruff_test(
+    name = "py_library_lint",
+    target = ":greeting",
+)

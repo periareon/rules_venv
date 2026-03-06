@@ -1,5 +1,14 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+exports_files([
+    "defs.bzl",
+    "py_ruff_aspect.bzl",
+    "py_ruff_check_test.bzl",
+    "py_ruff_format_test.bzl",
+    "py_ruff_test.bzl",
+    "py_ruff_toolchain.bzl",
+])
+
 bzl_library(
     name = "defs_bzl",
     srcs = [
