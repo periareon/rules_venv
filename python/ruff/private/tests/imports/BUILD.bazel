@@ -1,0 +1,39 @@
+load("//python:defs.bzl", "py_library", "py_test")
+load("//python/ruff:defs.bzl", "py_ruff_test")
+
+[
+    py_library(
+        name = name,
+        srcs = [
+            "__init__.py",
+            "fibonacci.py",
+        ],
+        visibility = ["//python/ruff/private/tests:__subpackages__"],
+    )
+    for name in [
+        "fibonacci",
+        # Define additional targets to ensure the aspects work
+        # on targets with `/` in the name.
+        "fibonacci/subdir",
+        "fibonacci/subdir1/subdir2",
+    ]
+]
+
+py_ruff_test(
+    name = "py_library_lint",
+    target = ":fibonacci",
+)
+
+py_test(
+    name = "fibonacci_import_test",
+    srcs = ["fibonacci_import_test.py"],
+    imports = ["."],
+    deps = [
+        ":fibonacci",
+    ],
+)
+
+py_ruff_test(
+    name = "fibonacci_import_test_lint",
+    target = ":fibonacci_import_test",
+)

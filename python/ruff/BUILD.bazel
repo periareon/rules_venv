@@ -1,0 +1,54 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python/ruff/private:py_ruff_mode_flag.bzl", "py_ruff_mode_flag")
+load("//python/ruff/private:ruff_toolchain.bzl", "current_py_ruff_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "ruff.toml",
+    "defs.bzl",
+    "py_ruff_aspect.bzl",
+    "py_ruff_test.bzl",
+    "py_ruff_toolchain.bzl",
+    "requirements.in",
+])
+
+label_flag(
+    name = "config",
+    build_setting_default = ":ruff.toml",
+)
+
+py_ruff_mode_flag(
+    name = "mode",
+    build_setting_default = ["check"],
+    values = [
+        "check",
+        "format",
+    ],
+)
+
+alias(
+    name = "format",
+    actual = "//python/ruff/private:ruff_formatter",
+)
+
+alias(
+    name = "fix",
+    actual = "//python/ruff/private:ruff_fixer",
+)
+
+toolchain_type(
+    name = "toolchain_type",
+)
+
+current_py_ruff_toolchain(
+    name = "current_py_ruff_toolchain",
+    tags = ["manual"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//visibility:public"],
+    deps = ["//python/ruff/private:bzl_lib"],
+)

@@ -1,0 +1,13 @@
+load("//python/ruff:defs.bzl", "py_ruff_toolchain")
+
+py_ruff_toolchain(
+    name = "py_ruff_toolchain",
+    ruff = "@pip_deps//ruff",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_ruff_toolchain",
+    toolchain_type = "//python/ruff:toolchain_type",
+    visibility = ["//visibility:public"],
+)
