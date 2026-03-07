@@ -1037,6 +1037,150 @@ to be individually cached.</li>
 <tr><td style="text-align: left"><a id="py_pytest_test_suite-kwargs"></a>kwargs</td><td style="text-align: left">Keyword arguments passed to the underlying <code>py_test</code> rule.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="ruff"><a class="header" href="#ruff">ruff</a></h1>
+<p>Bazel rules for the Python linter <a href="https://docs.astral.sh/ruff/">ruff</a>.</p>
+<h3 id="setup-5"><a class="header" href="#setup-5">Setup</a></h3>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
+<p>Next, the <code>ruff</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>ruff</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="ruff.html#py_ruff_toolchain">py_ruff_toolchain</a> will need to be configured.
+The toolchain accepts either <code>ruff</code> (a <code>py_library</code>, e.g. from pip) or <code>ruff_bin</code> (an executable); the two are mutually exclusive.</p>
+<pre><code class="language-python">load("@rules_venv//python/ruff:defs.bzl", "py_ruff_toolchain")
+
+py_ruff_toolchain(
+    name = "toolchain_impl",
+    ruff = "@pip_deps//ruff",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/ruff:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/ruff:toolchain")
+</code></pre>
+<p>From here, <a href="ruff.html#py_ruff_test">py_ruff_test</a> and the <a href="ruff.html#py_ruff_aspect">py_ruff_aspect</a>
+should now be usable. <a href="ruff.html#py_ruff_test">py_ruff_test</a> is a convenience that creates a test suite running both
+<a href="ruff.html#py_ruff_check_test">py_ruff_check_test</a> and <a href="ruff.html#py_ruff_format_test">py_ruff_format_test</a>. Both the test rules and the aspect
+use a global flag to determine which ruff configuration file to use in actions. The default config is
+<code>//python/ruff:ruff.toml</code>; the chosen file must be a valid label (e.g. <code>ruff.toml</code> or <code>pyproject.toml</code>).
+Add the following to <code>.bazelrc</code> to choose a different configuration file:</p>
+<pre><code class="language-text">build --@rules_venv//python/ruff:config=//:.ruffrc.toml
+</code></pre>
+<p>To use the aspect, you must also enable it and request its output group in <code>.bazelrc</code>:</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/ruff:py_ruff_aspect.bzl%py_ruff_aspect
+build --output_groups=+py_ruff_checks
+</code></pre>
+<p>Test rules can override the config per target via the <code>config</code> attribute (they default to the label flag above).</p>
+<h3 id="usage-3"><a class="header" href="#usage-3">Usage</a></h3>
+<p>Python code can be formatted using:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/ruff:format
+</code></pre>
+<p>Lint issues that support auto-fix can be applied using:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/ruff:fix
+</code></pre>
+<p>Both commands accept optional Bazel scope arguments (e.g. <code>//...</code> or <code>//some/package:all</code>); the default is <code>//...:all</code>.</p>
+<h2 id="rules-6"><a class="header" href="#rules-6">Rules</a></h2>
+<ul>
+<li><a href="ruff.html#py_ruff_check_test">py_ruff_check_test</a></li>
+<li><a href="ruff.html#py_ruff_format_test">py_ruff_format_test</a></li>
+<li><a href="ruff.html#py_ruff_toolchain">py_ruff_toolchain</a></li>
+</ul>
+<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
+<ul>
+<li><a href="ruff.html#py_ruff_test">py_ruff_test</a></li>
+</ul>
+<h2 id="aspects-5"><a class="header" href="#aspects-5">Aspects</a></h2>
+<ul>
+<li><a href="ruff.html#py_ruff_aspect">py_ruff_aspect</a></li>
+</ul>
+<p><a id="py_ruff_check_test"></a></p>
+<h2 id="py_ruff_check_test"><a class="header" href="#py_ruff_check_test">py_ruff_check_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_check_test")
+
+py_ruff_check_test(<a href="ruff.html#py_ruff_check_test-name">name</a>, <a href="ruff.html#py_ruff_check_test-config">config</a>, <a href="ruff.html#py_ruff_check_test-target">target</a>)
+</pre>
+<p>A rule for running <code>ruff check</code> on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/ruff:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_format_test"></a></p>
+<h2 id="py_ruff_format_test"><a class="header" href="#py_ruff_format_test">py_ruff_format_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_format_test")
+
+py_ruff_format_test(<a href="ruff.html#py_ruff_format_test-name">name</a>, <a href="ruff.html#py_ruff_format_test-config">config</a>, <a href="ruff.html#py_ruff_format_test-target">target</a>)
+</pre>
+<p>A rule for running <code>ruff format</code> on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/ruff:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_toolchain"></a></p>
+<h2 id="py_ruff_toolchain"><a class="header" href="#py_ruff_toolchain">py_ruff_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_toolchain")
+
+py_ruff_toolchain(<a href="ruff.html#py_ruff_toolchain-name">name</a>, <a href="ruff.html#py_ruff_toolchain-ruff">ruff</a>, <a href="ruff.html#py_ruff_toolchain-ruff_bin">ruff_bin</a>)
+</pre>
+<p>A toolchain for the <a href="https://docs.astral.sh/ruff/">ruff</a> linter and formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-ruff"></a>ruff</td><td style="text-align: left">The ruff <code>py_library</code> with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-ruff_bin"></a>ruff_bin</td><td style="text-align: left">A <code>ruff</code> binary to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_test"></a></p>
+<h2 id="py_ruff_test"><a class="header" href="#py_ruff_test">py_ruff_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_test")
+
+py_ruff_test(*, <a href="ruff.html#py_ruff_test-name">name</a>, <a href="ruff.html#py_ruff_test-target">target</a>, <a href="ruff.html#py_ruff_test-config">config</a>, <a href="ruff.html#py_ruff_test-kwargs">**kwargs</a>)
+</pre>
+<p>A rule for running <code>ruff check</code> and <code>ruff format</code> on a given target.</p>
+<p>This macro defines the following target:</p>
+<div class="table-wrapper"><table><thead><tr><th>rule</th><th>name</th></tr></thead><tbody>
+<tr><td>(py_ruff_check_test)[#py_ruff_check_test]</td><td><code>{name}.check</code></td></tr>
+<tr><td>(py_ruff_format_test)[#py_ruff_format_test]</td><td><code>{name}.format</code></td></tr>
+</tbody></table>
+</div>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_test-name"></a>name</td><td style="text-align: left">The name of the test suite</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_aspect"></a></p>
+<h2 id="py_ruff_aspect"><a class="header" href="#py_ruff_aspect">py_ruff_aspect</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_aspect")
+
+py_ruff_aspect()
+</pre>
+<p>An aspect for running ruff on targets with Python sources.</p>
+<p>This aspect can be configured by adding the following snippet to a workspace's <code>.bazelrc</code> file:</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/ruff:py_ruff_aspect.bzl%py_ruff_aspect
+build --output_groups=+py_ruff_checks
+</code></pre>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
 <p>A framework for defining <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/">wheels</a> from a tree of Bazel targets.</p>
 <h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
@@ -1045,7 +1189,7 @@ to be individually cached.</li>
 <li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
 <li>Sources and data are automatically collected.</li>
 </ol>
-<h2 id="setup-5"><a class="header" href="#setup-5">Setup</a></h2>
+<h2 id="setup-6"><a class="header" href="#setup-6">Setup</a></h2>
 <p>Building wheels requires no setup, however, to activate all features of
 the wheel rules, a toolchain must be registered.</p>
 <p>First some external python requirements will be required. There is guidance on
@@ -1076,12 +1220,12 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
-<h2 id="rules-6"><a class="header" href="#rules-6">Rules</a></h2>
+<h2 id="rules-7"><a class="header" href="#rules-7">Rules</a></h2>
 <ul>
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
 </ul>
-<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
+<h2 id="functions-4"><a class="header" href="#functions-4">Functions</a></h2>
 <ul>
 <li><a href="wheel.html#package_tag">package_tag</a></li>
 <li><a href="wheel.html#py_wheel_library">py_wheel_library</a></li>

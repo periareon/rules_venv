@@ -1,0 +1,353 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ruff - rules_venv</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">rules_venv</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/periareon/rules_venv" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="ruff"><a class="header" href="#ruff">ruff</a></h1>
+<p>Bazel rules for the Python linter <a href="https://docs.astral.sh/ruff/">ruff</a>.</p>
+<h3 id="setup"><a class="header" href="#setup">Setup</a></h3>
+<p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
+<p>Next, the <code>ruff</code> rules work mostly off of toolchains which are used to provide the necessary python targets (aka <code>ruff</code>)
+for the process wrappers. Users will want to make sure they have a way to get the necessary python dependencies. Tools such as
+<a href="https://github.com/periareon/req-compile">req-compile</a> can provide these.</p>
+<p>With the appropriate dependencies available, a <a href="#py_ruff_toolchain">py_ruff_toolchain</a> will need to be configured.
+The toolchain accepts either <code>ruff</code> (a <code>py_library</code>, e.g. from pip) or <code>ruff_bin</code> (an executable); the two are mutually exclusive.</p>
+<pre><code class="language-python">load("@rules_venv//python/ruff:defs.bzl", "py_ruff_toolchain")
+
+py_ruff_toolchain(
+    name = "toolchain_impl",
+    ruff = "@pip_deps//ruff",
+    visibility = ["//visibility:public"]
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@rules_venv//python/ruff:toolchain_type",
+    visibility = ["//visibility:public"]
+)
+</code></pre>
+<p>This toolchain then needs to be registered in the <code>MODULE.bazel</code> file.</p>
+<pre><code class="language-python">register_toolchains("//tools/python/ruff:toolchain")
+</code></pre>
+<p>From here, <a href="#py_ruff_test">py_ruff_test</a> and the <a href="#py_ruff_aspect">py_ruff_aspect</a>
+should now be usable. <a href="#py_ruff_test">py_ruff_test</a> is a convenience that creates a test suite running both
+<a href="#py_ruff_check_test">py_ruff_check_test</a> and <a href="#py_ruff_format_test">py_ruff_format_test</a>. Both the test rules and the aspect
+use a global flag to determine which ruff configuration file to use in actions. The default config is
+<code>//python/ruff:ruff.toml</code>; the chosen file must be a valid label (e.g. <code>ruff.toml</code> or <code>pyproject.toml</code>).
+Add the following to <code>.bazelrc</code> to choose a different configuration file:</p>
+<pre><code class="language-text">build --@rules_venv//python/ruff:config=//:.ruffrc.toml
+</code></pre>
+<p>To use the aspect, you must also enable it and request its output group in <code>.bazelrc</code>:</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/ruff:py_ruff_aspect.bzl%py_ruff_aspect
+build --output_groups=+py_ruff_checks
+</code></pre>
+<p>Test rules can override the config per target via the <code>config</code> attribute (they default to the label flag above).</p>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<p>Python code can be formatted using:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/ruff:format
+</code></pre>
+<p>Lint issues that support auto-fix can be applied using:</p>
+<pre><code class="language-bash">bazel run @rules_venv//python/ruff:fix
+</code></pre>
+<p>Both commands accept optional Bazel scope arguments (e.g. <code>//...</code> or <code>//some/package:all</code>); the default is <code>//...:all</code>.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
+<ul>
+<li><a href="#py_ruff_check_test">py_ruff_check_test</a></li>
+<li><a href="#py_ruff_format_test">py_ruff_format_test</a></li>
+<li><a href="#py_ruff_toolchain">py_ruff_toolchain</a></li>
+</ul>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="#py_ruff_test">py_ruff_test</a></li>
+</ul>
+<h2 id="aspects"><a class="header" href="#aspects">Aspects</a></h2>
+<ul>
+<li><a href="#py_ruff_aspect">py_ruff_aspect</a></li>
+</ul>
+<p><a id="py_ruff_check_test"></a></p>
+<h2 id="py_ruff_check_test"><a class="header" href="#py_ruff_check_test">py_ruff_check_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_check_test")
+
+py_ruff_check_test(<a href="#py_ruff_check_test-name">name</a>, <a href="#py_ruff_check_test-config">config</a>, <a href="#py_ruff_check_test-target">target</a>)
+</pre>
+<p>A rule for running <code>ruff check</code> on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/ruff:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_check_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_format_test"></a></p>
+<h2 id="py_ruff_format_test"><a class="header" href="#py_ruff_format_test">py_ruff_format_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_format_test")
+
+py_ruff_format_test(<a href="#py_ruff_format_test-name">name</a>, <a href="#py_ruff_format_test-config">config</a>, <a href="#py_ruff_format_test-target">target</a>)
+</pre>
+<p>A rule for running <code>ruff format</code> on a Python target.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/ruff:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_format_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_toolchain"></a></p>
+<h2 id="py_ruff_toolchain"><a class="header" href="#py_ruff_toolchain">py_ruff_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_toolchain")
+
+py_ruff_toolchain(<a href="#py_ruff_toolchain-name">name</a>, <a href="#py_ruff_toolchain-ruff">ruff</a>, <a href="#py_ruff_toolchain-ruff_bin">ruff_bin</a>)
+</pre>
+<p>A toolchain for the <a href="https://docs.astral.sh/ruff/">ruff</a> linter and formatter rules.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-ruff"></a>ruff</td><td style="text-align: left">The ruff <code>py_library</code> with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_toolchain-ruff_bin"></a>ruff_bin</td><td style="text-align: left">A <code>ruff</code> binary to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_test"></a></p>
+<h2 id="py_ruff_test"><a class="header" href="#py_ruff_test">py_ruff_test</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_test")
+
+py_ruff_test(*, <a href="#py_ruff_test-name">name</a>, <a href="#py_ruff_test-target">target</a>, <a href="#py_ruff_test-config">config</a>, <a href="#py_ruff_test-kwargs">**kwargs</a>)
+</pre>
+<p>A rule for running <code>ruff check</code> and <code>ruff format</code> on a given target.</p>
+<p>This macro defines the following target:</p>
+<div class="table-wrapper"><table><thead><tr><th>rule</th><th>name</th></tr></thead><tbody>
+<tr><td>(py_ruff_check_test)[#py_ruff_check_test]</td><td><code>{name}.check</code></td></tr>
+<tr><td>(py_ruff_format_test)[#py_ruff_format_test]</td><td><code>{name}.format</code></td></tr>
+</tbody></table>
+</div>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_ruff_test-name"></a>name</td><td style="text-align: left">The name of the test suite</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-target"></a>target</td><td style="text-align: left">The target to run <code>ruff</code> on.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-config"></a>config</td><td style="text-align: left">The config file (ruff.toml) containing ruff settings.</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_ruff_test-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
+<p><a id="py_ruff_aspect"></a></p>
+<h2 id="py_ruff_aspect"><a class="header" href="#py_ruff_aspect">py_ruff_aspect</a></h2>
+<pre>
+load("@rules_venv//python/ruff:defs.bzl", "py_ruff_aspect")
+
+py_ruff_aspect()
+</pre>
+<p>An aspect for running ruff on targets with Python sources.</p>
+<p>This aspect can be configured by adding the following snippet to a workspace's <code>.bazelrc</code> file:</p>
+<pre><code class="language-text">build --aspects=@rules_venv//python/ruff:py_ruff_aspect.bzl%py_ruff_aspect
+build --output_groups=+py_ruff_checks
+</code></pre>
+<p><strong>ASPECT ATTRIBUTES</strong></p>
+<p><strong>ATTRIBUTES</strong></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="pytest.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="wheel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="pytest.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="wheel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
