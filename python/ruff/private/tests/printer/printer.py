@@ -2,7 +2,7 @@
 
 import argparse
 
-from greeting import greeting  # type: ignore
+from greeting import greeting
 
 from python.ruff.private.tests.imports.fibonacci import fibonacci_of
 

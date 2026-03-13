@@ -9,14 +9,14 @@ class ImportsTest(unittest.TestCase):
     def test_alpha(self) -> None:
         """Test alpha imports."""
         # pylint: disable-next=import-outside-toplevel
-        import alpha  # type: ignore
+        import alpha
 
         self.assertEqual(alpha.ALPHA, "alpha")
 
     def test_bravo(self) -> None:
         """Test bravo imports."""
         # pylint: disable-next=import-outside-toplevel
-        import bravo  # type: ignore
+        import bravo
 
         self.assertEqual(bravo.BRAVO, "bravo")
 

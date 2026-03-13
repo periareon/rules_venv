@@ -10,7 +10,7 @@ from pathlib import Path
 from python.runfiles import Runfiles
 
 # pylint: disable-next=no-name-in-module
-from python.within_second_python.py_dep import generate_greeting  # type: ignore
+from python.within_second_python.py_dep import generate_greeting
 
 
 def generate_greeting_followup(name: str) -> str:
