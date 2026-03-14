@@ -1,0 +1,13 @@
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# When enabled, external repos that contain only source files (no generated
+# outputs) are excluded from the runfiles collection. Their `.pth` entries
+# are rewritten at runtime to reference the on-disk external directory
+# directly, avoiding redundant zip/extract I/O. This primarily benefits
+# Windows where runfiles are not natively supported.
+bool_flag(
+    name = "experimental_windows_use_source_deps_in_place",
+    build_setting_default = True,
+)
