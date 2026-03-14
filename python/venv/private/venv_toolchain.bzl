@@ -1,5 +1,6 @@
 """Bazel rules for Python venvs"""
 
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(":runfiles_enabled.bzl", "is_runfiles_enabled", "runfiles_enabled_attr")
 
 def _py_venv_toolchain_impl(ctx):
@@ -20,6 +21,7 @@ def _py_venv_toolchain_impl(ctx):
         zipapp_shebang = ctx.attr.zipapp_shebang,
         zipapp_maker = ctx.file._zipapp_maker,
         zipapp_main = ctx.file._zipapp_main,
+        _experimental_windows_use_source_deps_in_place = ctx.attr._experimental_windows_use_source_deps_in_place[BuildSettingInfo].value,
     )]
 
 py_venv_toolchain = rule(
@@ -33,6 +35,9 @@ py_venv_toolchain = rule(
             cfg = "target",
             allow_single_file = True,
             default = Label("//python/venv/private:venv_entrypoint"),
+        ),
+        "_experimental_windows_use_source_deps_in_place": attr.label(
+            default = Label("//python/venv/settings:experimental_windows_use_source_deps_in_place"),
         ),
         "_process_wrapper": attr.label(
             cfg = "target",

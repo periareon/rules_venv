@@ -102,13 +102,16 @@ def _create_py_info(*, ctx, imports, srcs, dep_info = None):
         ),
     )
 
-def create_venv_config_info(*, label, name, imports):
+def create_venv_config_info(*, label, name, imports, static_repos = None):
     """Construct info used to create venvs.
 
     Args:
         label (Label): The label of the target that owns the venv.
         name (str): The name for the venv.
         imports (List): A list of import paths to write to `.pth` files.
+        static_repos (List, optional): Repos whose files are all source (no generated outputs).
+            When set, the process wrapper will resolve `.pth` entries for these repos
+            directly from the external directory instead of the runfiles collection.
 
     Returns:
         struct: the data.
@@ -117,6 +120,13 @@ def create_venv_config_info(*, label, name, imports):
         "{{runfiles_dir}}/{}".format(import_dir)
         for import_dir in imports
     ]
+    if static_repos:
+        return struct(
+            label = str(label),
+            name = name,
+            pth = pth_data,
+            static_repos = static_repos,
+        )
     return struct(
         label = str(label),
         name = name,
@@ -171,7 +181,7 @@ def zip_resource_set(_os_name, inputs):
         "memory": 0.055 * inputs,
     }
 
-def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, exclude_files = depset(), name = None, use_zip = False):
+def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, exclude_files = depset(), name = None, use_zip = False, static_repos = None):
     """Generate a runfiles directory
 
     This functionality exists due to the lack of native support for generating
@@ -186,6 +196,9 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
             in `runfiles`.
         name (str, optional): An alternate name to use in the output instead of `ctx.label.name`.
         use_zip (bool, optional): If True, a zip file will be generated instead of a json manifest.
+        static_repos (list, optional): A list of repo names whose files should be excluded from
+            the collection. These repos contain only source files and will be referenced
+            in-place on disk at runtime.
 
     Returns:
         Tuple[File, Runfiles]: The generated runfiles collection and associated runfiles.
@@ -202,10 +215,21 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     if name == None:
         name = ctx.label.name
 
+    static_repo_set = {repo: None for repo in (static_repos or [])}
+
     if use_zip:
         output = ctx.actions.declare_file("{}.venv_runfiles.zip".format(name))
         resource_set = zip_resource_set
-        inputs = runfiles.files
+
+        if static_repo_set:
+            workspace_name_for_filter = ctx.workspace_name
+            inputs = depset([
+                file
+                for file in runfiles.files.to_list()
+                if (file.owner.workspace_name or workspace_name_for_filter) not in static_repo_set
+            ])
+        else:
+            inputs = runfiles.files
 
         # When creating zips, the zip should be the only runfile required.
         output_runfiles = ctx.runfiles()
@@ -233,6 +257,10 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     def _runfiles_filter_map(file):
         if file in exclude_files_set:
             return None
+        if static_repo_set:
+            repo = file.owner.workspace_name if file.owner.workspace_name else workspace_name
+            if repo in static_repo_set:
+                return None
         return "{}={}".format(file.path, _rlocationpath(file, workspace_name))
 
     runfiles_args.add_all(
@@ -317,10 +345,30 @@ def _create_venv_entrypoint(
     is_windows = venv_toolchain.entrypoint.basename.endswith(".bat")
     entrypoint = ctx.actions.declare_file("{}.{}".format(name, "bat" if is_windows else "sh"))
 
+    use_source_deps_in_place = venv_toolchain._experimental_windows_use_source_deps_in_place
+
+    collection_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
+        py_info.transitive_sources,
+    ])).merge(runfiles)
+
+    static_repos = None
+    runfiles_path = ""
+    if force_runfiles or not venv_toolchain.runfiles_enabled:
+        if use_source_deps_in_place:
+            repos_with_generated = {}
+            all_repos = {}
+            for file in collection_runfiles.files.to_list():
+                repo = file.owner.workspace_name if file.owner.workspace_name else workspace_name
+                all_repos[repo] = True
+                if not file.is_source:
+                    repos_with_generated[repo] = True
+            static_repos = sorted([r for r in all_repos if r not in repos_with_generated])
+
     venv_config_info = create_venv_config_info(
         label = ctx.label,
         name = name.replace("/", "_"),
         imports = py_info.imports.to_list(),
+        static_repos = static_repos,
     )
 
     venv_config = ctx.actions.declare_file("{}.venv_config.json".format(name))
@@ -340,22 +388,18 @@ def _create_venv_entrypoint(
         py_runtime.files,
     ]))
 
-    venv_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
-        py_info.transitive_sources,
-    ])).merge(runfiles)
+    venv_runfiles = collection_runfiles
 
-    runfiles_path = ""
     if force_runfiles or not venv_toolchain.runfiles_enabled:
         runfiles_collection, associated_runfiles = _create_runfiles_collection(
             ctx = ctx,
             venv_toolchain = venv_toolchain,
             py_toolchain = py_toolchain,
-            runfiles = ctx.runfiles(transitive_files = depset(transitive = [
-                py_info.transitive_sources,
-            ])).merge(runfiles),
+            runfiles = collection_runfiles,
             exclude_files = interpreter_runfiles.files,
             name = name,
             use_zip = False,
+            static_repos = static_repos,
         )
         runfiles_path = path_fn(runfiles_collection, workspace_name)
 
