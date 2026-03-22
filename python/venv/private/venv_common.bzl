@@ -357,12 +357,31 @@ def _create_venv_entrypoint(
         if use_source_deps_in_place:
             repos_with_generated = {}
             all_repos = {}
+            repos_requiring_colocated_runfiles_root = {}
             for file in collection_runfiles.files.to_list():
                 repo = file.owner.workspace_name if file.owner.workspace_name else workspace_name
                 all_repos[repo] = True
                 if not file.is_source:
                     repos_with_generated[repo] = True
-            static_repos = sorted([r for r in all_repos if r not in repos_with_generated])
+
+                # `rules_python` runfiles infers the runfiles root from the path
+                # of its own module file. If that repo is imported from the
+                # source checkout while the main workspace is imported from the
+                # rendered runfiles tree, repository inference breaks.
+                if file.short_path.endswith("python/runfiles/runfiles.py"):
+                    repos_requiring_colocated_runfiles_root[repo] = True
+
+            # Only external repositories are safe to reference in-place.
+            # The main workspace must stay inside the rendered runfiles tree so
+            # repository-aware helpers like `rules_python` runfiles can infer the
+            # caller's repository from a single consistent runfiles root.
+            static_repos = sorted([
+                r
+                for r in all_repos
+                if r != workspace_name and
+                   r not in repos_with_generated and
+                   r not in repos_requiring_colocated_runfiles_root
+            ])
 
     venv_config_info = create_venv_config_info(
         label = ctx.label,
