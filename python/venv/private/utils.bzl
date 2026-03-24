@@ -69,6 +69,9 @@ def _venv_entrypoint_impl(ctx):
     is_windows = ctx.file.entrypoint.basename.endswith(".bat")
     if is_windows:
         output = ctx.actions.declare_file("{}.bat".format(ctx.label.name))
+        batch_runfiles = ctx.file._batch_runfiles
+        file_substitutions["@REM {RUNFILES_API}"] = batch_runfiles.path
+        inputs.append(batch_runfiles)
     else:
         output = ctx.actions.declare_file("{}.sh".format(ctx.label.name))
         sh_toolchain = ctx.toolchains["@bazel_tools//tools/sh:toolchain_type"]
@@ -124,6 +127,12 @@ venv_entrypoint = rule(
             cfg = "target",
             aspects = [_bash_runfiles_finder],
             default = Label("@rules_shell//shell/runfiles"),
+        ),
+        "_batch_runfiles": attr.label(
+            doc = "The runfiles library for batch.",
+            cfg = "target",
+            allow_single_file = [".bat"],
+            default = Label("@rules_batch//batch/runfiles:runfiles.bat"),
         ),
         "_maker": attr.label(
             doc = "The script used to render the entrypoint.",
