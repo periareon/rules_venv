@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import platform
+import signal
 import shutil
 import subprocess
 import sys
@@ -319,9 +320,19 @@ def main() -> None:
         main_args.extend(args.main_args)
 
         logging.debug("Spawning subprocess: %s", " ".join(main_args))
-        result = subprocess.run(main_args, check=False, capture_output=False)
-        logging.debug("Process complete with exit code: %d", result.returncode)
-        sys.exit(result.returncode)
+
+        # Ignore SIGINT in the wrapper so Ctrl+C is handled entirely by
+        # the child process (e.g. Jupyter's interactive shutdown prompt).
+        # Popen resets signals in the child (restore_signals=True by
+        # default) so SIG_IGN only affects this process.  On Windows the
+        # console delivers Ctrl+C to each process independently, so the
+        # same behavior holds.
+        old_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        proc = subprocess.Popen(main_args)
+        returncode = proc.wait()
+        signal.signal(signal.SIGINT, old_handler)
+        logging.debug("Process complete with exit code: %d", returncode)
+        sys.exit(returncode)
     finally:
         # https://bazel.build/reference/test-encyclopedia#initial-conditions
         # TEST_TMPDIR: Is defined whenever running in under `bazel test`.
