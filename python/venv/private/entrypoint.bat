@@ -35,6 +35,8 @@ if {USE_RUNFILES}==1 (
         )
     )
 
+    call :runfiles_export_envvars
+
     call :rlocation "{PY_RUNTIME}" PY_RUNTIME
     call :rlocation "{VENV_PROCESS_WRAPPER}" VENV_PROCESS_WRAPPER
     call :rlocation "{VENV_CONFIG}" VENV_CONFIG
@@ -53,8 +55,6 @@ if {USE_RUNFILES}==1 (
         call :slocation "{VENV_RUNFILES_COLLECTION}" RULES_VENV_RUNFILES_COLLECTION
     )
 )
-
-call :runfiles_export_envvars
 
 %PY_RUNTIME% ^
     %VENV_PROCESS_WRAPPER% ^
