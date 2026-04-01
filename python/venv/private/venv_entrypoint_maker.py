@@ -47,10 +47,26 @@ _VENDORED_TEMPLATE = """\
 ################################################################################
 """
 
+_VENDORED_BAT_TEMPLATE = """\
+@REM ############################################################################
+@REM rules_venv vendor: {file}
+@REM ############################################################################
+{content}
+@REM ############################################################################
+@REM rules_venv end vendor: {file}
+@REM ############################################################################
+"""
+
 
 def main() -> None:
     """The main entrypoint."""
     args = parse_args()
+
+    template = (
+        _VENDORED_BAT_TEMPLATE
+        if args.output.suffix == ".bat"
+        else _VENDORED_TEMPLATE
+    )
 
     content = args.template.read_text(encoding="utf-8")
     for key, value in args.substitutions.items():
@@ -58,7 +74,7 @@ def main() -> None:
     for key, file in args.file_substitutions.items():
         value = Path(file).read_text(encoding="utf-8")
         content = content.replace(
-            key, _VENDORED_TEMPLATE.format(file=file, content=value)
+            key, template.format(file=file, content=value)
         )
 
     args.output.parent.mkdir(exist_ok=True, parents=True)
