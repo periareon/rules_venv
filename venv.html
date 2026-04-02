@@ -333,7 +333,7 @@ py_venv_common.create_py_info(*, <a href="#py_venv_common.create_py_info-ctx">ct
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
 py_venv_common.create_runfiles_collection(*, <a href="#py_venv_common.create_runfiles_collection-ctx">ctx</a>, <a href="#py_venv_common.create_runfiles_collection-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-py_toolchain">py_toolchain</a>, <a href="#py_venv_common.create_runfiles_collection-runfiles">runfiles</a>,
-                                          <a href="#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>)
+                                          <a href="#py_venv_common.create_runfiles_collection-exclude_files">exclude_files</a>, <a href="#py_venv_common.create_runfiles_collection-name">name</a>, <a href="#py_venv_common.create_runfiles_collection-use_zip">use_zip</a>, <a href="#py_venv_common.create_runfiles_collection-static_repos">static_repos</a>)
 </pre>
 <p>Generate a runfiles directory</p>
 <p>This functionality exists due to the lack of native support for generating
@@ -347,6 +347,7 @@ runfiles in an action. For details see: https://github.com/bazelbuild/bazel/issu
 <tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-exclude_files"></a>exclude_files</td><td style="text-align: left">A collection of files to exclude from the collection despite them appearing in <code>runfiles</code>.</td><td style="text-align: left"><code>depset([])</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-name"></a>name</td><td style="text-align: left">An alternate name to use in the output instead of <code>ctx.label.name</code>.</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-use_zip"></a>use_zip</td><td style="text-align: left">If True, a zip file will be generated instead of a json manifest.</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_runfiles_collection-static_repos"></a>static_repos</td><td style="text-align: left">A list of repo names whose files should be excluded from the collection. These repos contain only source files and will be referenced in-place on disk at runtime.</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
 <p><strong>RETURNS</strong></p>
@@ -366,7 +367,7 @@ py_venv_common.create_venv_attrs()
 <pre>
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
-py_venv_common.create_venv_config_info(*, <a href="#py_venv_common.create_venv_config_info-label">label</a>, <a href="#py_venv_common.create_venv_config_info-name">name</a>, <a href="#py_venv_common.create_venv_config_info-imports">imports</a>)
+py_venv_common.create_venv_config_info(*, <a href="#py_venv_common.create_venv_config_info-label">label</a>, <a href="#py_venv_common.create_venv_config_info-name">name</a>, <a href="#py_venv_common.create_venv_config_info-imports">imports</a>, <a href="#py_venv_common.create_venv_config_info-static_repos">static_repos</a>)
 </pre>
 <p>Construct info used to create venvs.</p>
 <p><strong>PARAMETERS</strong></p>
@@ -374,6 +375,7 @@ py_venv_common.create_venv_config_info(*, <a href="#py_venv_common.create_venv_c
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-label"></a>label</td><td style="text-align: left">The label of the target that owns the venv.</td><td style="text-align: left">none</td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-name"></a>name</td><td style="text-align: left">The name for the venv.</td><td style="text-align: left">none</td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-imports"></a>imports</td><td style="text-align: left">A list of import paths to write to <code>.pth</code> files.</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_config_info-static_repos"></a>static_repos</td><td style="text-align: left">Repos whose files are all source (no generated outputs). When set, the process wrapper will resolve <code>.pth</code> entries for these repos directly from the external directory instead of the runfiles collection.</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
 <p><strong>RETURNS</strong></p>
