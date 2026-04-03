@@ -541,10 +541,30 @@ py_black_aspect()
 </code></pre>
 <p>From here a <a href="https://docs.python.org/3/library/venv.html">venv</a> will likely be available at <code>.venv</code> within your workspace that
 can be activated for improved IDE support.</p>
+<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<ul>
+<li><a href="global_venv.html#py_global_venv">py_global_venv</a></li>
+</ul>
 <h2 id="aspects-1"><a class="header" href="#aspects-1">Aspects</a></h2>
 <ul>
 <li><a href="global_venv.html#py_global_venv_aspect">py_global_venv_aspect</a></li>
 </ul>
+<p><a id="py_global_venv"></a></p>
+<h2 id="py_global_venv"><a class="header" href="#py_global_venv">py_global_venv</a></h2>
+<pre>
+load("@rules_venv//python/global_venv:defs.bzl", "py_global_venv")
+
+py_global_venv(*, <a href="global_venv.html#py_global_venv-name">name</a>, <a href="global_venv.html#py_global_venv-gen_pyrightconfig">gen_pyrightconfig</a>, <a href="global_venv.html#py_global_venv-build_srcs">build_srcs</a>, <a href="global_venv.html#py_global_venv-kwargs">**kwargs</a>)
+</pre>
+<p>Define a "global venv" executable.</p>
+<p><strong>PARAMETERS</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_global_venv-name"></a>name</td><td style="text-align: left">The name of the target</td><td style="text-align: left">none</td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-gen_pyrightconfig"></a>gen_pyrightconfig</td><td style="text-align: left">Generate a <code>pyrightconfig.json</code> to support indexing Bazel generated files.</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-build_srcs"></a>build_srcs</td><td style="text-align: left">Build all python sources to ensure they're available for loading.</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for the <code>py_venv_binary</code>.</td><td style="text-align: left">none</td></tr>
+</tbody></table>
+</div>
 <p><a id="py_global_venv_aspect"></a></p>
 <h2 id="py_global_venv_aspect"><a class="header" href="#py_global_venv_aspect">py_global_venv_aspect</a></h2>
 <pre>
@@ -660,7 +680,7 @@ py_isort_aspect()
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="module-extensions"><a class="header" href="#module-extensions">Module Extensions</a></h1>
 <p>Rules for building <a href="https://docs.python.org/3/extending/extending.html">Module Extensions</a></p>
-<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<h2 id="functions-2"><a class="header" href="#functions-2">Functions</a></h2>
 <ul>
 <li><a href="module_extension.html#py_cc_extension">py_cc_extension</a></li>
 </ul>
@@ -883,7 +903,7 @@ build --output_groups=+py_pylint_checks
 <li><a href="pytest.html#py_pytest_test">py_pytest_test</a></li>
 <li><a href="pytest.html#py_pytest_toolchain">py_pytest_toolchain</a></li>
 </ul>
-<h2 id="functions-2"><a class="header" href="#functions-2">Functions</a></h2>
+<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
 <ul>
 <li><a href="pytest.html#py_pytest_test_suite">py_pytest_test_suite</a></li>
 </ul>
@@ -1093,7 +1113,7 @@ build --output_groups=+py_ruff_checks
 <li><a href="ruff.html#py_ruff_format_test">py_ruff_format_test</a></li>
 <li><a href="ruff.html#py_ruff_toolchain">py_ruff_toolchain</a></li>
 </ul>
-<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
+<h2 id="functions-4"><a class="header" href="#functions-4">Functions</a></h2>
 <ul>
 <li><a href="ruff.html#py_ruff_test">py_ruff_test</a></li>
 </ul>
@@ -1227,7 +1247,7 @@ toolchain(
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
 </ul>
-<h2 id="functions-4"><a class="header" href="#functions-4">Functions</a></h2>
+<h2 id="functions-5"><a class="header" href="#functions-5">Functions</a></h2>
 <ul>
 <li><a href="wheel.html#package_tag">package_tag</a></li>
 <li><a href="wheel.html#py_wheel_library">py_wheel_library</a></li>
