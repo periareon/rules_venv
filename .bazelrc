@@ -58,8 +58,12 @@ build --//python/pylint:config=//:.pylintrc.toml
 # Enable ruff for all targets in the workspace
 build:ruff --aspects=//python/ruff:py_ruff_aspect.bzl%py_ruff_aspect
 build:ruff --output_groups=+py_ruff_checks
-build --//python/ruff:config=//:.ruff.toml
 build --//python/ruff:mode=check,format
+
+# Enable ty for all targets in the workspace
+build:ty --aspects=//python/ty:py_ty_aspect.bzl%py_ty_aspect
+# Ty is in beta so it fails many valid cases.
+# build:ty --output_groups=+py_ty_checks
 
 # Define a config that enables all linter aspects.
 build:strict --config=black
@@ -67,6 +71,7 @@ build:strict --config=isort
 build:strict --config=mypy
 build:strict --config=pylint
 build:strict --config=ruff
+build:strict --config=ty
 
 ###############################################################################
 ## Custom user flags

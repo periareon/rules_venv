@@ -1,0 +1,52 @@
+load("//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("//python/ty:defs.bzl", "py_ty_test")
+
+py_library(
+    name = "lib",
+    srcs = ["lib.py"],
+)
+
+py_ty_test(
+    name = "lib_ty_test",
+    target = ":lib",
+)
+
+filegroup(
+    name = "lib_ty_aspect",
+    srcs = [":lib"],
+    output_group = "py_ty_checks",
+)
+
+py_binary(
+    name = "bin",
+    srcs = ["main.py"],
+)
+
+py_ty_test(
+    name = "bin_ty_test",
+    target = ":bin",
+)
+
+filegroup(
+    name = "bin_ty_aspect",
+    srcs = [":bin"],
+    output_group = "py_ty_checks",
+)
+
+py_test(
+    name = "lib_test",
+    srcs = ["lib_test.py"],
+    deps = [":lib"],
+)
+
+py_ty_test(
+    name = "lib_test_ty_test",
+    target = ":lib_test",
+)
+
+filegroup(
+    name = "lib_test_ty_aspect",
+    testonly = True,
+    srcs = [":lib_test"],
+    output_group = "py_ty_checks",
+)

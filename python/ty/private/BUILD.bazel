@@ -1,0 +1,28 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_library")
+
+exports_files([
+    "ty_runner.py",
+])
+
+py_library(
+    name = "ty_runner",
+    srcs = ["ty_runner.py"],
+    tags = ["no-mypy"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//python/runfiles",
+        "//python/ty:current_py_ty_toolchain",
+    ],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["*.bzl"]),
+    visibility = ["//python/ty:__subpackages__"],
+    deps = [
+        "//python:bzl_lib",
+        "//python/private:bzl_lib",
+        "//python/venv:bzl_lib",
+    ],
+)
