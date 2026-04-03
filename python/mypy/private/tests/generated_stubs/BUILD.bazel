@@ -1,0 +1,34 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+write_file(
+    name = "gen_stubs",
+    out = "untyped.pyi",
+    content = [
+        '"""Type stubs for untyped module."""',
+        "",
+        "",
+        "def greeting(name: str) -> str: ...",
+        "",
+    ],
+    newline = "unix",
+)
+
+py_library(
+    name = "untyped_lib",
+    srcs = ["untyped.py"],
+    data = [":gen_stubs"],
+    tags = ["no-mypy"],
+)
+
+py_library(
+    name = "consumer_lib",
+    srcs = ["consumer.py"],
+    deps = [":untyped_lib"],
+)
+
+py_mypy_test(
+    name = "consumer_mypy_test",
+    target = ":consumer_lib",
+)
