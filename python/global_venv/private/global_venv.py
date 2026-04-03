@@ -27,6 +27,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--dir", type=Path, help="The path of the venv to create.")
     parser.add_argument(
+        "--gen_pyrightconfig",
+        action="store_true",
+        default=False,
+        help="If passed, a `pyrightconfig.json` will be added next to `--dir`",
+    )
+    parser.add_argument(
+        "--build_srcs",
+        action="store_true",
+        default=False,
+        help="If passed, all detected targets will build any generated python files.",
+    )
+    parser.add_argument(
         "targets",
         type=str,
         default=["//..."],
@@ -216,6 +228,8 @@ def generate_global_venv_specs(
     workspace_dir: Path | str,
     rules_venv_name: str,
     targets: List[str],
+    *,
+    build_srcs: bool = False,
 ) -> None:
     """Invoke a Bazel build to generate "global venv" spec files.
 
@@ -224,6 +238,7 @@ def generate_global_venv_specs(
         workspace_dir: The path to the Bazel workspace.
         rules_venv_name: The `rules_venv` repository label part.
         targets: Targets to generate specs for.
+        build_srcs: Enable an additional output group to build sources.
     """
     logging.debug("Building specs...")
     args = [
@@ -231,7 +246,12 @@ def generate_global_venv_specs(
         "build",
         rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
         "--output_groups=py_global_venv_info",
-    ] + targets
+    ]
+
+    if build_srcs:
+        args.append("--output_groups=py_global_venv_srcs")
+
+    args.extend(targets)
     logging.debug(" ".join(args))
     subprocess.run(
         args,
@@ -557,6 +577,77 @@ def get_pth(
     return list(pth.keys())
 
 
+def get_extra_paths(
+    specs: Sequence[PyGlobalVenvInfo],
+    execution_root: Path,
+    workspace_name: str,
+) -> Sequence[str]:
+    """Collect unique bin_dir paths from specs for Pyright/Pylance `extraPaths`.
+
+    Pylance has a known limitation where it cannot resolve namespace packages
+    that span multiple search roots. Adding the bin root(s) to `extraPaths`
+    in a `pyrightconfig.json` works around this.
+
+    This mirrors the bin_dir logic in ``get_pth`` so that every search path
+    the Python runtime sees under ``bazel-bin`` is also visible to Pyright.
+
+    Args:
+        specs: Deserialized `PyGlobalVenvInfo` providers.
+        execution_root: The path to the Bazel execution root.
+        workspace_name: The name of the current Bazel workspace
+            (``execution_root.name``).
+
+    Returns:
+        A deduplicated list of absolute bin-dir paths.
+    """
+    bin_dirs: Dict[str, None] = {}
+    for spec in specs:
+        if not spec.bin_dir:
+            continue
+        for i in spec.imports:
+            if i == workspace_name:
+                bin_dirs[str(execution_root / spec.bin_dir)] = None
+            elif i.startswith(f"{workspace_name}/"):
+                _, _, subpath = i.partition("/")
+                bin_dirs[str(execution_root / spec.bin_dir / subpath)] = None
+            else:
+                bin_dirs[str(execution_root / spec.bin_dir / "external" / i)] = None
+    return list(bin_dirs.keys())
+
+
+def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
+    """Write a ``pyrightconfig.json`` with ``extraPaths`` for generated sources.
+
+    Pyright/Pylance cannot resolve namespace packages that span multiple
+    search roots.  When a namespace chain like ``a.b.c.generated`` is
+    partially present under the workspace root (``a/b/c/``) and the
+    ``generated`` package only exists under the ``bazel-bin`` root,
+    Pylance anchors the resolution to the first partial match and never
+    merges across roots.
+
+    See:
+        - https://github.com/microsoft/pylance-release/issues/3002
+        - https://github.com/microsoft/pylance-release/issues/7618
+
+    Adding the bin root(s) to ``extraPaths`` works around this limitation.
+    An existing config will have its ``extraPaths`` key replaced; all other
+    user settings are preserved.
+
+    Args:
+        output: The file path of the config to write.
+        extra_paths: Absolute paths to Bazel bin roots.
+    """
+    pyright_config: Dict[str, Any] = {}
+    if output.exists():
+        pyright_config = json.loads(output.read_text(encoding="utf-8"))
+    pyright_config["extraPaths"] = extra_paths
+    output.write_text(
+        json.dumps(pyright_config, indent=4) + "\n",
+        encoding="utf-8",
+    )
+    logging.info("Generated %s", output)
+
+
 def main() -> None:
     """The main entrypoint."""
     if "BUILD_WORKSPACE_DIRECTORY" not in os.environ:
@@ -605,6 +696,7 @@ def main() -> None:
         workspace_dir=workspace,
         rules_venv_name=rules_venv_name,
         targets=targets,
+        build_srcs=args.build_srcs,
     )
 
     # Collect all venv targets
@@ -631,19 +723,27 @@ def main() -> None:
         ),
     )
 
-    is_windows = platform.system() == "Windows"
-    activate_script = "activate.bat" if is_windows else "activate"
-    activate_path = venv_interpreter.parent / activate_script
+    if args.gen_pyrightconfig:
+        extra_paths = get_extra_paths(
+            specs=specs,
+            execution_root=bazel_info.execution_root,
+            workspace_name=bazel_info.execution_root.name,
+        )
+        if extra_paths:
+            write_pyrightconfig(
+                output=workspace / "pyrightconfig.json",
+                extra_paths=extra_paths,
+            )
 
-    if is_windows:
+    if platform.system() == "Windows":
         logging.info(
             "Generation complete, to activate run:\n\t%s",
-            activate_path,
+            venv_interpreter.parent / "activate.bat",
         )
     else:
         logging.info(
             "Generation complete, to activate run:\n\tsource %s",
-            activate_path,
+            venv_interpreter.parent / "activate",
         )
 
 

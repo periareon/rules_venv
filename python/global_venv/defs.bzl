@@ -18,8 +18,13 @@ can be activated for improved IDE support.
 """
 
 load(
+    ":py_global_venv.bzl",
+    _py_global_venv = "py_global_venv",
+)
+load(
     ":py_global_venv_aspect.bzl",
     _py_global_venv_aspect = "py_global_venv_aspect",
 )
 
 py_global_venv_aspect = _py_global_venv_aspect
+py_global_venv = _py_global_venv
