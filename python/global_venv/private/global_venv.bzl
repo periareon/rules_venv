@@ -3,19 +3,35 @@
 load("//python:py_info.bzl", "PyInfo")
 load("//python/venv:defs.bzl", "py_venv_binary")
 
-def global_venv(*, name, **kwargs):
+def py_global_venv(
+        *,
+        name,
+        gen_pyrightconfig = True,
+        build_srcs = False,
+        **kwargs):
     """Define a "global venv" executable.
 
     Args:
         name (str): The name of the target
+        gen_pyrightconfig (bool): Generate a `pyrightconfig.json` to support indexing
+            Bazel generated files.
+        build_srcs (bool): Build all python sources to ensure they're available for loading.
         **kwargs (dict): Additional keyword arguments for the `py_venv_binary`.
     """
     main = Label("//python/global_venv/private:global_venv.py")
+
+    args = []
+    if gen_pyrightconfig:
+        args.append("--gen_pyrightconfig")
+
+    if build_srcs:
+        args.append("--build_srcs")
 
     py_venv_binary(
         name = name,
         srcs = [main],
         main = main,
+        args = args,
         **kwargs
     )
 
@@ -32,6 +48,19 @@ SPEC_FILE_SUFFIX = ".py_global_venv_info.json"
 def _is_py_source(file):
     return file.basename.endswith((".py", ".pyi", ".so", ".pyd", ".pyc"))
 
+def _collect_files(collection):
+    all_files = []
+    for entry in collection:
+        if DefaultInfo in entry:
+            all_files.extend([
+                entry[DefaultInfo].files,
+                entry[DefaultInfo].default_runfiles.files,
+            ])
+        elif type(entry) == "File":
+            all_files.append(depset([entry]))
+
+    return all_files
+
 def _py_global_venv_aspect_impl(target, ctx):
     info = target[PyInfo]
     data = {
@@ -39,9 +68,14 @@ def _py_global_venv_aspect_impl(target, ctx):
         "imports": info.imports.to_list(),
     }
 
+    all_files = [target[DefaultInfo].files]
+    all_files.extend(_collect_files(getattr(ctx.rule.attr, "srcs", [])))
+    all_files.extend(_collect_files(getattr(ctx.rule.attr, "data", [])))
+    all_files = depset(transitive = all_files)
+
     has_generated_files = bool(not all([
         src.is_source
-        for src in target[DefaultInfo].files.to_list()
+        for src in all_files.to_list()
         if _is_py_source(src)
     ]))
 
@@ -57,6 +91,7 @@ def _py_global_venv_aspect_impl(target, ctx):
     return [
         OutputGroupInfo(
             py_global_venv_info = depset([output]),
+            py_global_venv_files = all_files,
         ),
         PyGlobalVenvInfo(**data),
     ]

@@ -1,12 +1,12 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//python/global_venv/private:global_venv.bzl", "global_venv")
+load("//python/global_venv:defs.bzl", "py_global_venv")
 
 exports_files([
     "defs.bzl",
     "py_global_venv_aspect.bzl",
 ])
 
-global_venv(
+py_global_venv(
     name = "global_venv",
     visibility = ["//visibility:public"],
 )
