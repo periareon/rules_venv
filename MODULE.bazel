@@ -59,6 +59,7 @@ register_toolchains(
     "//python/pytest/toolchain",
     "//python/ruff/toolchain",
     "//python/wheel/toolchain",
+    "//python/ty/toolchain",
     dev_dependency = True,
 )
 

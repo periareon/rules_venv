@@ -64,6 +64,7 @@ filegroup(
         "//python/pylint:requirements.in",
         "//python/pytest:requirements.in",
         "//python/ruff:requirements.in",
+        "//python/ty:requirements.in",
         "//python/wheel:requirements.in",
     ],
 )

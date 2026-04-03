@@ -1,0 +1,13 @@
+load("//python/ty:defs.bzl", "py_ty_toolchain")
+
+py_ty_toolchain(
+    name = "py_ty_toolchain",
+    ty = "@pip_deps//ty",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":py_ty_toolchain",
+    toolchain_type = "//python/ty:toolchain_type",
+    visibility = ["//visibility:public"],
+)
