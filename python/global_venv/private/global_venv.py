@@ -683,7 +683,7 @@ def main() -> None:
 
     # If the workspace has no name then use the name of the workspace directory.
     workspace_name = bazel_info.execution_root.name
-    if workspace_name == "__main__":
+    if workspace_name == "_main":
         workspace_name = workspace.name
 
     rules_venv_name = "@rules_venv"
