@@ -7,4 +7,3 @@ user.bazelrc
 /*venv*/
 /.mypy_cache
 /.pylint_cache
-/pyrightconfig.json

@@ -1,0 +1,3 @@
+{
+  "extends": "./bazel-pyrightconfig.json"
+}

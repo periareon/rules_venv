@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
         "--gen_pyrightconfig",
         action="store_true",
         default=False,
-        help="If passed, a `pyrightconfig.json` will be added next to `--dir`",
+        help="If passed, a `bazel-pyrightconfig.json` will be added next to `--dir`",
     )
     parser.add_argument(
         "--build_srcs",
@@ -616,7 +616,7 @@ def get_extra_paths(
 
 
 def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
-    """Write a ``pyrightconfig.json`` with ``extraPaths`` for generated sources.
+    """Write a ``bazel-pyrightconfig.json`` with ``extraPaths`` for generated sources.
 
     Pyright/Pylance cannot resolve namespace packages that span multiple
     search roots.  When a namespace chain like ``a.b.c.generated`` is
@@ -630,17 +630,12 @@ def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
         - https://github.com/microsoft/pylance-release/issues/7618
 
     Adding the bin root(s) to ``extraPaths`` works around this limitation.
-    An existing config will have its ``extraPaths`` key replaced; all other
-    user settings are preserved.
 
     Args:
         output: The file path of the config to write.
         extra_paths: Absolute paths to Bazel bin roots.
     """
-    pyright_config: Dict[str, Any] = {}
-    if output.exists():
-        pyright_config = json.loads(output.read_text(encoding="utf-8"))
-    pyright_config["extraPaths"] = extra_paths
+    pyright_config = {"extraPaths": extra_paths}
     output.write_text(
         json.dumps(pyright_config, indent=4) + "\n",
         encoding="utf-8",
@@ -731,7 +726,7 @@ def main() -> None:
         )
         if extra_paths:
             write_pyrightconfig(
-                output=workspace / "pyrightconfig.json",
+                output=workspace / "bazel-pyrightconfig.json",
                 extra_paths=extra_paths,
             )
 
