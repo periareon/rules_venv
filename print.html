@@ -557,10 +557,20 @@ load("@rules_venv//python/global_venv:defs.bzl", "py_global_venv")
 py_global_venv(*, <a href="global_venv.html#py_global_venv-name">name</a>, <a href="global_venv.html#py_global_venv-gen_pyrightconfig">gen_pyrightconfig</a>, <a href="global_venv.html#py_global_venv-build_srcs">build_srcs</a>, <a href="global_venv.html#py_global_venv-kwargs">**kwargs</a>)
 </pre>
 <p>Define a "global venv" executable.</p>
+<p>When <code>gen_pyrightconfig</code> is enabled (the default), running this target
+writes a <code>bazel-pyrightconfig.json</code> at the workspace root containing
+<code>extraPaths</code> that point into <code>bazel-bin</code>. This lets Pyright/Pylance
+resolve generated Python sources that live outside the source tree.</p>
+<p>To use it, add an <code>extends</code> field to your <code>pyrightconfig.json</code>::</p>
+<pre><code class="language-json">{
+    "extends": "bazel-pyrightconfig.json",
+    ...
+}
+</code></pre>
 <p><strong>PARAMETERS</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_global_venv-name"></a>name</td><td style="text-align: left">The name of the target</td><td style="text-align: left">none</td></tr>
-<tr><td style="text-align: left"><a id="py_global_venv-gen_pyrightconfig"></a>gen_pyrightconfig</td><td style="text-align: left">Generate a <code>pyrightconfig.json</code> to support indexing Bazel generated files.</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-gen_pyrightconfig"></a>gen_pyrightconfig</td><td style="text-align: left">Generate a <code>bazel-pyrightconfig.json</code> to support indexing Bazel generated files.</td><td style="text-align: left"><code>True</code></td></tr>
 <tr><td style="text-align: left"><a id="py_global_venv-build_srcs"></a>build_srcs</td><td style="text-align: left">Build all python sources to ensure they're available for loading.</td><td style="text-align: left"><code>False</code></td></tr>
 <tr><td style="text-align: left"><a id="py_global_venv-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for the <code>py_venv_binary</code>.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
