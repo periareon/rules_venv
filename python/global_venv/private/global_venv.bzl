@@ -11,9 +11,23 @@ def py_global_venv(
         **kwargs):
     """Define a "global venv" executable.
 
+    When ``gen_pyrightconfig`` is enabled (the default), running this target
+    writes a ``bazel-pyrightconfig.json`` at the workspace root containing
+    ``extraPaths`` that point into ``bazel-bin``. This lets Pyright/Pylance
+    resolve generated Python sources that live outside the source tree.
+
+    To use it, add an ``extends`` field to your ``pyrightconfig.json``::
+
+    ```json
+    {
+        "extends": "bazel-pyrightconfig.json",
+        ...
+    }
+    ```
+
     Args:
         name (str): The name of the target
-        gen_pyrightconfig (bool): Generate a `pyrightconfig.json` to support indexing
+        gen_pyrightconfig (bool): Generate a `bazel-pyrightconfig.json` to support indexing
             Bazel generated files.
         build_srcs (bool): Build all python sources to ensure they're available for loading.
         **kwargs (dict): Additional keyword arguments for the `py_venv_binary`.
@@ -73,13 +87,13 @@ def _py_global_venv_aspect_impl(target, ctx):
     all_files.extend(_collect_files(getattr(ctx.rule.attr, "data", [])))
     all_files = depset(transitive = all_files)
 
-    has_generated_files = bool(not all([
-        src.is_source
+    generated_srcs = [
+        src
         for src in all_files.to_list()
-        if _is_py_source(src)
-    ]))
+        if _is_py_source(src) and not src.is_source
+    ]
 
-    if has_generated_files:
+    if generated_srcs:
         data["bin_dir"] = ctx.bin_dir.path
 
     output = ctx.actions.declare_file("{}{}".format(target.label.name, SPEC_FILE_SUFFIX))
