@@ -309,10 +309,72 @@ def _py_pytest_toolchain_impl(ctx):
 
 py_pytest_toolchain = rule(
     implementation = _py_pytest_toolchain_impl,
-    doc = "A toolchain for the [pytest](https://python/pytest.readthedocs.io/en/stable/) rules.",
+    doc = """\
+A toolchain for the [pytest](https://docs.pytest.org/en/stable/) rules.
+
+The `pytest` attribute accepts a `py_library` target containing the pytest
+package and any desired plugins. At minimum, the library must include `pytest`.
+Additional dependencies unlock optional features:
+
+- `pytest-cov` + `coverage`: Enables `bazel coverage` support.
+- `pytest-xdist`: Enables parallel test execution via the `numprocesses` attribute.
+- `pytest-shard`: Enables Bazel test sharding.
+
+**Minimal example** (test-only, no coverage):
+
+```python
+load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_library(
+    name = "pytest_lib",
+    deps = ["@pip//pytest"],
+)
+
+py_pytest_toolchain(
+    name = "pytest_toolchain",
+    pytest = ":pytest_lib",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":pytest_toolchain",
+    toolchain_type = "@rules_venv//python/pytest:toolchain_type",
+)
+```
+
+**Full example** (with coverage, xdist, and sharding):
+
+```python
+load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_library(
+    name = "pytest_lib",
+    deps = [
+        "@pip//coverage",
+        "@pip//pytest",
+        "@pip//pytest_cov",
+        "@pip//pytest_shard",
+        "@pip//pytest_xdist",
+    ],
+)
+
+py_pytest_toolchain(
+    name = "pytest_toolchain",
+    pytest = ":pytest_lib",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":pytest_toolchain",
+    toolchain_type = "@rules_venv//python/pytest:toolchain_type",
+)
+```
+""",
     attrs = {
         "pytest": attr.label(
-            doc = "The pytest `py_library` to use with the rules.",
+            doc = "A `py_library` target providing `pytest` and any desired plugins.",
             providers = [PyInfo],
             mandatory = True,
         ),
