@@ -1008,11 +1008,65 @@ load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
 
 py_pytest_toolchain(<a href="pytest.html#py_pytest_toolchain-name">name</a>, <a href="pytest.html#py_pytest_toolchain-pytest">pytest</a>)
 </pre>
-<p>A toolchain for the <a href="https://python/pytest.readthedocs.io/en/stable/">pytest</a> rules.</p>
+<p>A toolchain for the <a href="https://docs.pytest.org/en/stable/">pytest</a> rules.</p>
+<p>The <code>pytest</code> attribute accepts a <code>py_library</code> target containing the pytest
+package and any desired plugins. At minimum, the library must include <code>pytest</code>.
+Additional dependencies unlock optional features:</p>
+<ul>
+<li><code>pytest-cov</code> + <code>coverage</code>: Enables <code>bazel coverage</code> support.</li>
+<li><code>pytest-xdist</code>: Enables parallel test execution via the <code>numprocesses</code> attribute.</li>
+<li><code>pytest-shard</code>: Enables Bazel test sharding.</li>
+</ul>
+<p><strong>Minimal example</strong> (test-only, no coverage):</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_library(
+    name = "pytest_lib",
+    deps = ["@pip//pytest"],
+)
+
+py_pytest_toolchain(
+    name = "pytest_toolchain",
+    pytest = ":pytest_lib",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":pytest_toolchain",
+    toolchain_type = "@rules_venv//python/pytest:toolchain_type",
+)
+</code></pre>
+<p><strong>Full example</strong> (with coverage, xdist, and sharding):</p>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/pytest:defs.bzl", "py_pytest_toolchain")
+
+py_library(
+    name = "pytest_lib",
+    deps = [
+        "@pip//coverage",
+        "@pip//pytest",
+        "@pip//pytest_cov",
+        "@pip//pytest_shard",
+        "@pip//pytest_xdist",
+    ],
+)
+
+py_pytest_toolchain(
+    name = "pytest_toolchain",
+    pytest = ":pytest_lib",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":pytest_toolchain",
+    toolchain_type = "@rules_venv//python/pytest:toolchain_type",
+)
+</code></pre>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_pytest_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_pytest_toolchain-pytest"></a>pytest</td><td style="text-align: left">The pytest <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_pytest_toolchain-pytest"></a>pytest</td><td style="text-align: left">A <code>py_library</code> target providing <code>pytest</code> and any desired plugins.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
 </tbody></table>
 </div>
 <p><a id="py_pytest_test_suite"></a></p>
