@@ -7,6 +7,8 @@ def py_global_venv(
         *,
         name,
         gen_pyrightconfig = True,
+        gen_entrypoints = True,
+        entrypoints = {},
         build_srcs = False,
         **kwargs):
     """Define a "global venv" executable.
@@ -25,10 +27,22 @@ def py_global_venv(
     }
     ```
 
+    When ``gen_entrypoints`` is enabled (the default), running this target will
+    auto-discover ``console_scripts`` entrypoints from pip packages via
+    ``importlib.metadata`` and generate executable scripts in the venv's ``bin/``
+    directory. This allows IDEs to find tools like ``black`` or ``mypy`` inside
+    the venv. Additional entrypoints can be specified manually via ``entrypoints``.
+
     Args:
         name (str): The name of the target
         gen_pyrightconfig (bool): Generate a `bazel-pyrightconfig.json` to support indexing
             Bazel generated files.
+        gen_entrypoints (bool): Auto-discover `console_scripts` entrypoints from pip
+            packages and generate executable scripts in the venv `bin/` directory.
+        entrypoints (dict): A mapping of script names to module specs
+            (e.g. `{"black": "black:patched_main"}`). These are always rendered regardless
+            of `gen_entrypoints`. When `gen_entrypoints` is also enabled, manual
+            entries take precedence over auto-discovered ones.
         build_srcs (bool): Build all python sources to ensure they're available for loading.
         **kwargs (dict): Additional keyword arguments for the `py_venv_binary`.
     """
@@ -37,6 +51,12 @@ def py_global_venv(
     args = []
     if gen_pyrightconfig:
         args.append("--gen_pyrightconfig")
+
+    if gen_entrypoints:
+        args.append("--gen_entrypoints")
+
+    for ep_name, ep_spec in entrypoints.items():
+        args.extend(["--entrypoint", "{}={}".format(ep_name, ep_spec)])
 
     if build_srcs:
         args.append("--build_srcs")

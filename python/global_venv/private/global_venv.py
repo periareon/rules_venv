@@ -6,9 +6,11 @@ import logging
 import os
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
+import textwrap
 import venv
 from dataclasses import Field, dataclass, fields
 from pathlib import Path
@@ -37,6 +39,18 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         default=False,
         help="If passed, all detected targets will build any generated python files.",
+    )
+    parser.add_argument(
+        "--gen_entrypoints",
+        action="store_true",
+        default=False,
+        help="Auto-discover console_scripts entrypoints from pip packages and generate executable scripts in the venv bin/ directory.",
+    )
+    parser.add_argument(
+        "--entrypoint",
+        action="append",
+        default=[],
+        help="Manual entrypoint in NAME=MODULE:CALLABLE format (e.g. black=black:patched_main). Can be specified multiple times.",
     )
     parser.add_argument(
         "targets",
@@ -643,7 +657,107 @@ def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
     logging.info("Generated %s", output)
 
 
-def main() -> None:
+def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
+    """Auto-discover ``console_scripts`` entrypoints via ``importlib.metadata``.
+
+    Subprocesses the venv's Python interpreter so that the venv's ``.pth``
+    file is active and ``importlib.metadata`` can find dist-info directories
+    on ``sys.path``.
+
+    Args:
+        interpreter: Path to the venv's Python interpreter.
+
+    Returns:
+        A mapping of script names to module specs (e.g. ``{"black": "black:patched_main"}``).
+    """
+    logging.debug("Discovering entrypoints...")
+    result = subprocess.run(
+        [
+            str(interpreter),
+            "-c",
+            (
+                "import json; "
+                "from importlib.metadata import entry_points; "
+                "eps = entry_points(group='console_scripts'); "
+                "print(json.dumps({ep.name: ep.value for ep in eps}))"
+            ),
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    )
+
+    if result.returncode != 0:
+        logging.warning(
+            "Entrypoint discovery failed (exit %d): %s",
+            result.returncode,
+            result.stderr.strip(),
+        )
+        return {}
+
+    try:
+        entrypoints: Dict[str, str] = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        logging.warning("Failed to parse entrypoint discovery output")
+        return {}
+
+    logging.debug("Discovered %d entrypoints", len(entrypoints))
+    return entrypoints
+
+
+def generate_entrypoint_scripts(
+    venv_dir: Path,
+    interpreter: Path,
+    entrypoints: Dict[str, str],
+) -> None:
+    """Generate executable console_scripts in the venv's ``bin`` directory.
+
+    Each entrypoint spec is expected in ``module:callable`` or plain ``module``
+    format.  For ``module:callable``, the generated script imports and calls
+    the callable.  For a plain ``module``, it uses ``runpy.run_module``.
+
+    Args:
+        venv_dir: Root of the virtual environment.
+        interpreter: Path to the venv's Python interpreter.
+        entrypoints: Mapping of script names to module specs.
+    """
+    if not entrypoints:
+        return
+
+    if platform.system() == "Windows":
+        bin_dir = venv_dir / "Scripts"
+    else:
+        bin_dir = venv_dir / "bin"
+
+    bin_dir.mkdir(parents=True, exist_ok=True)
+
+    for name, spec in sorted(entrypoints.items()):
+        module, _, callable_name = spec.partition(":")
+
+        if callable_name:
+            script_content = textwrap.dedent(f"""\
+                #!{interpreter}
+                import sys
+                from {module} import {callable_name}
+                sys.exit({callable_name}())
+            """)
+        else:
+            script_content = textwrap.dedent(f"""\
+                #!{interpreter}
+                import runpy
+                runpy.run_module('{module}', run_name='__main__', alter_sys=True)
+            """)
+
+        script_path = bin_dir / name
+        script_path.write_text(script_content, encoding="utf-8")
+        script_path.chmod(
+            script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
+
+    logging.info("Generated %d entrypoint scripts in %s", len(entrypoints), bin_dir)
+
+
+def main() -> None:  # pylint: disable=too-many-branches
     """The main entrypoint."""
     if "BUILD_WORKSPACE_DIRECTORY" not in os.environ:
         # Running outside of Bazel?
@@ -659,8 +773,6 @@ def main() -> None:
     )
 
     workspace = Path(os.environ["BUILD_WORKSPACE_DIRECTORY"])
-    bazel = args.bazel
-    targets = args.targets
 
     venv_dir = workspace / ".venv"
     if args.dir:
@@ -674,7 +786,7 @@ def main() -> None:
         logging.debug("Cleaning existing venv: %s", venv_dir)
         shutil.rmtree(venv_dir)
 
-    bazel_info = get_bazel_info(bazel=bazel, workspace_dir=workspace)
+    bazel_info = get_bazel_info(bazel=args.bazel, workspace_dir=workspace)
 
     # If the workspace has no name then use the name of the workspace directory.
     workspace_name = bazel_info.execution_root.name
@@ -687,19 +799,19 @@ def main() -> None:
 
     # Generate venv specs
     generate_global_venv_specs(
-        bazel=bazel,
+        bazel=args.bazel,
         workspace_dir=workspace,
         rules_venv_name=rules_venv_name,
-        targets=targets,
+        targets=args.targets,
         build_srcs=args.build_srcs,
     )
 
     # Collect all venv targets
     spec_paths = query_global_venv_specs(
-        bazel=bazel,
+        bazel=args.bazel,
         workspace_dir=workspace,
         rules_venv_name=rules_venv_name,
-        targets=targets,
+        targets=args.targets,
         execution_root=bazel_info.execution_root,
     )
 
@@ -724,11 +836,19 @@ def main() -> None:
             execution_root=bazel_info.execution_root,
             workspace_name=bazel_info.execution_root.name,
         )
-        if extra_paths:
-            write_pyrightconfig(
-                output=workspace / "bazel-pyrightconfig.json",
-                extra_paths=extra_paths,
-            )
+        write_pyrightconfig(
+            output=workspace / "bazel-pyrightconfig.json",
+            extra_paths=extra_paths,
+        )
+
+    if args.gen_entrypoints or args.entrypoint:
+        entrypoints: Dict[str, str] = {}
+        if args.gen_entrypoints:
+            entrypoints.update(discover_entrypoints(venv_interpreter))
+        for ep in args.entrypoint:
+            ep_name, _, ep_spec = ep.partition("=")
+            entrypoints[ep_name] = ep_spec
+        generate_entrypoint_scripts(venv_dir, venv_interpreter, entrypoints)
 
     if platform.system() == "Windows":
         logging.info(
