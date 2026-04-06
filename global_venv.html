@@ -164,6 +164,19 @@
 </code></pre>
 <p>From here a <a href="https://docs.python.org/3/library/venv.html">venv</a> will likely be available at <code>.venv</code> within your workspace that
 can be activated for improved IDE support.</p>
+<h2 id="entrypoints"><a class="header" href="#entrypoints">Entrypoints</a></h2>
+<p>By default, <code>py_global_venv</code> auto-discovers <code>console_scripts</code> entrypoints from pip
+packages (via <code>importlib.metadata</code>) and generates executable scripts in the venv's
+<code>bin/</code> directory. This allows IDEs to find tools like <code>black</code> or <code>mypy</code> inside the venv.</p>
+<p>Additional entrypoints can be specified manually:</p>
+<pre><code class="language-python">py_global_venv(
+    name = "global_venv",
+    entrypoints = {
+        "my_tool": "my.module:cli",
+    },
+)
+</code></pre>
+<p>Auto-discovery can be disabled with <code>gen_entrypoints = False</code>.</p>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <ul>
 <li><a href="#py_global_venv">py_global_venv</a></li>
@@ -177,7 +190,7 @@ can be activated for improved IDE support.</p>
 <pre>
 load("@rules_venv//python/global_venv:defs.bzl", "py_global_venv")
 
-py_global_venv(*, <a href="#py_global_venv-name">name</a>, <a href="#py_global_venv-gen_pyrightconfig">gen_pyrightconfig</a>, <a href="#py_global_venv-build_srcs">build_srcs</a>, <a href="#py_global_venv-kwargs">**kwargs</a>)
+py_global_venv(*, <a href="#py_global_venv-name">name</a>, <a href="#py_global_venv-gen_pyrightconfig">gen_pyrightconfig</a>, <a href="#py_global_venv-gen_entrypoints">gen_entrypoints</a>, <a href="#py_global_venv-entrypoints">entrypoints</a>, <a href="#py_global_venv-build_srcs">build_srcs</a>, <a href="#py_global_venv-kwargs">**kwargs</a>)
 </pre>
 <p>Define a "global venv" executable.</p>
 <p>When <code>gen_pyrightconfig</code> is enabled (the default), running this target
@@ -190,10 +203,17 @@ resolve generated Python sources that live outside the source tree.</p>
     ...
 }
 </code></pre>
+<p>When <code>gen_entrypoints</code> is enabled (the default), running this target will
+auto-discover <code>console_scripts</code> entrypoints from pip packages via
+<code>importlib.metadata</code> and generate executable scripts in the venv's <code>bin/</code>
+directory. This allows IDEs to find tools like <code>black</code> or <code>mypy</code> inside
+the venv. Additional entrypoints can be specified manually via <code>entrypoints</code>.</p>
 <p><strong>PARAMETERS</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_global_venv-name"></a>name</td><td style="text-align: left">The name of the target</td><td style="text-align: left">none</td></tr>
 <tr><td style="text-align: left"><a id="py_global_venv-gen_pyrightconfig"></a>gen_pyrightconfig</td><td style="text-align: left">Generate a <code>bazel-pyrightconfig.json</code> to support indexing Bazel generated files.</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-gen_entrypoints"></a>gen_entrypoints</td><td style="text-align: left">Auto-discover <code>console_scripts</code> entrypoints from pip packages and generate executable scripts in the venv <code>bin/</code> directory.</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_global_venv-entrypoints"></a>entrypoints</td><td style="text-align: left">A mapping of script names to module specs (e.g. <code>{"black": "black:patched_main"}</code>). These are always rendered regardless of <code>gen_entrypoints</code>. When <code>gen_entrypoints</code> is also enabled, manual entries take precedence over auto-discovered ones.</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="py_global_venv-build_srcs"></a>build_srcs</td><td style="text-align: left">Build all python sources to ensure they're available for loading.</td><td style="text-align: left"><code>False</code></td></tr>
 <tr><td style="text-align: left"><a id="py_global_venv-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for the <code>py_venv_binary</code>.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
