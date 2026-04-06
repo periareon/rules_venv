@@ -1,4 +1,4 @@
-"""Wrapper to run pytest and gather coverage into an LCOV database."""
+"""Wrapper to run pytest and optionally gather coverage into an LCOV database."""
 
 import argparse
 import configparser
@@ -8,9 +8,19 @@ import sys
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple, Optional, Sequence
 
-import coverage
-from coverage.cmdline import main as coverage_main
 from python.runfiles import Runfiles
+
+# isort: off
+
+try:
+    import coverage
+    from coverage.cmdline import main as coverage_main
+
+    HAS_COVERAGE = True
+except ImportError:
+    coverage = None  # type: ignore[assignment]
+    coverage_main = None  # type: ignore[assignment]
+    HAS_COVERAGE = False
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
@@ -49,7 +59,8 @@ def parse_args(
     parser = argparse.ArgumentParser(prog="pytest_process_wrapper", usage=__doc__)
     parser.add_argument(
         "--cov-config",
-        required=True,
+        required=False,
+        default=None,
         type=_rlocationpath,
         help="Path to a `coverage.py` rc file (e.g. `coveragerc`).",
     )
@@ -295,9 +306,9 @@ def normalize_path(filename: str) -> str:
 
 
 def patch_realpaths() -> None:
-    """Patch os.path.realpath escapes. Coverage will be loaded even if not being
-    collected, so to be safe patch no matter what.
-    """
+    """Patch os.path.realpath escapes when coverage is available."""
+    if not HAS_COVERAGE:
+        return
     coverage.files.abs_file = abs_file  # type: ignore
     coverage.control.abs_file = abs_file  # type: ignore
     coverage.files.set_relative_directory()
@@ -395,9 +406,19 @@ def main() -> None:
 
     cov_enabled = os.getenv("COVERAGE") == "1"
     if cov_enabled:
+        if not HAS_COVERAGE:
+            raise EnvironmentError(
+                "Bazel coverage was requested but the `coverage` package is not "
+                "installed. Add `coverage` and `pytest-cov` to the `py_library` "
+                "used by your `py_pytest_toolchain`."
+            )
         if not capabilities.coverage:
             raise EnvironmentError(
                 "Bazel coverage was requested but `pytest-cov` plugin was not found."
+            )
+        if cov_config_path is None:
+            raise EnvironmentError(
+                "Bazel coverage was requested but no `--cov-config` was provided."
             )
 
         coverage_file = Path(os.environ["TEST_TMPDIR"], ".coverage")
