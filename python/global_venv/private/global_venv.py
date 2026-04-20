@@ -5,7 +5,6 @@ import json
 import logging
 import os
 import platform
-import shutil
 import stat
 import subprocess
 import sys
@@ -35,7 +34,8 @@ def parse_args() -> argparse.Namespace:
         help="If passed, a `bazel-pyrightconfig.json` will be added next to `--dir`",
     )
     parser.add_argument(
-        "--build_srcs",
+        "--build",
+        dest="build_srcs",
         action="store_true",
         default=False,
         help="If passed, all detected targets will build any generated python files.",
@@ -74,11 +74,7 @@ def parse_args() -> argparse.Namespace:
 class ExtendedEnvBuilder(venv.EnvBuilder):
     """https://docs.python.org/3/library/venv.html"""
 
-    def __init__(
-        self,
-        name: str,
-        pth: Sequence[str],
-    ) -> None:
+    def __init__(self, name: str, pth: Sequence[str], clear: bool = False) -> None:
         """Constructor.
 
         Args:
@@ -86,19 +82,36 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
             pth: The `pth` values to add to PYTHONPATH. Note that each value
                 can contain a format string `{runfiles_dir}` that will be
                 substituted out.
+            clear: Whether or not to clear an existing venv.
         """
         self.bazel_pth = pth
         self.interpreter: Optional[Path] = None
 
         super().__init__(
             system_site_packages=False,
-            clear=False,
+            clear=clear,
             upgrade=False,
             with_pip=False,
             symlinks=True,
             prompt=name,
             upgrade_deps=False,
         )
+
+    def install_scripts(self, context: SimpleNamespace, path: str) -> None:
+        """A wrapper around the existing install_scripts to handle regenerations
+
+        Args:
+            context: The information for the virtual environment
+                creation request being processed.
+            path: Absolute pathname of a directory containing script.
+        """
+        # Delete any activate scripts to de-conflict with recreation
+        bin_path = Path(context.bin_path)
+        for entry in bin_path.iterdir():
+            if entry.name.lower().startswith("activate"):
+                entry.unlink()
+
+        super().install_scripts(context, path)
 
     def post_setup(self, context: SimpleNamespace) -> None:
         """
@@ -145,6 +158,7 @@ def create_venv(
     venv_name: str,
     venv_dir: Path | str,
     pth: Sequence[str],
+    clean: bool = False,
 ) -> Path:
     """Construct a new Python venv at the requested location.
 
@@ -152,6 +166,7 @@ def create_venv(
         venv_name: The name (prompt) of the venv.
         venv_dir: The location where the venv should be created
         pth: Values to add to the a `pth` file for import resolution.
+        clean: Delete an existing env if one exists.
 
     Returns:
         The path to the new venv interpreter.
@@ -159,6 +174,7 @@ def create_venv(
     builder = ExtendedEnvBuilder(
         name=venv_name,
         pth=pth,
+        clear=clean,
     )
 
     builder.create(venv_dir)
@@ -259,11 +275,13 @@ def generate_global_venv_specs(
         str(bazel),
         "build",
         rf"--aspects={rules_venv_name}//python/global_venv:defs.bzl%py_global_venv_aspect",
-        "--output_groups=py_global_venv_info",
+        "--remote_download_toplevel",
     ]
 
     if build_srcs:
-        args.append("--output_groups=py_global_venv_srcs")
+        args.append("--output_groups=py_global_venv_info,py_global_venv_files")
+    else:
+        args.append("--output_groups=py_global_venv_info")
 
     args.extend(targets)
     logging.debug(" ".join(args))
@@ -452,7 +470,16 @@ class PyGlobalVenvInfo:
     """A python implementation of the Bazel provider."""
 
     imports: Sequence[str]
-    bin_dir: Optional[Path] = None
+    bin_dirs: Sequence[str] = ()
+    bin_dir: Optional[str] = None
+
+    def get_bin_dirs(self) -> Sequence[str]:
+        """Return bin_dirs, falling back to bin_dir for old spec files."""
+        if self.bin_dirs:
+            return self.bin_dirs
+        if self.bin_dir:
+            return [self.bin_dir]
+        return ()
 
 
 def query_global_venv_specs(
@@ -573,20 +600,20 @@ def get_pth(
     # There is no ordered set in python so a dict is used for it's index behavior.
     pth: Dict[str, None] = {}
     for spec in specs:
+        bin_dirs = spec.get_bin_dirs()
         for i in spec.imports:
             if i == workspace_name:
-                pth[str(workspace_dir)] = None
-                if spec.bin_dir:
-                    pth[str(execution_root / spec.bin_dir)] = None
-            elif i.startswith(f"{workspace_name}/"):
+                continue
+
+            if i.startswith(f"{workspace_name}/"):
                 _, _, i = i.partition("/")
                 pth[str(workspace_dir / i)] = None
-                if spec.bin_dir:
-                    pth[str(execution_root / spec.bin_dir / i)] = None
+                for bin_dir in bin_dirs:
+                    pth[str(execution_root / bin_dir / i)] = None
             else:
                 pth[str(output_base / "external" / i)] = None
-                if spec.bin_dir:
-                    pth[str(execution_root / spec.bin_dir / "external" / i)] = None
+                for bin_dir in bin_dirs:
+                    pth[str(execution_root / bin_dir / "external" / i)] = None
 
     return list(pth.keys())
 
@@ -594,7 +621,6 @@ def get_pth(
 def get_extra_paths(
     specs: Sequence[PyGlobalVenvInfo],
     execution_root: Path,
-    workspace_name: str,
 ) -> Sequence[str]:
     """Collect unique bin_dir paths from specs for Pyright/Pylance `extraPaths`.
 
@@ -602,31 +628,18 @@ def get_extra_paths(
     that span multiple search roots. Adding the bin root(s) to `extraPaths`
     in a `pyrightconfig.json` works around this.
 
-    This mirrors the bin_dir logic in ``get_pth`` so that every search path
-    the Python runtime sees under ``bazel-bin`` is also visible to Pyright.
-
     Args:
         specs: Deserialized `PyGlobalVenvInfo` providers.
         execution_root: The path to the Bazel execution root.
-        workspace_name: The name of the current Bazel workspace
-            (``execution_root.name``).
 
     Returns:
         A deduplicated list of absolute bin-dir paths.
     """
-    bin_dirs: Dict[str, None] = {}
+    extra_paths: Dict[str, None] = {}
     for spec in specs:
-        if not spec.bin_dir:
-            continue
-        for i in spec.imports:
-            if i == workspace_name:
-                bin_dirs[str(execution_root / spec.bin_dir)] = None
-            elif i.startswith(f"{workspace_name}/"):
-                _, _, subpath = i.partition("/")
-                bin_dirs[str(execution_root / spec.bin_dir / subpath)] = None
-            else:
-                bin_dirs[str(execution_root / spec.bin_dir / "external" / i)] = None
-    return list(bin_dirs.keys())
+        for bin_dir in spec.get_bin_dirs():
+            extra_paths[str(execution_root / bin_dir)] = None
+    return list(extra_paths.keys())
 
 
 def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
@@ -705,10 +718,55 @@ def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
     return entrypoints
 
 
+def discover_data_scripts(interpreter: Path) -> Dict[str, Path]:
+    """Discover wheel data scripts (``*.data/scripts/``) on the venv's ``sys.path``.
+
+    Wheels may ship pre-built binaries via ``{name}.data/scripts/`` instead of
+    ``console_scripts`` entry points.  ``pip install`` copies these into the
+    venv's ``bin/`` directory, but Bazel-managed packages leave them in-place.
+
+    Args:
+        interpreter: Path to the venv's Python interpreter.
+
+    Returns:
+        A mapping of script names to their absolute source paths.
+    """
+    logging.debug("Discovering data scripts...")
+    result = subprocess.run(
+        [
+            str(interpreter),
+            "-c",
+            (
+                "import json; "
+                "from importlib.metadata import distributions; "
+                "scripts = {}; "
+                "[scripts.update({f.name: str(f.locate())}) "
+                "for dist in distributions() "
+                "for f in dist.files or [] "
+                "if '.data/scripts/' in str(f)]; "
+                "print(json.dumps(scripts))"
+            ),
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    )
+
+    try:
+        scripts: Dict[str, str] = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        logging.warning("Failed to parse data scripts discovery output")
+        return {}
+
+    logging.debug("Discovered %d data scripts", len(scripts))
+    return {name: Path(path) for name, path in scripts.items()}
+
+
 def generate_entrypoint_scripts(
     venv_dir: Path,
     interpreter: Path,
     entrypoints: Dict[str, str],
+    data_scripts: Optional[Dict[str, Path]] = None,
 ) -> None:
     """Generate executable console_scripts in the venv's ``bin`` directory.
 
@@ -716,12 +774,16 @@ def generate_entrypoint_scripts(
     format.  For ``module:callable``, the generated script imports and calls
     the callable.  For a plain ``module``, it uses ``runpy.run_module``.
 
+    Pre-built data scripts are symlinked directly.
+
     Args:
         venv_dir: Root of the virtual environment.
         interpreter: Path to the venv's Python interpreter.
         entrypoints: Mapping of script names to module specs.
+        data_scripts: Mapping of script names to source paths for pre-built
+            binaries discovered from wheel data directories.
     """
-    if not entrypoints:
+    if not entrypoints and not data_scripts:
         return
 
     if platform.system() == "Windows":
@@ -756,8 +818,19 @@ def generate_entrypoint_scripts(
 
     logging.info("Generated %d entrypoint scripts in %s", len(entrypoints), bin_dir)
 
+    if data_scripts:
+        count = 0
+        for name, source in sorted(data_scripts.items()):
+            dest = bin_dir / name
+            if dest.exists() or dest.is_symlink():
+                logging.debug("Skipping data script %s (already exists)", name)
+                continue
+            dest.symlink_to(source)
+            count += 1
+        logging.info("Symlinked %d data scripts in %s", count, bin_dir)
 
-def main() -> None:  # pylint: disable=too-many-branches
+
+def main() -> None:  # pylint: disable=too-many-branches,too-many-locals
     """The main entrypoint."""
     if "BUILD_WORKSPACE_DIRECTORY" not in os.environ:
         # Running outside of Bazel?
@@ -781,10 +854,6 @@ def main() -> None:  # pylint: disable=too-many-branches
             venv_dir = cwd / args.dir
         else:
             venv_dir = args.dir
-
-    if venv_dir.exists() and args.clean:
-        logging.debug("Cleaning existing venv: %s", venv_dir)
-        shutil.rmtree(venv_dir)
 
     bazel_info = get_bazel_info(bazel=args.bazel, workspace_dir=workspace)
 
@@ -828,13 +897,13 @@ def main() -> None:  # pylint: disable=too-many-branches
             workspace_dir=workspace,
             workspace_name=bazel_info.execution_root.name,
         ),
+        clean=args.clean,
     )
 
     if args.gen_pyrightconfig:
         extra_paths = get_extra_paths(
             specs=specs,
             execution_root=bazel_info.execution_root,
-            workspace_name=bazel_info.execution_root.name,
         )
         write_pyrightconfig(
             output=workspace / "bazel-pyrightconfig.json",
@@ -843,12 +912,16 @@ def main() -> None:  # pylint: disable=too-many-branches
 
     if args.gen_entrypoints or args.entrypoint:
         entrypoints: Dict[str, str] = {}
+        data_scripts: Dict[str, Path] = {}
         if args.gen_entrypoints:
             entrypoints.update(discover_entrypoints(venv_interpreter))
+            data_scripts.update(discover_data_scripts(venv_interpreter))
         for ep in args.entrypoint:
             ep_name, _, ep_spec = ep.partition("=")
             entrypoints[ep_name] = ep_spec
-        generate_entrypoint_scripts(venv_dir, venv_interpreter, entrypoints)
+        generate_entrypoint_scripts(
+            venv_dir, venv_interpreter, entrypoints, data_scripts
+        )
 
     if platform.system() == "Windows":
         logging.info(

@@ -27,11 +27,44 @@ def py_global_venv(
     }
     ```
 
+    **Important:** Do not define ``extraPaths`` in your own ``pyrightconfig.json``
+    when using ``extends``. Pyright's ``extends`` replaces array fields rather
+    than merging them, so any ``extraPaths`` in the child config will override
+    the generated values from ``bazel-pyrightconfig.json``.
+
+    When targets use configuration transitions (e.g. ``py_cc_extension`` building
+    with ``compilation_mode = "opt"``), generated files may live in directories
+    like ``bazel-out/k8-opt/bin`` instead of ``bazel-out/k8-fastbuild/bin``. The
+    generated ``bazel-pyrightconfig.json`` includes all observed output directories
+    automatically.
+
+    For **ruff** or **isort** to correctly classify first-party imports that
+    include generated sources, add the Bazel output directories to the ``src``
+    setting::
+
+    ```toml
+    # .ruff.toml
+    src = [".", "bazel-out/k8-*/bin"]
+    ```
+
+    For standalone **isort**::
+
+    ```ini
+    # .isort.cfg
+    [isort]
+    src_paths = .,bazel-out/k8-*/bin
+    ```
+
+    This allows ruff/isort to find generated ``.pyi`` stubs and ``.so`` extensions
+    when determining whether an import is first-party or third-party.
+
     When ``gen_entrypoints`` is enabled (the default), running this target will
     auto-discover ``console_scripts`` entrypoints from pip packages via
     ``importlib.metadata`` and generate executable scripts in the venv's ``bin/``
-    directory. This allows IDEs to find tools like ``black`` or ``mypy`` inside
-    the venv. Additional entrypoints can be specified manually via ``entrypoints``.
+    directory. Pre-built binaries shipped via wheel data scripts (e.g. ``ruff``)
+    are also symlinked into the venv. This allows IDEs to find tools like
+    ``black``, ``ruff``, or ``mypy`` inside the venv. Additional entrypoints can
+    be specified manually via ``entrypoints``.
 
     Args:
         name (str): The name of the target
@@ -72,7 +105,7 @@ def py_global_venv(
 PyGlobalVenvInfo = provider(
     doc = "Info about a python package required to include it in a global venv.",
     fields = {
-        "bin_dir": "Optional[String]: The path to the bin dir (signifies the current configuration).",
+        "bin_dirs": "List[String]: The paths to the bin dirs for each unique configuration.",
         "imports": "File: A json encoded file.",
     },
 )
@@ -97,12 +130,16 @@ def _collect_files(collection):
 
 def _py_global_venv_aspect_impl(target, ctx):
     info = target[PyInfo]
-    data = {
-        "bin_dir": None,
-        "imports": info.imports.to_list(),
-    }
+
+    # Collect any additional runfiles but only ones owned by the current targt
+    runfiles = depset([
+        file
+        for file in target[DefaultInfo].default_runfiles.files.to_list()
+        if file.owner == target.label
+    ])
 
     all_files = [target[DefaultInfo].files]
+    all_files.append(runfiles)
     all_files.extend(_collect_files(getattr(ctx.rule.attr, "srcs", [])))
     all_files.extend(_collect_files(getattr(ctx.rule.attr, "data", [])))
     all_files = depset(transitive = all_files)
@@ -113,8 +150,12 @@ def _py_global_venv_aspect_impl(target, ctx):
         if _is_py_source(src) and not src.is_source
     ]
 
-    if generated_srcs:
-        data["bin_dir"] = ctx.bin_dir.path
+    bin_dirs = {src.root.path: True for src in generated_srcs}
+
+    data = {
+        "bin_dirs": sorted(bin_dirs.keys()),
+        "imports": info.imports.to_list(),
+    }
 
     output = ctx.actions.declare_file("{}{}".format(target.label.name, SPEC_FILE_SUFFIX))
     ctx.actions.write(
@@ -125,7 +166,7 @@ def _py_global_venv_aspect_impl(target, ctx):
     return [
         OutputGroupInfo(
             py_global_venv_info = depset([output]),
-            py_global_venv_files = all_files,
+            py_global_venv_files = depset(generated_srcs),
         ),
         PyGlobalVenvInfo(**data),
     ]
