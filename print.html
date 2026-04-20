@@ -541,10 +541,36 @@ py_black_aspect()
 </code></pre>
 <p>From here a <a href="https://docs.python.org/3/library/venv.html">venv</a> will likely be available at <code>.venv</code> within your workspace that
 can be activated for improved IDE support.</p>
+<h2 id="pyright--pylance"><a class="header" href="#pyright--pylance">Pyright / Pylance</a></h2>
+<p>By default, a <code>bazel-pyrightconfig.json</code> is generated with <code>extraPaths</code> pointing to
+each Bazel output directory that contains generated Python sources. To use it, add
+an <code>extends</code> field to your <code>pyrightconfig.json</code>:</p>
+<pre><code class="language-json">{
+    "extends": "bazel-pyrightconfig.json"
+}
+</code></pre>
+<p><strong>Important:</strong> Do not define <code>extraPaths</code> in your own <code>pyrightconfig.json</code>. Pyright's
+<code>extends</code> replaces array fields rather than merging them, so any <code>extraPaths</code> in the
+child config will override the generated values.</p>
+<h2 id="ruff--isort"><a class="header" href="#ruff--isort">Ruff / isort</a></h2>
+<p>Ruff classifies imports as first-party by checking whether the imported module can be
+resolved under its <code>src</code> directories. Generated sources (<code>.pyi</code> stubs, <code>.so</code> extensions)
+only exist under <code>bazel-out</code>, so ruff needs those directories in <code>src</code>:</p>
+<pre><code class="language-toml"># .ruff.toml
+src = [".", "bazel-out/k8-*/bin"]
+</code></pre>
+<p>For standalone isort:</p>
+<pre><code class="language-ini"># .isort.cfg
+[isort]
+src_paths = .,bazel-out/k8-*/bin
+</code></pre>
+<p>The glob <code>k8-*</code> covers all Bazel configurations (<code>k8-fastbuild</code>, <code>k8-opt</code>, <code>k8-dbg</code>).</p>
 <h2 id="entrypoints"><a class="header" href="#entrypoints">Entrypoints</a></h2>
 <p>By default, <code>py_global_venv</code> auto-discovers <code>console_scripts</code> entrypoints from pip
 packages (via <code>importlib.metadata</code>) and generates executable scripts in the venv's
-<code>bin/</code> directory. This allows IDEs to find tools like <code>black</code> or <code>mypy</code> inside the venv.</p>
+<code>bin/</code> directory. Pre-built binaries shipped via wheel data scripts (e.g. <code>ruff</code>) are
+also symlinked into the venv. This allows IDEs to find tools like <code>black</code>, <code>ruff</code>, or
+<code>mypy</code> inside the venv.</p>
 <p>Additional entrypoints can be specified manually:</p>
 <pre><code class="language-python">py_global_venv(
     name = "global_venv",
@@ -580,11 +606,35 @@ resolve generated Python sources that live outside the source tree.</p>
     ...
 }
 </code></pre>
+<p><strong>Important:</strong> Do not define <code>extraPaths</code> in your own <code>pyrightconfig.json</code>
+when using <code>extends</code>. Pyright's <code>extends</code> replaces array fields rather
+than merging them, so any <code>extraPaths</code> in the child config will override
+the generated values from <code>bazel-pyrightconfig.json</code>.</p>
+<p>When targets use configuration transitions (e.g. <code>py_cc_extension</code> building
+with <code>compilation_mode = "opt"</code>), generated files may live in directories
+like <code>bazel-out/k8-opt/bin</code> instead of <code>bazel-out/k8-fastbuild/bin</code>. The
+generated <code>bazel-pyrightconfig.json</code> includes all observed output directories
+automatically.</p>
+<p>For <strong>ruff</strong> or <strong>isort</strong> to correctly classify first-party imports that
+include generated sources, add the Bazel output directories to the <code>src</code>
+setting::</p>
+<pre><code class="language-toml"># .ruff.toml
+src = [".", "bazel-out/k8-*/bin"]
+</code></pre>
+<p>For standalone <strong>isort</strong>::</p>
+<pre><code class="language-ini"># .isort.cfg
+[isort]
+src_paths = .,bazel-out/k8-*/bin
+</code></pre>
+<p>This allows ruff/isort to find generated <code>.pyi</code> stubs and <code>.so</code> extensions
+when determining whether an import is first-party or third-party.</p>
 <p>When <code>gen_entrypoints</code> is enabled (the default), running this target will
 auto-discover <code>console_scripts</code> entrypoints from pip packages via
 <code>importlib.metadata</code> and generate executable scripts in the venv's <code>bin/</code>
-directory. This allows IDEs to find tools like <code>black</code> or <code>mypy</code> inside
-the venv. Additional entrypoints can be specified manually via <code>entrypoints</code>.</p>
+directory. Pre-built binaries shipped via wheel data scripts (e.g. <code>ruff</code>)
+are also symlinked into the venv. This allows IDEs to find tools like
+<code>black</code>, <code>ruff</code>, or <code>mypy</code> inside the venv. Additional entrypoints can
+be specified manually via <code>entrypoints</code>.</p>
 <p><strong>PARAMETERS</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Default Value</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_global_venv-name"></a>name</td><td style="text-align: left">The name of the target</td><td style="text-align: left">none</td></tr>
