@@ -30,9 +30,9 @@ def _create_dep_info(*, ctx, deps):
         runfiles = runfiles.merge(dep[DefaultInfo].default_runfiles)
 
     return struct(
-        # https://bazel.build/rules/lib/providers/PyInfo#imports
+        # https://rules-python.readthedocs.io/en/latest/api/rules_python/python/private/py_info.html#PyInfo.imports
         transitive_imports = depset(import_workspaces, transitive = imports),
-        # https://bazel.build/rules/lib/providers/PyInfo#transitive_sources
+        # https://rules-python.readthedocs.io/en/latest/api/rules_python/python/private/py_info.html#PyInfo.transitive_sources
         transitive_sources = depset(transitive = srcs, order = "postorder"),
         # Runfiles from dependencies.
         runfiles = runfiles,
@@ -70,7 +70,7 @@ def _get_imports(*, ctx, imports, transitive_imports):
             ))
         result.append(import_path)
 
-    return depset(result, transitive = [transitive_imports])
+    return depset(result, transitive = [transitive_imports], order = "preorder")
 
 def _create_py_info(*, ctx, imports, srcs, dep_info = None):
     """Construct a `PyInfo` provider

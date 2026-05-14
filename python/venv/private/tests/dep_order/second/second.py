@@ -1,0 +1,3 @@
+"""Second library."""
+
+SECOND = "second"
