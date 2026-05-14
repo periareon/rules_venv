@@ -123,7 +123,7 @@ def _py_pytest_test_impl(ctx):
 
     dep_info = py_venv_common.create_dep_info(
         ctx = ctx,
-        deps = [ctx.attr._runner] + ctx.attr.deps,
+        deps = ctx.attr.deps + [ctx.attr._runner],
     )
 
     py_info = py_venv_common.create_py_info(

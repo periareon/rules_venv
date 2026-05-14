@@ -1,0 +1,10 @@
+load("//python/venv:defs.bzl", "py_venv_test")
+
+py_venv_test(
+    name = "dep_order_test",
+    srcs = ["dep_order_test.py"],
+    deps = [
+        "//python/venv/private/tests/dep_order/first",
+        "//python/venv/private/tests/dep_order/second",
+    ],
+)

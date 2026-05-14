@@ -1,0 +1,8 @@
+load("//python/venv:defs.bzl", "py_venv_library")
+
+py_venv_library(
+    name = "second",
+    srcs = ["second.py"],
+    imports = ["."],
+    visibility = ["//python/venv/private/tests/dep_order:__subpackages__"],
+)
