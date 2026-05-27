@@ -198,9 +198,16 @@ def collect_coverage_sources(runfiles: Runfiles, manifest: Path) -> CoverageSour
         if text.startswith("bazel-out"):
             continue
 
-        rlocationpath = (workspace / line).as_posix()
-        src = _rlocation(runfiles, rlocationpath)
-        sources.update({Path(src): PurePosixPath(line)})
+        # TODO: https://github.com/periareon/rules_venv/issues/124
+        # Implement support for transitive coverage sources that themselves are not
+        # in runfiles.
+        try:
+            rlocationpath = (workspace / line).as_posix()
+            src = _rlocation(runfiles, rlocationpath)
+            sources.update({Path(src): PurePosixPath(line)})
+        except FileNotFoundError as exc:
+            if "RULES_VENV_DEBUG" in os.environ:
+                print(f"WARNING: {exc}", file=sys.stderr)
 
     return sources
 
