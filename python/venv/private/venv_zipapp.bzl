@@ -153,6 +153,12 @@ def create_python_zip_file(
     args.add("--main", _rlocationpath(main, ctx.workspace_name))
     args.add("--py_runtime", _rlocationpath(interpreter, ctx.workspace_name))
     args.add("--venv_process_wrapper", _rlocationpath(venv_toolchain.process_wrapper, ctx.workspace_name))
+
+    # Pass the on-disk path too so the zipapp maker can stage the process
+    # wrapper itself when the input binary did not (i.e. a stock `py_binary`
+    # rather than a `py_venv_binary`). The file is already in `venv_runfiles`,
+    # so no additional action inputs are needed.
+    args.add("--venv_process_wrapper_source", venv_toolchain.process_wrapper)
     optional_shebang = shebang or venv_toolchain.zipapp_shebang
     if optional_shebang:
         args.add("--shebang", optional_shebang)

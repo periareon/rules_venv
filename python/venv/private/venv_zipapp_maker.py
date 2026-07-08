@@ -57,6 +57,16 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="The rules_venv binary process wrapper.",
     )
     parser.add_argument(
+        "--venv_process_wrapper_source",
+        type=Path,
+        required=True,
+        help=(
+            "The on-disk source of the process wrapper. Used to stage the "
+            "wrapper into the zipapp when the input binary's runfiles "
+            "manifest does not already list it (e.g. a stock py_binary)."
+        ),
+    )
+    parser.add_argument(
         "--inject_args",
         type=json.loads,
         required=True,
@@ -239,6 +249,16 @@ def main() -> None:
             venv_config_info=args.venv_config_info,
             runfiles_dir=runfiles_dir,
         )
+
+        # `py_venv_binary` already stages the process wrapper into its
+        # runfiles manifest, so `install_runfiles` will have copied it above.
+        # A stock `py_binary` does not, so copy it in ourselves — otherwise
+        # the generated __main__.py will fail at runtime with a missing
+        # `venv_process_wrapper.py`.
+        wrapper_dest = runfiles_dir / args.venv_process_wrapper
+        if not wrapper_dest.exists():
+            wrapper_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(args.venv_process_wrapper_source, wrapper_dest)
 
         write_entrypoint(
             template=args.zipapp_main_template,
