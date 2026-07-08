@@ -136,7 +136,6 @@ def create_python_zip_file(
         main,
         venv_toolchain.process_wrapper,
         venv_toolchain.zipapp_main,
-        files_to_run.runfiles_manifest,
         files_to_run.repo_mapping_manifest,
     ], transitive = [
         py_runtime.files,
@@ -164,9 +163,38 @@ def create_python_zip_file(
         args.add("--shebang", optional_shebang)
     args.add("--output", python_zip_file)
     args.add("--venv_config_info", json.encode(venv_config_info))
-    args.add("--runfiles_manifest", files_to_run.runfiles_manifest)
     args.add("--inject_args", json.encode(inject_args))
     args.add("--inject_env", json.encode(inject_env))
+
+    # Build a param file listing every file to stage in the zipapp, one
+    # `rlocation<TAB>exec_path` line per entry. `File.path` is
+    # execroot-relative and deterministic across build machines — see the
+    # note on `venv_runfiles` above for why the runfiles manifest is unsuited
+    # to this action. Uses `ctx.actions.args()` so the param file is written
+    # by Bazel at execution time and forms part of the action's stable
+    # cache key.
+    workspace_name = ctx.workspace_name
+
+    def _format_runfile_entry(file):
+        return "{}\t{}".format(_rlocationpath(file, workspace_name), file.path)
+
+    files_list_args = ctx.actions.args()
+    files_list_args.use_param_file("--runfiles_files_list=%s", use_always = True)
+    files_list_args.set_param_file_format("multiline")
+    files_list_args.add_all(
+        depset([main], transitive = [runfiles.files]),
+        map_each = _format_runfile_entry,
+        allow_closure = True,
+        expand_directories = False,
+    )
+
+    # The repo mapping manifest lives at the special rlocation
+    # `_repo_mapping` (no workspace prefix). The runfiles library at
+    # runtime reads it to translate cross-repo rlocation lookups.
+    files_list_args.add(
+        files_to_run.repo_mapping_manifest,
+        format = "_repo_mapping\t%s",
+    )
 
     py_runtime_exec = py_toolchain_exec.py3_runtime
     interpreter_exec = None
@@ -179,7 +207,7 @@ def create_python_zip_file(
     ctx.actions.run(
         mnemonic = "PyVenvZipapp",
         executable = interpreter_exec,
-        arguments = [python_args, args],
+        arguments = [python_args, args, files_list_args],
         outputs = [python_zip_file],
         inputs = depset(transitive = [
             venv_runfiles,
