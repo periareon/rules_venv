@@ -21,10 +21,16 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--runfiles_manifest",
+        "--runfiles_files_list",
         type=Path,
         required=True,
-        help="The runfiles manifest for the py binary.",
+        help=(
+            "Newline-delimited `rlocation<TAB>exec_path` list of every file "
+            "to stage into the zipapp. Written by the caller with Bazel's "
+            "`ctx.actions.args()` param-file mechanism so `exec_path` is "
+            "execroot-relative and portable across local and remote workers "
+            "(and the file's content hash is deterministic across machines)."
+        ),
     )
     parser.add_argument(
         "--venv_config_info",
@@ -91,28 +97,34 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def install_runfiles(
-    files_manifest: Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
+    files_list: Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
 ) -> RlocationPath:
     """Create a runfiles directory for creating zipapps.
 
     Args:
-        files_manifest: The manifest of files to install.
+        files_list: Newline-delimited `rlocation<TAB>exec_path` file. `exec_path`
+            is execroot-relative — the action's CWD is guaranteed to be the
+            execroot on every Bazel worker (local or remote), so the paths
+            resolve uniformly. Deliberately NOT the standard runfiles manifest
+            whose `real_path` column is a build-machine absolute path.
         venv_config_info: Configuration info needed to construct a venv for the given runfiles.
         runfiles_dir: The output location to write into.
 
     Returns:
         The `rlocationpath` of the config file used to create venvs.
     """
-    with files_manifest.open("r", encoding="utf-8") as manifest_file:
-        for line in manifest_file:
-            rlocation, _, real_path = line.strip().partition(" ")
+    with files_list.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            rlocation, _, exec_path = line.rstrip("\n").partition("\t")
+            if not rlocation:
+                continue
 
             # Ensure spaces are expanded in the zip file. For more details see:
             # https://github.com/bazelbuild/bazel/commit/c9115305cb81e7fe645f91ca790642cab136b2a1
             dest_path = runfiles_dir / rlocation.replace(r"\s", " ")
 
             dest_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(real_path, dest_path)
+            shutil.copy2(exec_path, dest_path)
 
     config_file = runfiles_dir / f"{venv_config_info['name']}.venv_config.json"
     config_file.write_text(
@@ -245,7 +257,7 @@ def main() -> None:
 
         logging.debug("Installing runfiles to: %s", runfiles_dir)
         config_file = install_runfiles(
-            files_manifest=args.runfiles_manifest,
+            files_list=args.runfiles_files_list,
             venv_config_info=args.venv_config_info,
             runfiles_dir=runfiles_dir,
         )
