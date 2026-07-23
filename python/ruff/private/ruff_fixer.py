@@ -1,17 +1,23 @@
 """A script for applying ruff format fixes to Bazel targets."""
 
 import argparse
+import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 from python.runfiles import Runfiles
 
-from python.ruff.private.ruff_runner import Modes, find_ruff
+from python.ruff.private.ruff_runner import (
+    Modes,
+    collect_first_party_names_from_dir,
+    find_ruff,
+    user_known_first_party,
+)
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
@@ -51,7 +57,20 @@ def find_bazel() -> Path:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments."""
+    """Parse command line arguments.
+
+    Any arguments after a `--` delimiter are captured on the returned namespace
+    as `ruff_args` and forwarded verbatim to the underlying `ruff` invocation.
+    """
+    argv = sys.argv[1:]
+    if "--" in argv:
+        split = argv.index("--")
+        pre_args = argv[:split]
+        ruff_args = argv[split + 1 :]
+    else:
+        pre_args = argv
+        ruff_args = []
+
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
@@ -63,10 +82,12 @@ def parse_args() -> argparse.Namespace:
         "scope",
         nargs="*",
         default=["//...:all"],
-        help="Bazel package or target scoping for formatting. E.g. `//...`, `//some:target`.",
+        help="Bazel package or target scoping for formatting. E.g. `//...`, `//some:target`. "
+        "Arguments after a `--` delimiter are forwarded to `ruff` (e.g. `-- --unsafe-fixes`).",
     )
 
-    parsed_args = parser.parse_args()
+    parsed_args = parser.parse_args(pre_args)
+    parsed_args.ruff_args = ruff_args
 
     if not parsed_args.bazel:
         parsed_args.bazel = find_bazel()
@@ -145,12 +166,32 @@ def query_targets(
     return targets
 
 
+def workspace_first_party_override(
+    workspace_dir: Path, settings_path: Path
+) -> Optional[str]:
+    """Build a ``lint.isort.known-first-party`` override for the fixer.
+
+    Mirrors the runner's runfiles-based override but sources names from the
+    workspace on disk (which the fixer runs against). Keeping these two paths
+    aligned prevents fix/check disagreement over what counts as first-party.
+    """
+    discovered = collect_first_party_names_from_dir(workspace_dir)
+    combined = set(discovered) | set(user_known_first_party(settings_path))
+    if not combined:
+        return None
+    quoted = ", ".join(json.dumps(name) for name in sorted(combined))
+    return f"lint.isort.known-first-party = [{quoted}]"
+
+
+# pylint: disable-next=too-many-arguments
 def run_ruff_fix(
     ruff: Path,
     sources: List[str],
     settings_path: Path,
     workspace_dir: Path,
     mode: Modes,
+    *,
+    extra_args: Sequence[str] = (),
 ) -> None:
     """Run ruff format on a given set of sources
 
@@ -160,6 +201,7 @@ def run_ruff_fix(
         settings_path: The path to the ruff config file.
         workspace_dir: The Bazel workspace root.
         mode: The current fix mode.
+        extra_args: Additional arguments forwarded verbatim to `ruff`.
 
     """
     if not sources:
@@ -170,6 +212,15 @@ def run_ruff_fix(
         "--config",
         str(settings_path),
     ]
+
+    first_party_override = workspace_first_party_override(workspace_dir, settings_path)
+    if first_party_override is not None:
+        ruff_args.extend(["--config", first_party_override])
+        if "RULES_VENV_RUFF_DEBUG" in os.environ:
+            print(
+                f"ruff-fixer: first-party override: {first_party_override}",
+                file=sys.stderr,
+            )
 
     if mode == Modes.CHECK:
         ruff_args.extend(
@@ -189,6 +240,8 @@ def run_ruff_fix(
 
     if "RULES_VENV_RUFF_DEBUG" in os.environ:
         ruff_args.append("--verbose")
+
+    ruff_args.extend(extra_args)
 
     ruff_args.extend(sources)
 
@@ -251,6 +304,7 @@ def main() -> None:
         settings_path=settings,
         workspace_dir=workspace_dir,
         mode=mode,
+        extra_args=args.ruff_args,
     )
 
 

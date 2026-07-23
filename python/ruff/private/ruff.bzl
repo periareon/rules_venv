@@ -58,6 +58,7 @@ def _py_ruff_test_impl_common(ctx, mode):
         ),
         RunEnvironmentInfo(
             environment = {
+                "RULES_VENV_BAZEL_WORKSPACE": ctx.workspace_name,
                 "RULES_VENV_RUFF_RUNNER_ARGS_FILE": rlocationpath(args_file, ctx.workspace_name),
             },
         ),
@@ -215,7 +216,9 @@ def _py_ruff_aspect_impl(target, ctx):
             tools = depset(transitive = [runfiles.files, toolchain.all_files]),
             outputs = [marker],
             arguments = [mode_args, args],
-            env = ctx.configuration.default_shell_env,
+            env = ctx.configuration.default_shell_env | {
+                "RULES_VENV_BAZEL_WORKSPACE": ctx.workspace_name,
+            },
         )
 
     if not markers:
