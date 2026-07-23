@@ -8,8 +8,8 @@ import json
 import logging
 import os
 import platform
-import signal
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -226,6 +226,11 @@ def install_files(
             install_fn(abs_src, abs_dest)
 
 
+def _restore_sigint() -> None:
+    """Restore SIGINT to SIG_DFL. Used as `preexec_fn` for child processes."""
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+
 def rmtree(path: Path | str) -> None:
     """Attempt to delete a directory tree."""
     # Here we use `TemporaryDirectory` to wrap the path to delete and delete it.
@@ -340,14 +345,17 @@ def main() -> None:
 
         logging.debug("Spawning subprocess: %s", " ".join(main_args))
 
-        # Ignore SIGINT in the wrapper so Ctrl+C is handled entirely by
-        # the child process (e.g. Jupyter's interactive shutdown prompt).
-        # Popen resets signals in the child (restore_signals=True by
-        # default) so SIG_IGN only affects this process.  On Windows the
-        # console delivers Ctrl+C to each process independently, so the
-        # same behavior holds.
+        # Ignore SIGINT in the wrapper so Ctrl+C is handled entirely by the
+        # child (e.g. Jupyter's interactive shutdown prompt). On POSIX,
+        # Popen's `restore_signals` does not cover SIGINT and CPython
+        # preserves an inherited SIG_IGN instead of installing its default
+        # KeyboardInterrupt handler, so restore SIG_DFL in the child via
+        # `preexec_fn`. Windows does not inherit SIG_IGN across processes.
+        popen_kwargs = {}
+        if platform.system() != "Windows":
+            popen_kwargs["preexec_fn"] = _restore_sigint
         old_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        proc = subprocess.Popen(main_args)
+        proc = subprocess.Popen(main_args, **popen_kwargs)
         returncode = proc.wait()
         signal.signal(signal.SIGINT, old_handler)
         logging.debug("Process complete with exit code: %d", returncode)
