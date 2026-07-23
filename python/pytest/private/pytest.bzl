@@ -96,7 +96,7 @@ def _py_pytest_test_impl(ctx):
     if ctx.attr.numprocesses > 0:
         numprocesses = ctx.attr.numprocesses
         runner_args.add("--numprocesses={}".format(numprocesses))
-        exec_requirements["resources:cpu:{}".format(numprocesses)] = str(numprocesses)
+        exec_requirements["resources:cpu"] = str(numprocesses)
 
     # Separate runner args from other inputs
     runner_args.add("--")
