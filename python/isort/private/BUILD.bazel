@@ -28,6 +28,7 @@ py_binary(
     deps = [
         ":isort_runner",
         "//python/isort:current_py_isort_toolchain",
+        "//python/private:target_query",
         "//python/runfiles",
     ],
 )

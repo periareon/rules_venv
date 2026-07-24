@@ -3,8 +3,6 @@
 import argparse
 import json
 import os
-import platform
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -12,6 +10,7 @@ from typing import List, Optional, Sequence
 
 from python.runfiles import Runfiles
 
+from python.private import target_query
 from python.ruff.private.ruff_runner import (
     Modes,
     collect_first_party_names_from_dir,
@@ -19,41 +18,25 @@ from python.ruff.private.ruff_runner import (
     user_known_first_party,
 )
 
+_COMMON_IGNORE_TAGS: Sequence[str] = ("no_ruff", "noruff")
 
-def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
-    """Look up a runfile and ensure the file exists
-
-    Args:
-        runfiles: The runfiles object
-        rlocationpath: The runfile key
-
-    Returns:
-        The requested runfile.
-    """
-    # TODO: https://github.com/periareon/rules_venv/issues/37
-    source_repo = None
-    if platform.system() == "Windows":
-        source_repo = ""
-    runfile = runfiles.Rlocation(rlocationpath, source_repo)
-    if not runfile:
-        raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
-    path = Path(runfile)
-    if not path.exists():
-        raise FileNotFoundError(f"Runfile does not exist: ({rlocationpath}) {path}")
-    return path
-
-
-def find_bazel() -> Path:
-    """Locate a Bazel executable."""
-    if "BAZEL_REAL" in os.environ:
-        return Path(os.environ["BAZEL_REAL"])
-
-    for filename in ["bazel", "bazel.exe", "bazelisk", "bazelisk.exe"]:
-        path = shutil.which(filename)
-        if path:
-            return Path(path)
-
-    raise FileNotFoundError("Could not locate a Bazel binary")
+_IGNORE_TAGS = {
+    Modes.FORMAT: list(_COMMON_IGNORE_TAGS)
+    + [
+        "nofmt",
+        "noformat",
+        "no_format",
+        "no_fmt",
+        "no_ruff_format",
+        "no_ruff_fmt",
+    ],
+    Modes.CHECK: list(_COMMON_IGNORE_TAGS)
+    + [
+        "nolint",
+        "no_lint",
+        "no_ruff_lint",
+    ],
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -90,80 +73,9 @@ def parse_args() -> argparse.Namespace:
     parsed_args.ruff_args = ruff_args
 
     if not parsed_args.bazel:
-        parsed_args.bazel = find_bazel()
+        parsed_args.bazel = target_query.find_bazel()
 
     return parsed_args
-
-
-def query_targets(
-    scope: Sequence[str], bazel: Path, workspace_dir: Path, mode: Modes
-) -> List[str]:
-    """Query for all source targets of all python targets within a given workspace.
-
-    Args:
-        scope: The scope of the Bazel query (e.g. `//...`)
-        bazel: The path to a Bazel binary.
-        workspace_dir: The workspace root in which to query.
-        mode: The current operating ruff mode.
-
-    Returns:
-        A list of all discovered targets.
-    """
-    # Query explanation:
-    # Filter targets down to anything beginning with `//` and ends with `.py`.
-    #       Collect source files.
-    #           Collect dependencies of targets for a given scope.
-    #           Except for targets tagged to ignore formatting
-    #
-    query_template = r"""filter("^//.*\.py$", kind("source file", deps(set({scope}) except attr(tags, "(^\[|, )({ignore_tags})(, |\]$)", set({scope})), 1)))"""
-
-    common_tags = [
-        "no-ruff",
-        "noruff",
-        "no_ruff",
-    ]
-
-    ignore_tags = {
-        Modes.FORMAT: common_tags
-        + [
-            "nofmt",
-            "noformat",
-            "no-format",
-            "no_format",
-            "no-fmt",
-            "no_fmt",
-            "no-ruff-format",
-            "no_ruff_format",
-            "no_ruff_fmt",
-        ],
-        Modes.CHECK: common_tags
-        + [
-            "nolint",
-            "no-lint",
-            "no_lint",
-            "no-ruff-lint",
-            "no_ruff_lint",
-        ],
-    }
-
-    query_result = subprocess.run(
-        [
-            str(bazel),
-            "query",
-            query_template.replace("{scope}", " ".join(scope)).replace(
-                "{ignore_tags}", "|".join(ignore_tags[mode])
-            ),
-            "--noimplicit_deps",
-            "--keep_going",
-        ],
-        cwd=str(workspace_dir),
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-        check=False,
-    )
-
-    targets = query_result.stdout.splitlines()
-    return targets
 
 
 def workspace_first_party_override(
@@ -255,15 +167,6 @@ def run_ruff_fix(
         sys.exit(result.returncode)
 
 
-def pathify(label: str) -> str:
-    """Converts `//foo:bar` into `foo/bar`."""
-    if label.startswith("@"):
-        raise ValueError("External labels are unsupported", label)
-    if label.startswith("//:"):
-        return label[3:]
-    return label.replace(":", "/").replace("//", "")
-
-
 def main() -> None:
     """The main entry point"""
     args = parse_args()
@@ -281,20 +184,20 @@ def main() -> None:
             "RUNFILES_MANIFEST_FILE and RUNFILES_DIR are not set. Is python running under Bazel?"
         )
 
-    settings = _rlocation(runfiles, os.environ["RUFF_SETTINGS_PATH"])
+    settings = target_query.rlocation(runfiles, os.environ["RUFF_SETTINGS_PATH"])
     mode = Modes(os.environ["RUFF_MODE"])
 
-    # Query for all sources
-    targets = query_targets(
-        scope=args.scope, bazel=args.bazel, workspace_dir=workspace_dir, mode=mode
+    sources = target_query.resolve_source_paths(
+        scope=args.scope,
+        bazel=args.bazel,
+        workspace_dir=workspace_dir,
+        ignore_tags=_IGNORE_TAGS[mode],
     )
-
-    sources = [pathify(t) for t in targets]
 
     ruff_bin = None
     rlocationpath = os.getenv("RUFF_RLOCATIONPATH")
     if rlocationpath:
-        ruff_bin = _rlocation(runfiles, rlocationpath)
+        ruff_bin = target_query.rlocation(runfiles, rlocationpath)
 
     ruff_bin = find_ruff(ruff_bin)
 

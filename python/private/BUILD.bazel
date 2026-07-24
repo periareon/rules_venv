@@ -1,4 +1,15 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:py_library.bzl", "py_library")
+
+py_library(
+    name = "target_query",
+    srcs = ["target_query.py"],
+    tags = ["no-ruff-format"],
+    visibility = ["//python:__subpackages__"],
+    deps = [
+        "//python/runfiles",
+    ],
+)
 
 bzl_library(
     name = "bzl_lib",

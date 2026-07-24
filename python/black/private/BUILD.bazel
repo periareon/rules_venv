@@ -27,6 +27,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//python/black:current_py_black_toolchain",
+        "//python/private:target_query",
         "//python/runfiles",
     ],
 )

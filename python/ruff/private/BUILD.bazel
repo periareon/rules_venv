@@ -32,6 +32,7 @@ py_library(
         visibility = ["//visibility:public"],
         deps = [
             ":ruff_runner",
+            "//python/private:target_query",
             "//python/ruff:current_py_ruff_toolchain",
             "//python/runfiles",
         ],

@@ -1,56 +1,24 @@
 """A script for applying isort fixes to Bazel targets."""
 
 import argparse
-import json
 import os
-import platform
-import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, List
+from typing import List, Sequence
 
 from isort.main import main as isort_main
 from python.runfiles import Runfiles
 
 from python.isort.private.isort_runner import generate_config_with_projects
+from python.private import target_query
 
-
-def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
-    """Look up a runfile and ensure the file exists
-
-    Args:
-        runfiles: The runfiles object
-        rlocationpath: The runfile key
-
-    Returns:
-        The requested runifle.
-    """
-    # TODO: https://github.com/periareon/rules_venv/issues/37
-    source_repo = None
-    if platform.system() == "Windows":
-        source_repo = ""
-    runfile = runfiles.Rlocation(rlocationpath, source_repo)
-    if not runfile:
-        raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
-    path = Path(runfile)
-    if not path.exists():
-        raise FileNotFoundError(f"Runfile does not exist: ({rlocationpath}) {path}")
-    return path
-
-
-def find_bazel() -> Path:
-    """Locate a Bazel executable."""
-    if "BAZEL_REAL" in os.environ:
-        return Path(os.environ["BAZEL_REAL"])
-
-    for filename in ["bazel", "bazel.exe", "bazelisk", "bazelisk.exe"]:
-        path = shutil.which(filename)
-        if path:
-            return Path(path)
-
-    raise FileNotFoundError("Could not locate a Bazel binary")
+_IGNORE_TAGS: Sequence[str] = (
+    "noformat",
+    "no_format",
+    "no_isort_format",
+    "no_isort",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,117 +40,39 @@ def parse_args() -> argparse.Namespace:
     parsed_args = parser.parse_args()
 
     if not parsed_args.bazel:
-        parsed_args.bazel = find_bazel()
+        parsed_args.bazel = target_query.find_bazel()
 
     return parsed_args
 
 
-def query_targets(query_string: str, bazel: Path, workspace_dir: Path) -> List[str]:
-    """Query python sources of bazel targets to run isort on
+def _expand_imports(target: target_query.TargetInfo, workspace_dir: Path) -> List[str]:
+    """Expand a target's raw `imports` values to isort `src_paths`.
 
-    Args:
-        query_string: A query string to pass to `bazel query`.
-        bazel: The path to a Bazel binary.
-        workspace_dir: The location fo the Bazel workspace root.
-
-    Returns:
-        A list of targets provided by `bazel query`.
+    Matches the runner's `//package/<imports_value>` construction and
+    always includes the workspace root so intra-repo imports resolve.
     """
-    query_result = subprocess.run(
-        [
-            str(bazel),
-            "query",
-            query_string,
-            "--noimplicit_deps",
-            "--keep_going",
-        ],
-        cwd=str(workspace_dir),
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-        check=False,
-    )
-
-    targets = query_result.stdout.splitlines()
-    return targets
-
-
-def query_imports(
-    query_string: str, bazel: Path, workspace_dir: Path
-) -> Dict[str, Dict[str, List[str]]]:
-    """Query python sources of bazel targets to run isort on
-
-    Args:
-        query_string: A query string to pass to `bazel query`.
-        bazel: The path to a Bazel binary.
-        workspace_dir: The location fo the Bazel workspace root.
-
-    Returns:
-        A list of paths to included as isort src paths.
-    """
-    query_result = subprocess.run(
-        [
-            str(bazel),
-            "query",
-            query_string,
-            "--noimplicit_deps",
-            "--keep_going",
-            "--output=streamed_jsonproto",
-        ],
-        cwd=str(workspace_dir),
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-        check=False,
-    )
-
-    imports = {}
-    for stream in query_result.stdout.splitlines():
-        result = json.loads(stream)
-        rule = result["rule"]
-        label = rule["name"]
-        imports[label] = {"imports": [str(workspace_dir)]}
-        package, _, _ = label.partition(":")
-        for attr in rule["attribute"]:
-            if attr["name"] != "imports":
-                continue
-            if "stringListValue" not in attr:
-                continue
-            for value in attr["stringListValue"]:
-                import_path = workspace_dir / f"{package}/{value}".strip("/.")
-                imports[label]["imports"].append(str(import_path))
-
-        imports[label]["imports"] = sorted(imports[label]["imports"])
-
-    return imports
-
-
-def pathify(label: str) -> str:
-    """Converts `//foo:bar` into `foo/bar`."""
-    if label.startswith("@"):
-        raise ValueError("External labels are unsupported", label)
-    if label.startswith("//:"):
-        return label[3:]
-    return label.replace(":", "/").replace("//", "")
+    paths = {str(workspace_dir)}
+    for value in target.imports:
+        joined = f"{target.package}/{value}".strip("/.")
+        if joined:
+            paths.add(str(workspace_dir / joined))
+    return sorted(paths)
 
 
 def run_isort(
-    targets: List[str],
+    sources: Sequence[str],
     settings_path: Path,
     workspace_dir: Path,
 ) -> None:
     """Run isort in a subprocess
 
     Args:
-        targets: A list of source targets to format
+        sources: Workspace-relative paths to `.py` files to format.
         settings_path: The path to the isort config file.
         workspace_dir: The Bazel workspace root.
-        repo_imports: Python package ids which represent global packages to consider first party.
-        target_imports: Optional paths to directories that contain first party packages.
     """
-    if not targets:
+    if not sources:
         return
-
-    # Convert the targets to source paths
-    sources = [pathify(target) for target in targets]
 
     isort_args = ["--settings-path", str(settings_path)]
 
@@ -215,7 +105,10 @@ def run_isort(
         sys.exit(exit_code)
 
 
-# pylint: disable=too-many-locals
+def _sanitize_label(label: str) -> str:
+    return label.replace("@", "at").replace("/", "_").replace(":", "_")
+
+
 def main() -> None:
     """The main entry point"""
     args = parse_args()
@@ -233,72 +126,56 @@ def main() -> None:
             "RUNFILES_MANIFEST_FILE and RUNFILES_DIR are not set. Is python running under Bazel?"
         )
 
-    existing_settings = _rlocation(runfiles, os.environ["ISORT_SETTINGS_PATH"])
-
-    # query all targets with no specified imports
-    # Query explanation:
-    # Filter all local targets ending in `*.py`.
-    #     Get all source files.
-    #         Get direct dependencies from targets matching the given scope.
-    #         Except for targets tag to ignore formatting
-    srcs_query_template = r"""let scope = {scope} in filter("^//.*\.py$", kind("source file", deps($scope except attr(tags, "(^\[|, )(noformat|no-format|no_format|no-isort-format|no_isort_format)(, |\]$)", $scope), 1)))"""  # pylint: disable=line-too-long
-
-    # Query for targets which do not specify `imports = ["."]`
-    srcs_scope = r"""kind(py_.*, set({scope}) except attr(imports, "[\.\w\d\-_]+", kind("py_*", set({scope}))))""".format(  # pylint: disable=line-too-long
-        scope=" ".join(args.scope)
+    existing_settings = target_query.rlocation(
+        runfiles, os.environ["ISORT_SETTINGS_PATH"]
     )
 
-    src_targets = query_targets(
-        srcs_query_template.replace("{scope}", srcs_scope),
-        args.bazel,
-        workspace_dir,
+    # Single query for the entire scope. `imports`-carrying targets are
+    # picked out below in Python — the old code ran one extra query per
+    # such target, which dominated wall time on repos with many
+    # `imports = ["."]` libraries.
+    targets = target_query.query_python_targets(
+        scope=args.scope,
+        bazel=args.bazel,
+        workspace_dir=workspace_dir,
+        ignore_tags=_IGNORE_TAGS,
     )
 
-    # query all targets with any import paths provided
-    imports_query_template = r"""attr(imports, "[\.\w\d\-_]+", kind("py_*", set({scope})) except attr(tags, "(^\[|, )(noformat|no-format|no_format|no-isort-format|no_isort_format)(, |\]$)", set({scope})) )"""  # pylint: disable=line-too-long
-    imports_scope = imports_query_template.replace("{scope}", " ".join(args.scope))
-    imports = query_imports(
-        query_string=imports_scope, bazel=args.bazel, workspace_dir=workspace_dir
+    # Bucket 1: targets without an `imports` attribute — one isort run,
+    # workspace-only `src_paths`, files from every such target unioned.
+    default_sources = sorted(
+        {file for target in targets if not target.imports for file in target.files}
     )
-
-    for target, target_imports in imports.items():
-        target_imports["src_targets"] = query_targets(
-            srcs_query_template.replace("{scope}", target),
-            args.bazel,
-            workspace_dir,
-        )
+    # Bucket 2: one isort run per `imports`-carrying target so its
+    # package-relative import paths land in that run's `src_paths`.
+    imports_targets = [target for target in targets if target.imports]
 
     with tempfile.TemporaryDirectory(prefix="isort-fixer-") as tmp_dir:
-        settings_path = Path(tmp_dir) / existing_settings.name
+        default_settings = Path(tmp_dir) / existing_settings.name
         generate_config_with_projects(
             existing=existing_settings,
-            output=settings_path,
+            output=default_settings,
             src_paths=[str(workspace_dir)],
         )
-
-        # Run isort on all sources
         run_isort(
-            targets=src_targets,
-            settings_path=settings_path,
+            sources=default_sources,
+            settings_path=default_settings,
             workspace_dir=workspace_dir,
         )
 
-        for target, data in imports.items():
-            sanitized_target = (
-                target.replace("@", "at").replace("/", "_").replace(":", "_")
+        for target in imports_targets:
+            per_target_settings = (
+                Path(tmp_dir) / _sanitize_label(target.label) / existing_settings.name
             )
-            settings_path = Path(tmp_dir) / sanitized_target / existing_settings.name
-            settings_path.parent.mkdir(exist_ok=True, parents=True)
-
+            per_target_settings.parent.mkdir(exist_ok=True, parents=True)
             generate_config_with_projects(
                 existing=existing_settings,
-                output=settings_path,
-                src_paths=data["imports"],
+                output=per_target_settings,
+                src_paths=_expand_imports(target, workspace_dir),
             )
-
             run_isort(
-                targets=data["src_targets"],
-                settings_path=settings_path,
+                sources=target.files,
+                settings_path=per_target_settings,
                 workspace_dir=workspace_dir,
             )
 
