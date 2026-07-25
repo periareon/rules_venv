@@ -1,14 +1,12 @@
 """Show consumption of types from another package in the repo."""
 
-from typing import List, Union
-
 from types_example import (
     ColorType,
     MaybeIntsList,
 )
 
 
-def color_name(color: Union[int, ColorType]) -> str:
+def color_name(color: int | ColorType) -> str:
     """Get the color name"""
     if color == ColorType.RED:
         return "red"
@@ -22,6 +20,6 @@ def color_name(color: Union[int, ColorType]) -> str:
     raise ValueError(f"Unexpected color code: {color}")
 
 
-def stringify_numbers(maybe_numbers: MaybeIntsList) -> List[str]:
+def stringify_numbers(maybe_numbers: MaybeIntsList) -> list[str]:
     """Get a list of color names."""
     return [str(i) for i in maybe_numbers]

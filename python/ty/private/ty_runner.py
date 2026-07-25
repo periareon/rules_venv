@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
 
 from python.runfiles import Runfiles
 
@@ -44,7 +44,7 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
@@ -148,12 +148,13 @@ def _generate_config(
     with open(merged, "w", encoding="utf-8") as f:
         f.write(stripped)
         f.write("\n[environment]\n")
-        for key, value in env.items():
-            f.write(f"{key} = {_format_toml_value(value)}\n")
+        f.writelines(
+            f"{key} = {_format_toml_value(value)}\n" for key, value in env.items()
+        )
     return merged
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser("ty Runner")
 
@@ -196,14 +197,14 @@ def _load_args() -> Sequence[str]:
     if "BAZEL_TEST" in os.environ and "RULES_VENV_TY_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(runfiles, os.environ["RULES_VENV_TY_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
     return sys.argv[1:]
 
 
-def find_ty(ty_path: Optional[Path] = None) -> Path:
+def find_ty(ty_path: Path | None = None) -> Path:
     """Locate ty from the python environment
 
     Args:

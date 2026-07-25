@@ -1,7 +1,6 @@
 """Simple types for mypy."""
 
 import enum
-from typing import List, Optional
 
 
 class ColorType(enum.IntEnum):
@@ -12,4 +11,4 @@ class ColorType(enum.IntEnum):
     BLUE = 3
 
 
-MaybeIntsList = List[Optional[int]]
+MaybeIntsList = list[int | None]

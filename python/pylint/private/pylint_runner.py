@@ -7,8 +7,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Generator, Sequence
 from pathlib import Path
-from typing import Any, Generator, Optional, Sequence, cast
+from typing import Any, cast
 
 from pylint import run_pylint
 from python.runfiles import Runfiles
@@ -63,11 +64,11 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser("Pylint Runner")
 
@@ -107,7 +108,7 @@ def _load_args() -> Sequence[str]:
     ):
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(
             runfiles, os.environ["RULES_VENV_PYLINT_RUNNER_ARGS_FILE"]
         )

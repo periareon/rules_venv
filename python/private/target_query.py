@@ -30,9 +30,10 @@ import platform
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Any
 
 from python.runfiles import Runfiles
 
@@ -40,11 +41,11 @@ from python.runfiles import Runfiles
 # `exports` / `runtime_deps` are intentionally excluded — dep targets get
 # picked up on their own via the scope; the fixer scope determines what
 # is formatted, not what a target depends on.
-_SUBTREE_FILE_ATTRS: FrozenSet[str] = frozenset(("srcs", "main", "data"))
+_SUBTREE_FILE_ATTRS: frozenset[str] = frozenset(("srcs", "main", "data"))
 
 # Attributes read at the root of a PyInfo target itself. `data` is
 # deliberately absent — this is the whole point of the boundary rule.
-_ROOT_FILE_ATTRS: Tuple[str, ...] = ("srcs", "main")
+_ROOT_FILE_ATTRS: tuple[str, ...] = ("srcs", "main")
 
 _SOURCE_FILE_KIND = "__source_file__"
 
@@ -55,8 +56,8 @@ class TargetInfo:
 
     label: str
     package: str
-    files: Tuple[str, ...]
-    imports: Tuple[str, ...]
+    files: tuple[str, ...]
+    imports: tuple[str, ...]
 
 
 @dataclass
@@ -65,9 +66,9 @@ class _Entity:
 
     label: str
     kind: str  # rule class, or `_SOURCE_FILE_KIND` for source files
-    tags: List[str] = field(default_factory=list)
-    imports: List[str] = field(default_factory=list)
-    attr_labels: Dict[str, List[str]] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    imports: list[str] = field(default_factory=list)
+    attr_labels: dict[str, list[str]] = field(default_factory=dict)
 
 
 def find_bazel() -> Path:
@@ -104,7 +105,7 @@ def query_python_targets(
     workspace_dir: Path,
     *,
     ignore_tags: Sequence[str] = (),
-) -> List[TargetInfo]:
+) -> list[TargetInfo]:
     """Return every PyInfo-like target under `scope` with its resolved file set.
 
     A target counts as "Python-like" if the resolver walks at least one
@@ -118,7 +119,7 @@ def query_python_targets(
     a target's tags is done in Python, not in the query, so there is no
     regex-escaping foot-gun.
     """
-    entities: Dict[str, _Entity] = {}
+    entities: dict[str, _Entity] = {}
     root_labels, scope_source_files = _fetch_roots(
         bazel, workspace_dir, scope, entities, ignore_tags
     )
@@ -130,9 +131,9 @@ def _fetch_roots(
     bazel: Path,
     workspace_dir: Path,
     scope: Sequence[str],
-    entities: Dict[str, _Entity],
+    entities: dict[str, _Entity],
     ignore_tags: Sequence[str],
-) -> Tuple[List[str], List[_Entity]]:
+) -> tuple[list[str], list[_Entity]]:
     """Round 1: fetch scope roots + their attributes; split rules vs scope-level `.py`.
 
     Wildcards in `scope` are handled by Bazel here — no need to
@@ -141,8 +142,8 @@ def _fetch_roots(
     there is no escaping/case foot-gun.
     """
     roots_query = f"set({' '.join(scope)})"
-    root_labels: List[str] = []
-    scope_source_files: List[_Entity] = []
+    root_labels: list[str] = []
+    scope_source_files: list[_Entity] = []
     for entity in _stream_query(bazel, workspace_dir, roots_query):
         entities[entity.label] = entity
         if entity.kind == _SOURCE_FILE_KIND:
@@ -172,7 +173,7 @@ def _bfs_file_subgraph(
     bazel: Path,
     workspace_dir: Path,
     root_labels: Sequence[str],
-    entities: Dict[str, _Entity],
+    entities: dict[str, _Entity],
 ) -> None:
     """Iteratively fetch labels reached via file-carrying attributes.
 
@@ -181,7 +182,7 @@ def _bfs_file_subgraph(
     nesting depth — typically 1-2 rounds — so this is cheap even
     though each round is its own `bazel query` invocation.
     """
-    to_fetch: Set[str] = set()
+    to_fetch: set[str] = set()
     for label in root_labels:
         entity = entities[label]
         for attr in _ROOT_FILE_ATTRS:
@@ -204,9 +205,9 @@ def _bfs_file_subgraph(
 def _build_target_infos(
     root_labels: Sequence[str],
     scope_source_files: Sequence[_Entity],
-    entities: Dict[str, _Entity],
-) -> List[TargetInfo]:
-    results: List[TargetInfo] = []
+    entities: dict[str, _Entity],
+) -> list[TargetInfo]:
+    results: list[TargetInfo] = []
     for label in root_labels:
         entity = entities[label]
         py_files = tuple(
@@ -242,7 +243,7 @@ def resolve_source_paths(
     workspace_dir: Path,
     *,
     ignore_tags: Sequence[str] = (),
-) -> List[str]:
+) -> list[str]:
     """Return every workspace-relative `.py` path in scope, sorted + deduped.
 
     Convenience wrapper for tools like ruff/black that don't need
@@ -266,7 +267,7 @@ def _normalize_tag(tag: str) -> str:
     return tag.replace("-", "_").lower()
 
 
-def _enqueue(entities: Dict[str, _Entity], queue: Set[str], label: str) -> None:
+def _enqueue(entities: dict[str, _Entity], queue: set[str], label: str) -> None:
     """Add a label to the BFS queue unless we've already handled it."""
     if not label or label.startswith("@"):
         # External sources are never formatted.
@@ -279,8 +280,8 @@ def _enqueue(entities: Dict[str, _Entity], queue: Set[str], label: str) -> None:
 def _fetch_labels(
     bazel: Path,
     workspace_dir: Path,
-    entities: Dict[str, _Entity],
-    labels: Set[str],
+    entities: dict[str, _Entity],
+    labels: set[str],
 ) -> None:
     """Fetch attributes for `labels` in a single query.
 
@@ -357,7 +358,7 @@ def _stream_query(
             )
 
 
-def _parse_entity(obj: Dict[str, Any]) -> Optional[_Entity]:
+def _parse_entity(obj: dict[str, Any]) -> _Entity | None:
     record_type = obj.get("type")
     if record_type == "SOURCE_FILE":
         name = obj.get("sourceFile", {}).get("name")
@@ -372,9 +373,9 @@ def _parse_entity(obj: Dict[str, Any]) -> Optional[_Entity]:
     if not label:
         return None
 
-    tags: List[str] = []
-    imports: List[str] = []
-    attr_labels: Dict[str, List[str]] = {}
+    tags: list[str] = []
+    imports: list[str] = []
+    attr_labels: dict[str, list[str]] = {}
     for attr in rule.get("attribute", []):
         name = attr.get("name")
         if name == "tags":
@@ -382,7 +383,7 @@ def _parse_entity(obj: Dict[str, Any]) -> Optional[_Entity]:
         elif name == "imports":
             imports = list(attr.get("stringListValue", []))
         elif name in _SUBTREE_FILE_ATTRS:
-            values: List[str] = []
+            values: list[str] = []
             if "stringListValue" in attr:
                 values.extend(attr["stringListValue"])
             elif attr.get("stringValue"):
@@ -399,15 +400,15 @@ def _parse_entity(obj: Dict[str, Any]) -> Optional[_Entity]:
     )
 
 
-def _resolve_files(root: _Entity, entities: Dict[str, _Entity]) -> Set[str]:
+def _resolve_files(root: _Entity, entities: dict[str, _Entity]) -> set[str]:
     """Walk the file-carrying subgraph starting at a PyInfo root.
 
     Only `_ROOT_FILE_ATTRS` are read on `root`. Any rule reached below
     the root has all of `_SUBTREE_FILE_ATTRS` inspected. External labels
     (`@repo//...`) are skipped so third-party sources are never returned.
     """
-    files: Set[str] = set()
-    visited: Set[str] = set()
+    files: set[str] = set()
+    visited: set[str] = set()
 
     def _visit(label: str) -> None:
         if label.startswith("@") or label in visited:

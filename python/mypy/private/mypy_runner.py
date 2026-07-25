@@ -7,8 +7,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, TextIO, Union
+from typing import TextIO
 
 from mypy.main import main as mypy_main
 from python.runfiles import Runfiles
@@ -44,11 +45,11 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser()
 
@@ -179,15 +180,15 @@ def main() -> None:  # pylint: disable=too-many-branches
     if "BAZEL_TEST" in os.environ and "RULES_VENV_MYPY_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(runfiles, os.environ["RULES_VENV_MYPY_RUNNER_ARGS_FILE"])
         args = parse_args(arg_file.read_text(encoding="utf-8").splitlines())
     else:
         args = parse_args()
 
     stream = io.StringIO()
-    stderr: Union[TextIO, io.StringIO]
-    stdout: Union[TextIO, io.StringIO]
+    stderr: TextIO | io.StringIO
+    stdout: TextIO | io.StringIO
     if args.marker:
         stderr = stream
         stdout = stream

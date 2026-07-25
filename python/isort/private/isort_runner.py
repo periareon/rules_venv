@@ -9,8 +9,9 @@ import platform
 import shutil
 import sys
 import tempfile
+from collections.abc import Generator, Sequence
 from pathlib import Path
-from typing import Any, Generator, List, Optional, Sequence, cast
+from typing import Any, cast
 
 from python.runfiles import Runfiles
 
@@ -53,11 +54,11 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments
 
     Returns:
@@ -103,7 +104,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 def locate_first_party_src_paths(
     runfiles_dir: Path, imports: Sequence[str]
-) -> List[str]:
+) -> list[str]:
     """Determine the list of first party packages.
 
     Args:
@@ -118,7 +119,7 @@ def locate_first_party_src_paths(
 
 
 def generate_config_with_projects(
-    existing: Path, output: Path, src_paths: List[str]
+    existing: Path, output: Path, src_paths: list[str]
 ) -> None:
     """Write a new config file with first party imports merged into it.
 
@@ -190,7 +191,7 @@ def _load_args() -> Sequence[str]:
     if "BAZEL_TEST" in os.environ and "RULES_VENV_ISORT_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(runfiles, os.environ["RULES_VENV_ISORT_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
@@ -205,7 +206,7 @@ def _get_runfiles_dir() -> Path:
     if "RUNFILES_DIR" in os.environ:
         return Path(os.environ["RUNFILES_DIR"])
 
-    raise EnvironmentError("Unable to locate runfiles directory.")
+    raise OSError("Unable to locate runfiles directory.")
 
 
 def main() -> None:

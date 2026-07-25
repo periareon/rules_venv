@@ -5,8 +5,9 @@ import os
 import shutil
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from python.runfiles import Runfiles
 
@@ -19,7 +20,7 @@ except (ImportError, ModuleNotFoundError):
     sys.exit(1)
 
 
-def _rlocation(runfiles: Optional[Runfiles], rlocationpath: str) -> Path:
+def _rlocation(runfiles: Runfiles | None, rlocationpath: str) -> Path:
     """Look up a runfile and ensure the file exists
 
     Args:
@@ -30,7 +31,7 @@ def _rlocation(runfiles: Optional[Runfiles], rlocationpath: str) -> Path:
         The requested runifle.
     """
     if runfiles is None:
-        raise EnvironmentError("Runfiles could not be found")
+        raise OSError("Runfiles could not be found")
     runfile = runfiles.Rlocation(rlocationpath, "")
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
@@ -41,7 +42,7 @@ def _rlocation(runfiles: Optional[Runfiles], rlocationpath: str) -> Path:
 
 
 def parse_args(
-    args: Optional[Sequence[str]] = None, runfiles: Optional[Runfiles] = None
+    args: Sequence[str] | None = None, runfiles: Runfiles | None = None
 ) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -77,9 +78,7 @@ def main() -> Any:
     runfiles = Runfiles.Create()
 
     if "RULES_VENV_WHEEL_PUBLISHER_ARGS" not in os.environ:
-        raise EnvironmentError(
-            "RULES_VENV_WHEEL_PUBLISHER_ARGS not defined in environment."
-        )
+        raise OSError("RULES_VENV_WHEEL_PUBLISHER_ARGS not defined in environment.")
 
     args_file = _rlocation(runfiles, os.environ["RULES_VENV_WHEEL_PUBLISHER_ARGS"])
     argv = args_file.read_text(encoding="utf-8").splitlines()

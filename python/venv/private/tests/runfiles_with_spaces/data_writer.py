@@ -66,7 +66,7 @@ def main() -> None:
     args = parse_args()
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     data_file = _rlocation(runfiles, args.data)
 

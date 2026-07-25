@@ -38,7 +38,7 @@ class AspectConsumerTest(unittest.TestCase):
         """Test the action output exists and is formed correctly."""
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles.")
+            raise OSError("Failed to locate runfiles.")
 
         aspect_output = rlocation(runfiles, os.environ["ASPECT_ACTION_OUTPUT"])
 

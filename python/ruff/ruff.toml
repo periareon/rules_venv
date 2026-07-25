@@ -1,1 +1,6 @@
 # https://docs.astral.sh/ruff/configuration/#__tabbed_1_2
+
+[lint]
+# `isort` runs as its own aspect (see .bazelrc :isort config); leave import
+# sorting to that tool so the two implementations can't disagree.
+ignore = ["I001"]

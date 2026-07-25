@@ -3,7 +3,6 @@
 import argparse
 import re
 from pathlib import Path
-from typing import Dict
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def parse_constraints(constraints_file: Path) -> Dict[str, str]:
+def parse_constraints(constraints_file: Path) -> dict[str, str]:
     """Parse a constraints (`requirements.in`) file into a map of package names to their constriants
 
     Args:

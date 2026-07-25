@@ -5,6 +5,9 @@ load("//python/isort/private/tests:isort_regex_test.bzl", "isort_regex_test")
 py_library(
     name = "example",
     srcs = ["example.py"],
+    # Fixture intentionally uses `import X.Y as Y` to exercise isort's
+    # ordering; skip ruff's PLR0402 rewrite so the imports stay pristine.
+    tags = ["no_ruff"],
     deps = [
         ":first_party_1",
         ":first_party_2",
@@ -35,6 +38,7 @@ py_test(
     name = "example_test",
     srcs = ["example.py"],
     main = "example.py",
+    tags = ["no_ruff"],
     deps = [
         ":first_party_1",
         ":first_party_2",

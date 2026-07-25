@@ -15,9 +15,12 @@ import sys
 import tempfile
 import venv
 import zipfile
+from collections.abc import Sequence
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, NamedTuple, Optional, Sequence
+from typing import NamedTuple
+
+_LOG = logging.getLogger(__name__)
 
 
 class ParsedArgs(NamedTuple):
@@ -60,7 +63,7 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
                 substituted out.
         """
         self.bazel_pth = pth
-        self.interpreter: Optional[Path] = None
+        self.interpreter: Path | None = None
 
         super().__init__(
             system_site_packages=False,
@@ -166,7 +169,7 @@ def extract_zip(zip_file: Path, output_dir: Path) -> None:
 
 
 def install_files(
-    manifest: Path, output_dir: Path, src_root: Optional[Path] = None
+    manifest: Path, output_dir: Path, src_root: Path | None = None
 ) -> None:
     """A helper for installing files in a directory.
 
@@ -283,21 +286,21 @@ def main() -> None:
 
         runfiles_collection = os.environ["RULES_VENV_RUNFILES_COLLECTION"]
         if runfiles_collection.endswith(".zip"):
-            logging.debug("Extracting runfiles collection to: %s", runfiles_dir)
+            _LOG.debug("Extracting runfiles collection to: %s", runfiles_dir)
             runfiles_dir.mkdir(exist_ok=True, parents=True)
             extract_zip(
                 zip_file=Path(runfiles_collection),
                 output_dir=runfiles_dir,
             )
         elif runfiles_collection.endswith(".json"):
-            logging.debug("Linking runfiles collection to: %s", runfiles_dir)
+            _LOG.debug("Linking runfiles collection to: %s", runfiles_dir)
             install_files(manifest=Path(runfiles_collection), output_dir=runfiles_dir)
         else:
-            raise EnvironmentError(
+            raise OSError(
                 f"Unexpected `RULES_VENV_RUNFILES_COLLECTION` value: {runfiles_collection}"
             )
 
-        logging.debug("Runfiles ready!")
+        _LOG.debug("Runfiles ready!")
 
     # The venv dir is only cleaned up if the target is not running under
     # a Bazel test. Bazel will clean up the directory for us when the test
@@ -323,7 +326,7 @@ def main() -> None:
                             config_pth[idx] = entry.format(runfiles_dir=external_dir)
 
         # Create a new venv.
-        logging.debug("Creating venv at: %s", venv_dir)
+        _LOG.debug("Creating venv at: %s", venv_dir)
         venv_interpreter = create_venv(
             venv_name=config["label"],
             venv_dir=venv_dir,
@@ -331,19 +334,17 @@ def main() -> None:
         )
 
         # Subprocess the entrypoint via the new venv.
-        main_args: List[str] = [
+        main_args: list[str] = [
             str(venv_interpreter),
             "-B",  # don't write .pyc files on import; also PYTHONDONTWRITEBYTECODE=x
             "-s",  # don't add user site directory to sys.path; also PYTHONNOUSERSITE
         ]
-        if (
-            sys.version_info.major >= 3 and sys.version_info.minor >= 11
-        ) or sys.version_info.major > 3:
+        if sys.version_info >= (3, 11):
             main_args.append("-P")  # safe paths (available in Python 3.11)
         main_args.append(str(args.main))
         main_args.extend(args.main_args)
 
-        logging.debug("Spawning subprocess: %s", " ".join(main_args))
+        _LOG.debug("Spawning subprocess: %s", " ".join(main_args))
 
         # Ignore SIGINT in the wrapper so Ctrl+C is handled entirely by the
         # child (e.g. Jupyter's interactive shutdown prompt). On POSIX,
@@ -358,7 +359,7 @@ def main() -> None:
         proc = subprocess.Popen(main_args, **popen_kwargs)
         returncode = proc.wait()
         signal.signal(signal.SIGINT, old_handler)
-        logging.debug("Process complete with exit code: %d", returncode)
+        _LOG.debug("Process complete with exit code: %d", returncode)
         sys.exit(returncode)
     finally:
         # https://bazel.build/reference/test-encyclopedia#initial-conditions
@@ -371,12 +372,12 @@ def main() -> None:
         )
 
         if skip_cleanup:
-            logging.debug("Skipping cleanup of: %s", temp_dir)
+            _LOG.debug("Skipping cleanup of: %s", temp_dir)
         else:
             try:
                 rmtree(temp_dir)
             except (PermissionError, OSError) as exc:
-                logging.warning(
+                _LOG.warning(
                     "Error encountered while cleaning up venv %s: %s", temp_dir, exc
                 )
 

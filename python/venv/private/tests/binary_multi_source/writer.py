@@ -27,7 +27,7 @@ def main() -> None:
     args = parse_args()
 
     args.output.parent.mkdir(exist_ok=True, parents=True)
-    args.output.write_bytes(f"{SPECIAL_MESSAGE}\n".encode("utf-8"))
+    args.output.write_bytes(f"{SPECIAL_MESSAGE}\n".encode())
 
 
 if __name__ == "__main__":

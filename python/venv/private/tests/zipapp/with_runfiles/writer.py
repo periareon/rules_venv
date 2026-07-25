@@ -40,7 +40,7 @@ def main() -> None:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     runfile = _rlocation(
         runfiles,
@@ -48,7 +48,7 @@ def main() -> None:
     )
 
     text = runfile.read_text(encoding="utf-8").strip()
-    args.output.write_bytes(f"{text}\n".encode("utf-8"))
+    args.output.write_bytes(f"{text}\n".encode())
 
 
 if __name__ == "__main__":

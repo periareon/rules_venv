@@ -52,7 +52,7 @@ def main() -> None:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     prefix_file = _rlocation(runfiles, os.environ["PREFIX_RLOCATIONPATH"])
 

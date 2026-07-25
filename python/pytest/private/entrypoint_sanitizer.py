@@ -31,13 +31,7 @@ def main() -> None:
     content = args.entrypoint.read_text(encoding="utf-8")
 
     args.output.write_text(
-        "\n".join(
-            [
-                "# type: ignore",
-                "# pylint: skip-file",
-                content,
-            ]
-        ),
+        f"# type: ignore\n# pylint: skip-file\n{content}",
         encoding="utf-8",
     )
 

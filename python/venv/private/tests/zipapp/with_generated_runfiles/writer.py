@@ -40,7 +40,7 @@ def main() -> None:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     runfile = _rlocation(
         runfiles,

@@ -22,7 +22,7 @@ def load_data() -> str:
     """Load data from a runfile."""
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     rlocationpath = (
         "rules_venv/python/venv/private/tests/import_duplicates/consumer/data.txt"

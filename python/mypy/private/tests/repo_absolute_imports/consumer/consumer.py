@@ -1,7 +1,5 @@
 """Show consumption of types from another package in the repo."""
 
-from typing import List
-
 from python.mypy.private.tests.repo_absolute_imports.types_example import (
     ColorType,
     MaybeIntsList,
@@ -22,6 +20,6 @@ def color_name(color: int) -> str:
     raise ValueError(f"Unexpected color code: {color}")
 
 
-def stringify_numbers(maybe_numbers: MaybeIntsList) -> List[str]:
+def stringify_numbers(maybe_numbers: MaybeIntsList) -> list[str]:
     """Get a list of color names."""
     return [str(i) for i in maybe_numbers]

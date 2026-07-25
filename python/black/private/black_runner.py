@@ -7,9 +7,10 @@ import platform
 import shutil
 import sys
 import tempfile
+from collections.abc import Generator, Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Any, Generator, Optional, Sequence, cast
+from typing import Any, cast
 
 import black
 from python.runfiles import Runfiles
@@ -68,11 +69,11 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser("Black Runner")
 
@@ -109,7 +110,7 @@ def _load_args() -> Sequence[str]:
     if "BAZEL_TEST" in os.environ and "RULES_VENV_BLACK_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(runfiles, os.environ["RULES_VENV_BLACK_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
@@ -142,9 +143,12 @@ def main() -> None:
         try:
             # If a stream is defined, ensure the output is captured to this file.
             if args.marker:
-                with stream.open("w", encoding="utf-8") as tmp:
-                    with redirect_stderr(tmp), redirect_stdout(tmp):
-                        black.patched_main()
+                with (
+                    stream.open("w", encoding="utf-8") as tmp,
+                    redirect_stderr(tmp),
+                    redirect_stdout(tmp),
+                ):
+                    black.patched_main()
             else:
                 black.patched_main()
 

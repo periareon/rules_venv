@@ -11,10 +11,13 @@ import sys
 import tempfile
 import textwrap
 import venv
+from collections.abc import Sequence
 from dataclasses import Field, dataclass, fields
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any
+
+_LOG = logging.getLogger(__name__)
 
 SPEC_FILE_SUFFIX = ".py_global_venv_info.json"
 
@@ -85,7 +88,7 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
             clear: Whether or not to clear an existing venv.
         """
         self.bazel_pth = pth
-        self.interpreter: Optional[Path] = None
+        self.interpreter: Path | None = None
 
         super().__init__(
             system_site_packages=False,
@@ -186,7 +189,7 @@ def create_venv(
     return interpreter
 
 
-def _bazel_env() -> Dict[str, str]:
+def _bazel_env() -> dict[str, str]:
     """Sanitize a map of environment variables for Bazel subprocesses.
 
     Returns:
@@ -198,8 +201,7 @@ def _bazel_env() -> Dict[str, str]:
         "BUILD_WORKING_DIRECTORY",
         "BUILD_WORKSPACE_DIRECTORY",
     ):
-        if remove in env:
-            del env[remove]
+        env.pop(remove, None)
     return env
 
 
@@ -221,12 +223,12 @@ def get_bazel_info(bazel: Path | str, workspace_dir: Path | str) -> BazelInfo:
     Returns:
         Deserialized Bazel info.
     """
-    logging.debug("Bazel info...")
+    _LOG.debug("Bazel info...")
     args = [
         str(bazel),
         "info",
     ]
-    logging.debug(" ".join(args))
+    _LOG.debug(" ".join(args))
     result = subprocess.run(
         args,
         env=_bazel_env(),
@@ -235,9 +237,9 @@ def get_bazel_info(bazel: Path | str, workspace_dir: Path | str) -> BazelInfo:
         cwd=workspace_dir,
         capture_output=True,
     )
-    logging.debug("%s", result.stdout)
-    logging.debug("%s", result.stderr)
-    logging.debug("Done.")
+    _LOG.debug("%s", result.stdout)
+    _LOG.debug("%s", result.stderr)
+    _LOG.debug("Done.")
 
     info = {}
     supported_fields = [f.name for f in fields(BazelInfo)]
@@ -257,7 +259,7 @@ def generate_global_venv_specs(
     bazel: Path | str,
     workspace_dir: Path | str,
     rules_venv_name: str,
-    targets: List[str],
+    targets: list[str],
     *,
     build_srcs: bool = False,
 ) -> None:
@@ -270,7 +272,7 @@ def generate_global_venv_specs(
         targets: Targets to generate specs for.
         build_srcs: Enable an additional output group to build sources.
     """
-    logging.debug("Building specs...")
+    _LOG.debug("Building specs...")
     args = [
         str(bazel),
         "build",
@@ -284,7 +286,7 @@ def generate_global_venv_specs(
         args.append("--output_groups=py_global_venv_info")
 
     args.extend(targets)
-    logging.debug(" ".join(args))
+    _LOG.debug(" ".join(args))
     subprocess.run(
         args,
         env=_bazel_env(),
@@ -293,12 +295,12 @@ def generate_global_venv_specs(
         cwd=workspace_dir,
         capture_output=logging.getLogger().level != logging.DEBUG,
     )
-    logging.debug("Done.")
+    _LOG.debug("Done.")
 
 
 def map_data_fields(
-    class_fields: Sequence[Field[Any]], field_map: Dict[str, str], data: Dict[str, Any]
-) -> Dict[str, Any]:
+    class_fields: Sequence[Field[Any]], field_map: dict[str, str], data: dict[str, Any]
+) -> dict[str, Any]:
     """A helper for deserializing aquery jsonproto outputs.
 
     For the purposes of the global venv maker, not all fields are needed
@@ -332,7 +334,7 @@ class Artifact:
     path_fragment_id: int
 
     @staticmethod
-    def map_fields(data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_fields(data: dict[str, Any]) -> dict[str, Any]:
         """Sanitize raw data for deserialization."""
         return map_data_fields(
             class_fields=fields(Artifact),
@@ -349,10 +351,10 @@ class PathFragment:
 
     id: int
     label: str
-    parent_id: Optional[int] = None
+    parent_id: int | None = None
 
     @staticmethod
-    def map_fields(data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_fields(data: dict[str, Any]) -> dict[str, Any]:
         """Sanitize raw data for deserialization."""
         return map_data_fields(
             class_fields=fields(PathFragment),
@@ -370,7 +372,7 @@ class Action:
     output_ids: Sequence[int]
 
     @staticmethod
-    def map_fields(data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_fields(data: dict[str, Any]) -> dict[str, Any]:
         """Sanitize raw data for deserialization."""
         return map_data_fields(
             class_fields=fields(Action),
@@ -388,7 +390,7 @@ class ActionGraphContainer:
     path_fragments: Sequence[PathFragment]
 
 
-def deserialize_aquery_output(jsonproto: Dict[str, Any]) -> ActionGraphContainer:
+def deserialize_aquery_output(jsonproto: dict[str, Any]) -> ActionGraphContainer:
     """Deserialize aquery output into python classes.
 
     Args:
@@ -400,28 +402,22 @@ def deserialize_aquery_output(jsonproto: Dict[str, Any]) -> ActionGraphContainer
     if not jsonproto:
         raise ValueError("The jsonproto cannot be empty.")
     if "actions" not in jsonproto:
-        logging.warning(
-            "Aquery jsonproto has no `actions` key. Results may be affected"
-        )
+        _LOG.warning("Aquery jsonproto has no `actions` key. Results may be affected")
     if "artifacts" not in jsonproto:
-        logging.warning(
-            "Aquery jsonproto has no `artifacts` key. Results may be affected"
-        )
+        _LOG.warning("Aquery jsonproto has no `artifacts` key. Results may be affected")
     if "pathFragments" not in jsonproto:
-        logging.warning(
+        _LOG.warning(
             "Aquery jsonproto has no `pathFragments` key. Results may be affected"
         )
     raw_actions = jsonproto.get("actions", [])
     raw_artifacts = jsonproto.get("artifacts", [])
     raw_fragments = jsonproto.get("pathFragments", [])
     if not raw_actions:
-        logging.warning("Aquery jsonproto has `actions`. Results may be affected")
+        _LOG.warning("Aquery jsonproto has `actions`. Results may be affected")
     if not raw_artifacts:
-        logging.warning("Aquery jsonproto has `artifacts`. Results may be affected")
+        _LOG.warning("Aquery jsonproto has `artifacts`. Results may be affected")
     if not raw_fragments:
-        logging.warning(
-            "Aquery jsonproto has no `pathFragments`. Results may be affected"
-        )
+        _LOG.warning("Aquery jsonproto has no `pathFragments`. Results may be affected")
     actions = [
         Action(**Action.map_fields(entry)) for entry in jsonproto.get("actions", [])
     ]
@@ -441,7 +437,7 @@ def deserialize_aquery_output(jsonproto: Dict[str, Any]) -> ActionGraphContainer
     )
 
 
-def path_from_fragments(frag_id: int, fragments: Dict[int, PathFragment]) -> Path:
+def path_from_fragments(frag_id: int, fragments: dict[int, PathFragment]) -> Path:
     """Recursively compute the a path from a map of path fragments
 
     Args:
@@ -471,7 +467,7 @@ class PyGlobalVenvInfo:
 
     imports: Sequence[str]
     bin_dirs: Sequence[str] = ()
-    bin_dir: Optional[str] = None
+    bin_dir: str | None = None
 
     def get_bin_dirs(self) -> Sequence[str]:
         """Return bin_dirs, falling back to bin_dir for old spec files."""
@@ -486,7 +482,7 @@ def query_global_venv_specs(
     bazel: Path | str,
     workspace_dir: Path | str,
     rules_venv_name: str,
-    targets: List[str],
+    targets: list[str],
     execution_root: Path | str,
 ) -> Sequence[Path]:
     """Perform a Bazel query and return paths to `PyGlobalVenvInfo` spec files.
@@ -509,12 +505,11 @@ def query_global_venv_specs(
         "BUILD_WORKING_DIRECTORY",
         "BUILD_WORKSPACE_DIRECTORY",
     ):
-        if remove in env:
-            del env[remove]
+        env.pop(remove, None)
 
     with tempfile.TemporaryDirectory(prefix="rules_venv_global-") as tmp:
         tmp_log = Path(tmp) / "aquery_log.json"
-        logging.debug("Querying specs...")
+        _LOG.debug("Querying specs...")
         args = [
             str(bazel),
             "aquery",
@@ -526,7 +521,7 @@ def query_global_venv_specs(
             "--output=jsonproto",
             f"--output_file={tmp_log}",
         ] + targets
-        logging.debug(" ".join(args))
+        _LOG.debug(" ".join(args))
         subprocess.run(
             args,
             env=_bazel_env(),
@@ -535,7 +530,7 @@ def query_global_venv_specs(
             cwd=workspace_dir,
             capture_output=True,
         )
-        logging.debug("Done.")
+        _LOG.debug("Done.")
 
         with tmp_log.open() as log:
             aquery_output = deserialize_aquery_output(jsonproto=json.load(log))
@@ -555,9 +550,7 @@ def query_global_venv_specs(
         # `PyInfo` which will not match the expectations of the aspect. `rules_python >= 1.5.0`
         # should be used to provide `PyInfo`.
         if not spec_paths:
-            logging.warning(
-                "No spec paths were found which means the venv will be empty."
-            )
+            _LOG.warning("No spec paths were found which means the venv will be empty.")
 
         return sorted(set(spec_paths))
 
@@ -598,7 +591,7 @@ def get_pth(
         A list of paths to include in a `pth` file.
     """
     # There is no ordered set in python so a dict is used for it's index behavior.
-    pth: Dict[str, None] = {}
+    pth: dict[str, None] = {}
     for spec in specs:
         bin_dirs = spec.get_bin_dirs()
         for i in spec.imports:
@@ -635,7 +628,7 @@ def get_extra_paths(
     Returns:
         A deduplicated list of absolute bin-dir paths.
     """
-    extra_paths: Dict[str, None] = {}
+    extra_paths: dict[str, None] = {}
     for spec in specs:
         for bin_dir in spec.get_bin_dirs():
             extra_paths[str(execution_root / bin_dir)] = None
@@ -667,10 +660,10 @@ def write_pyrightconfig(output: Path, extra_paths: Sequence[str]) -> None:
         json.dumps(pyright_config, indent=4) + "\n",
         encoding="utf-8",
     )
-    logging.info("Generated %s", output)
+    _LOG.info("Generated %s", output)
 
 
-def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
+def discover_entrypoints(interpreter: Path) -> dict[str, str]:
     """Auto-discover ``console_scripts`` entrypoints via ``importlib.metadata``.
 
     Subprocesses the venv's Python interpreter so that the venv's ``.pth``
@@ -683,7 +676,7 @@ def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
     Returns:
         A mapping of script names to module specs (e.g. ``{"black": "black:patched_main"}``).
     """
-    logging.debug("Discovering entrypoints...")
+    _LOG.debug("Discovering entrypoints...")
     result = subprocess.run(
         [
             str(interpreter),
@@ -701,7 +694,7 @@ def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
     )
 
     if result.returncode != 0:
-        logging.warning(
+        _LOG.warning(
             "Entrypoint discovery failed (exit %d): %s",
             result.returncode,
             result.stderr.strip(),
@@ -709,16 +702,16 @@ def discover_entrypoints(interpreter: Path) -> Dict[str, str]:
         return {}
 
     try:
-        entrypoints: Dict[str, str] = json.loads(result.stdout)
+        entrypoints: dict[str, str] = json.loads(result.stdout)
     except json.JSONDecodeError:
-        logging.warning("Failed to parse entrypoint discovery output")
+        _LOG.warning("Failed to parse entrypoint discovery output")
         return {}
 
-    logging.debug("Discovered %d entrypoints", len(entrypoints))
+    _LOG.debug("Discovered %d entrypoints", len(entrypoints))
     return entrypoints
 
 
-def discover_data_scripts(interpreter: Path) -> Dict[str, Path]:
+def discover_data_scripts(interpreter: Path) -> dict[str, Path]:
     """Discover wheel data scripts (``*.data/scripts/``) on the venv's ``sys.path``.
 
     Wheels may ship pre-built binaries via ``{name}.data/scripts/`` instead of
@@ -731,7 +724,7 @@ def discover_data_scripts(interpreter: Path) -> Dict[str, Path]:
     Returns:
         A mapping of script names to their absolute source paths.
     """
-    logging.debug("Discovering data scripts...")
+    _LOG.debug("Discovering data scripts...")
     result = subprocess.run(
         [
             str(interpreter),
@@ -753,20 +746,20 @@ def discover_data_scripts(interpreter: Path) -> Dict[str, Path]:
     )
 
     try:
-        scripts: Dict[str, str] = json.loads(result.stdout)
+        scripts: dict[str, str] = json.loads(result.stdout)
     except json.JSONDecodeError:
-        logging.warning("Failed to parse data scripts discovery output")
+        _LOG.warning("Failed to parse data scripts discovery output")
         return {}
 
-    logging.debug("Discovered %d data scripts", len(scripts))
+    _LOG.debug("Discovered %d data scripts", len(scripts))
     return {name: Path(path) for name, path in scripts.items()}
 
 
 def generate_entrypoint_scripts(
     venv_dir: Path,
     interpreter: Path,
-    entrypoints: Dict[str, str],
-    data_scripts: Optional[Dict[str, Path]] = None,
+    entrypoints: dict[str, str],
+    data_scripts: dict[str, Path] | None = None,
 ) -> None:
     """Generate executable console_scripts in the venv's ``bin`` directory.
 
@@ -816,27 +809,25 @@ def generate_entrypoint_scripts(
             script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
         )
 
-    logging.info("Generated %d entrypoint scripts in %s", len(entrypoints), bin_dir)
+    _LOG.info("Generated %d entrypoint scripts in %s", len(entrypoints), bin_dir)
 
     if data_scripts:
         count = 0
         for name, source in sorted(data_scripts.items()):
             dest = bin_dir / name
             if dest.exists() or dest.is_symlink():
-                logging.debug("Skipping data script %s (already exists)", name)
+                _LOG.debug("Skipping data script %s (already exists)", name)
                 continue
             dest.symlink_to(source)
             count += 1
-        logging.info("Symlinked %d data scripts in %s", count, bin_dir)
+        _LOG.info("Symlinked %d data scripts in %s", count, bin_dir)
 
 
 def main() -> None:  # pylint: disable=too-many-branches,too-many-locals
     """The main entrypoint."""
     if "BUILD_WORKSPACE_DIRECTORY" not in os.environ:
         # Running outside of Bazel?
-        raise EnvironmentError(
-            "BUILD_WORKSPACE_DIRECTORY is not set in the environment."
-        )
+        raise OSError("BUILD_WORKSPACE_DIRECTORY is not set in the environment.")
 
     args = parse_args()
 
@@ -911,8 +902,8 @@ def main() -> None:  # pylint: disable=too-many-branches,too-many-locals
         )
 
     if args.gen_entrypoints or args.entrypoint:
-        entrypoints: Dict[str, str] = {}
-        data_scripts: Dict[str, Path] = {}
+        entrypoints: dict[str, str] = {}
+        data_scripts: dict[str, Path] = {}
         if args.gen_entrypoints:
             entrypoints.update(discover_entrypoints(venv_interpreter))
             data_scripts.update(discover_data_scripts(venv_interpreter))
@@ -924,12 +915,12 @@ def main() -> None:  # pylint: disable=too-many-branches,too-many-locals
         )
 
     if platform.system() == "Windows":
-        logging.info(
+        _LOG.info(
             "Generation complete, to activate run:\n\t%s",
             venv_interpreter.parent / "activate.bat",
         )
     else:
-        logging.info(
+        _LOG.info(
             "Generation complete, to activate run:\n\tsource %s",
             venv_interpreter.parent / "activate",
         )

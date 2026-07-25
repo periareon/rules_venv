@@ -1,6 +1,6 @@
 """Test module."""
 
-from typing import Callable
+from collections.abc import Callable
 
 
 def thrice(i: int, callback: Callable[[int], int]) -> int:

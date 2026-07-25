@@ -1,6 +1,6 @@
 """A python module designed to test coverage"""
 
-from . import submod  # noqa: F401
+from . import submod
 
 
 def divide(num1: int, num2: int) -> float:

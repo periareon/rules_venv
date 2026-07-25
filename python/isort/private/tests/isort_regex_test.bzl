@@ -31,6 +31,6 @@ def isort_regex_test(*, name, src, expectation, tags = [], **kwargs):
             "@platforms//os:windows": ["@platforms//:incompatible"],
             "//conditions:default": [],
         }),
-        tags = tags + ["no-ruff-format"],
+        tags = tags + ["no-ruff"],
         **kwargs
     )

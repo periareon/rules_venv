@@ -38,7 +38,7 @@ class RepoVersionTests(unittest.TestCase):
         """Test that the version.bzl and MOUDLE.bazel versions are synced."""
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles.")
+            raise OSError("Failed to locate runfiles.")
 
         version_bzl = rlocation(runfiles, "rules_venv/version.bzl")
         bzl_version = re.findall(

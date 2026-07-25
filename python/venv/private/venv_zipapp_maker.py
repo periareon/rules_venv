@@ -10,13 +10,16 @@ import stat
 import sys
 import tempfile
 import zipfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any
+
+_LOG = logging.getLogger(__name__)
 
 RlocationPath = str
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
 
@@ -97,7 +100,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def install_runfiles(
-    files_list: Path, venv_config_info: Dict[str, Any], runfiles_dir: Path
+    files_list: Path, venv_config_info: dict[str, Any], runfiles_dir: Path
 ) -> RlocationPath:
     """Create a runfiles directory for creating zipapps.
 
@@ -165,7 +168,7 @@ def write_entrypoint(
     )
     content = content.replace('VENV_CONFIG = ""', f'VENV_CONFIG = "{venv_config}"')
     content = content.replace('MAIN = ""', f'MAIN = "{main_bin}"')
-    content = content.replace("ARGS: List[str] = []", f"ARGS: List[str] = {args}")
+    content = content.replace("ARGS: list[str] = []", f"ARGS: list[str] = {args}")
     content = content.replace("ENV: Mapping[str, str] = {}", f"ENV: Mapping[str, str] = {env}")
 
     # The existence of this file will force the zipapp to use this as the
@@ -174,7 +177,7 @@ def write_entrypoint(
     zipapp_main.write_text(content, encoding="utf-8")
 
 
-def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -> None:
+def make_zipapp(output: Path, zipapp_dir: Path, shebang: str | None = None) -> None:
     """Run a command to generate a zipapp.
 
     Because `zipapp.create_archive` doesn't handle permissions, the zipapp must
@@ -186,7 +189,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
         zipapp_dir: The zipapp contents
     """
 
-    zip_infos: List[Tuple[zipfile.ZipInfo, bytes]] = []
+    zip_infos: list[tuple[zipfile.ZipInfo, bytes]] = []
 
     for child in sorted(zipapp_dir.rglob("*")):
         if child.is_dir():
@@ -203,7 +206,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
 
         zip_infos.append((info, data))
 
-        logging.debug(
+        _LOG.debug(
             "Writing file to zipapp: (%s) %s", stat.filemode(st_mode), arcname
         )
 
@@ -216,7 +219,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
         compresslevel=0,
     ) as z:
         for info, data in zip_infos:
-            logging.debug(
+            _LOG.debug(
                 "Writing file to zipapp: (%s) %s",
                 stat.filemode(info.external_attr >> 16),
                 info.filename,
@@ -227,7 +230,7 @@ def make_zipapp(output: Path, zipapp_dir: Path, shebang: Optional[str] = None) -
         if shebang:
             shebang_bytes = b"#!" + shebang.rstrip().encode("utf-8") + b"\n"
             fd.write(shebang_bytes)
-            logging.debug("Writing shebang to zipapp: #!%s", shebang_bytes)
+            _LOG.debug("Writing shebang to zipapp: #!%s", shebang_bytes)
 
         fd.write(ram_file.getvalue())
 
@@ -255,7 +258,7 @@ def main() -> None:
         runfiles_dir = Path(temp_dir)
         runfiles_dir.mkdir(exist_ok=True, parents=True)
 
-        logging.debug("Installing runfiles to: %s", runfiles_dir)
+        _LOG.debug("Installing runfiles to: %s", runfiles_dir)
         config_file = install_runfiles(
             files_list=args.runfiles_files_list,
             venv_config_info=args.venv_config_info,
@@ -283,7 +286,7 @@ def main() -> None:
             zipapp_dir=runfiles_dir,
         )
 
-        logging.debug("Creating zipapp: %s", args.output)
+        _LOG.debug("Creating zipapp: %s", args.output)
         make_zipapp(output=args.output, shebang=args.shebang, zipapp_dir=runfiles_dir)
 
 

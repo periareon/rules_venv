@@ -52,7 +52,7 @@ def main() -> None:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     # To further ensure this file is accessed from the runfiles of the copier, a alternate
     # file is added to at runtime via the `run_binary` target so `rlocationpath` can be used

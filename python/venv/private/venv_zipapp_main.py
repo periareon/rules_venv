@@ -5,20 +5,21 @@ This should effectively be a python implementation of `@rules_venv//python/venv/
 
 import logging
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
 import zipfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import List, Mapping
+
+_LOG = logging.getLogger(__name__)
 
 # Template variables
 PY_RUNTIME = ""
 VENV_PROCESS_WRAPPER = ""
 VENV_CONFIG = ""
 MAIN = ""
-ARGS: List[str] = []
+ARGS: list[str] = []
 ENV: Mapping[str, str] = {}
 
 
@@ -75,7 +76,7 @@ def main() -> None:
     )
     try:
         runfiles_dir.mkdir(exist_ok=True, parents=True)
-        logging.debug("Extracting runfiles to: %s", runfiles_dir)
+        _LOG.debug("Extracting runfiles to: %s", runfiles_dir)
         extract_zip(zip_file=Path(__file__).parent, output_dir=runfiles_dir)
         os.environ["RUNFILES_DIR"] = str(runfiles_dir)
 
@@ -93,16 +94,16 @@ def main() -> None:
         env = dict(os.environ)
         env.update(ENV)
 
-        logging.debug("Injected args: %s", ARGS)
-        logging.debug("Injected env: %s", ENV)
-        logging.debug("Spawning subprocess: %s", " ".join(args))
+        _LOG.debug("Injected args: %s", ARGS)
+        _LOG.debug("Injected env: %s", ENV)
+        _LOG.debug("Spawning subprocess: %s", " ".join(args))
         result = subprocess.run(
             args,
             env=env,
             check=False,
             capture_output=False,
         )
-        logging.debug("Process complete with exit code: %d", result.returncode)
+        _LOG.debug("Process complete with exit code: %d", result.returncode)
         sys.exit(result.returncode)
 
     finally:
@@ -114,12 +115,12 @@ def main() -> None:
         skip_cleanup = "RULES_VENV_ZIPAPP_LEAK_VENV" in os.environ or skip_cleanup
 
         if skip_cleanup:
-            logging.debug("Skipping cleanup of: %s", runfiles_dir)
+            _LOG.debug("Skipping cleanup of: %s", runfiles_dir)
         else:
             try:
                 rmtree(runfiles_dir)
             except (PermissionError, OSError) as exc:
-                logging.warning(
+                _LOG.warning(
                     "Error encountered while cleaning up runfiles %s: %s",
                     runfiles_dir,
                     exc,

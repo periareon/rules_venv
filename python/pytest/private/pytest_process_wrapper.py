@@ -5,8 +5,9 @@ import configparser
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
-from typing import NamedTuple, Optional, Sequence
+from typing import NamedTuple
 
 from python.runfiles import Runfiles
 
@@ -44,7 +45,7 @@ def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
 
 
 def parse_args(
-    runfiles: Runfiles, args: Optional[Sequence[str]] = None
+    runfiles: Runfiles, args: Sequence[str] | None = None
 ) -> argparse.Namespace:
     """Parse command line arguments
 
@@ -112,12 +113,14 @@ def parse_args(
     # Strip out the `numprocesses` argument.
     parsed_args.pytest_args = remaining
 
-    if pytest_args.numprocesses:
-        if parsed_args.numprocesses != pytest_args.numprocesses:
-            parser.error(
-                "`--numprocesses` (`-n`) must be an argument to the process runner. "
-                "Please update the Bazel target to use the `numprocesses` attribute."
-            )
+    if (
+        pytest_args.numprocesses
+        and parsed_args.numprocesses != pytest_args.numprocesses
+    ):
+        parser.error(
+            "`--numprocesses` (`-n`) must be an argument to the process runner. "
+            "Please update the Bazel target to use the `numprocesses` attribute."
+        )
 
     return parsed_args
 
@@ -146,7 +149,7 @@ def query_pytest_capabilities() -> PytestCapabilities:
             check=True,
         )
     except subprocess.CalledProcessError as exc:
-        raise EnvironmentError("Failed to query pytest capabilities") from exc
+        raise OSError("Failed to query pytest capabilities") from exc
 
     supports_coverage = False
     supports_xdist = False
@@ -264,7 +267,7 @@ def splice_coverage_config(
     return updated_cov_config
 
 
-def load_args_file(runfiles: Runfiles) -> Optional[list[str]]:
+def load_args_file(runfiles: Runfiles) -> list[str] | None:
     """Attempt to load a Bazel provided args file from the environment.
 
     Args:
@@ -323,7 +326,7 @@ def patch_realpaths() -> None:
 
 def dump_coverage(
     coverage_file: Path,
-    coverage_config: Optional[Path],
+    coverage_config: Path | None,
     coverage_sources: CoverageSourceMap,
     coverage_output_file: Path,
 ) -> None:
@@ -367,7 +370,7 @@ def main() -> None:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
 
     parsed_args = parse_args(runfiles, load_args_file(runfiles))
 
@@ -414,17 +417,17 @@ def main() -> None:
     cov_enabled = os.getenv("COVERAGE") == "1"
     if cov_enabled:
         if not HAS_COVERAGE:
-            raise EnvironmentError(
+            raise OSError(
                 "Bazel coverage was requested but the `coverage` package is not "
                 "installed. Add `coverage` and `pytest-cov` to the `py_library` "
                 "used by your `py_pytest_toolchain`."
             )
         if not capabilities.coverage:
-            raise EnvironmentError(
+            raise OSError(
                 "Bazel coverage was requested but `pytest-cov` plugin was not found."
             )
         if cov_config_path is None:
-            raise EnvironmentError(
+            raise OSError(
                 "Bazel coverage was requested but no `--cov-config` was provided."
             )
 
@@ -476,7 +479,7 @@ def main() -> None:
     # Append `pytest-xdist` args
     if parsed_args.numprocesses is not None:
         if not capabilities.xdist:
-            raise EnvironmentError(
+            raise OSError(
                 "`numprocesses` was specified but `pytest-xdist` plugin was not found."
             )
 
@@ -485,7 +488,7 @@ def main() -> None:
     # Handle test sharding - requires pytest-shard plugin.
     if "TEST_SHARD_INDEX" in os.environ and "TEST_TOTAL_SHARDS" in os.environ:
         if not capabilities.shard:
-            raise EnvironmentError("`pytest-shard` plugin was not found.")
+            raise OSError("`pytest-shard` plugin was not found.")
 
         # Append `pytest-shard` args
         pytest_args.extend(

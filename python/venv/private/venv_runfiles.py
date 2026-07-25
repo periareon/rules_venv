@@ -11,12 +11,13 @@ import logging
 import os
 import zipfile
 from pathlib import Path
-from typing import List, Tuple
+
+_LOG = logging.getLogger(__name__)
 
 RlocationPath = str
 
 
-def _srcs_pair_arg_file(arg: str) -> List[Tuple[str, RlocationPath]]:
+def _srcs_pair_arg_file(arg: str) -> list[tuple[str, RlocationPath]]:
     if not arg.startswith("@"):
         raise ValueError(f"Expected a params file. Got `{arg}`")
 
@@ -61,8 +62,8 @@ def create_zip(args: argparse.Namespace) -> None:
     Args:
         args: Parsed command line arguments.
     """
-    logging.debug("Loading runfiles data.")
-    zip_infos: List[Tuple[zipfile.ZipInfo, bytes]] = []
+    _LOG.debug("Loading runfiles data.")
+    zip_infos: list[tuple[zipfile.ZipInfo, bytes]] = []
     for pair in args.src_pairs:
         for src, dest in pair:
             # Ensure timestamps are ignored so outputs are reproducible.
@@ -73,7 +74,7 @@ def create_zip(args: argparse.Namespace) -> None:
                 )
             )
 
-    logging.debug("Building zipfile.")
+    _LOG.debug("Building zipfile.")
     ram_file = io.BytesIO()
     with zipfile.ZipFile(
         ram_file, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=0
@@ -81,7 +82,7 @@ def create_zip(args: argparse.Namespace) -> None:
         for info, data in zip_infos:
             zip_file.writestr(info, data)
 
-    logging.debug("Writing zip to disk.")
+    _LOG.debug("Writing zip to disk.")
     args.output.parent.mkdir(exist_ok=True, parents=True)
     args.output.write_bytes(ram_file.getvalue())
 
@@ -92,13 +93,13 @@ def create_manifest(args: argparse.Namespace) -> None:
     Args:
         args: Parsed command line arguments.
     """
-    logging.debug("Processing runfiles paths.")
+    _LOG.debug("Processing runfiles paths.")
     runfiles = {}
     for pair in args.src_pairs:
         for src, dest in pair:
             runfiles[src] = dest
 
-    logging.debug("Writing manifest to disk.")
+    _LOG.debug("Writing manifest to disk.")
     args.output.parent.mkdir(exist_ok=True, parents=True)
     args.output.write_text(json.dumps(runfiles, indent=4) + "\n", encoding="utf-8")
 
@@ -121,7 +122,7 @@ def main() -> None:
     else:
         raise ValueError("Output files must be either zip or json files.")
 
-    logging.debug("Done!")
+    _LOG.debug("Done!")
 
 
 if __name__ == "__main__":

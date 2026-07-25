@@ -28,7 +28,7 @@ def create_runfiles() -> Runfiles:
     """Construct a runfiles object."""
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles.")
+        raise OSError("Failed to locate runfiles.")
     return runfiles
 
 

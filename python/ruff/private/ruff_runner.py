@@ -10,9 +10,9 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+from collections.abc import Iterable, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence
 
 from python.runfiles import Runfiles
 
@@ -47,7 +47,7 @@ def _maybe_runfile(arg: str) -> Path:
 
     runfiles = Runfiles.Create()
     if not runfiles:
-        raise EnvironmentError("Failed to locate runfiles")
+        raise OSError("Failed to locate runfiles")
     return _rlocation(runfiles, arg)
 
 
@@ -61,7 +61,7 @@ class Modes(StrEnum):
     """Run formatting"""
 
 
-def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
+def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser("Ruff Runner")
 
@@ -110,14 +110,14 @@ def _load_args() -> Sequence[str]:
     if "BAZEL_TEST" in os.environ and "RULES_VENV_RUFF_RUNNER_ARGS_FILE" in os.environ:
         runfiles = Runfiles.Create()
         if not runfiles:
-            raise EnvironmentError("Failed to locate runfiles")
+            raise OSError("Failed to locate runfiles")
         arg_file = _rlocation(runfiles, os.environ["RULES_VENV_RUFF_RUNNER_ARGS_FILE"])
         return arg_file.read_text(encoding="utf-8").splitlines()
 
     return sys.argv[1:]
 
 
-def find_ruff(ruff_path: Optional[Path] = None) -> Path:
+def find_ruff(ruff_path: Path | None = None) -> Path:
     """Locate ruff from the python environment
 
     Args:
@@ -187,7 +187,7 @@ def _dir_has_python_content(root: Path) -> bool:
     return False
 
 
-def collect_first_party_names_from_dir(root: Path) -> List[str]:
+def collect_first_party_names_from_dir(root: Path) -> list[str]:
     """Collect first-party module names from the top level of ``root``.
 
     Includes a top-level entry when its name is a valid Python identifier
@@ -196,7 +196,7 @@ def collect_first_party_names_from_dir(root: Path) -> List[str]:
     skipped so they don't collide with third-party pip packages of the same
     name.
     """
-    names: List[str] = []
+    names: list[str] = []
     if not root.is_dir():
         return names
     try:
@@ -224,7 +224,7 @@ def _decode_manifest_key(escaped: str) -> str:
 
 def collect_first_party_names_from_manifest(  # pylint: disable=too-many-locals,too-many-branches
     manifest_file: Path, prefix: str
-) -> List[str]:
+) -> list[str]:
     """Collect first-party names by parsing a runfiles manifest under ``prefix``.
 
     Used when no materialized runfiles directory is available (e.g. Windows
@@ -232,8 +232,8 @@ def collect_first_party_names_from_manifest(  # pylint: disable=too-many-locals,
     ``RUNFILES_MANIFEST_FILE`` is set).
     """
     normalized = prefix.rstrip("/") + "/"
-    dir_has_py: Dict[str, bool] = {}
-    root_files: Dict[str, None] = {}
+    dir_has_py: dict[str, bool] = {}
+    root_files: dict[str, None] = {}
     try:
         with manifest_file.open("r", encoding="utf-8") as fh:
             for raw in fh:
@@ -260,7 +260,7 @@ def collect_first_party_names_from_manifest(  # pylint: disable=too-many-locals,
     except OSError:
         return []
 
-    names: List[str] = []
+    names: list[str] = []
     for name, has_py in dir_has_py.items():
         if has_py and _is_valid_module_name(name):
             names.append(name)
@@ -271,7 +271,7 @@ def collect_first_party_names_from_manifest(  # pylint: disable=too-many-locals,
     return names
 
 
-def user_known_first_party(config_path: Path) -> List[str]:
+def user_known_first_party(config_path: Path) -> list[str]:
     """Read `lint.isort.known-first-party` from a user's ruff config."""
     try:
         with config_path.open("rb") as fh:
@@ -293,7 +293,7 @@ def user_known_first_party(config_path: Path) -> List[str]:
 
 
 def _iter_workspace_first_party_names(
-    workspace: str, runfiles: Optional[Runfiles]
+    workspace: str, runfiles: Runfiles | None
 ) -> Iterable[str]:
     """Yield first-party names discovered under `<workspace>/` in runfiles."""
     if runfiles is not None:
@@ -312,7 +312,7 @@ def _iter_workspace_first_party_names(
             return
 
 
-def _first_party_config_override(user_config: Path) -> Optional[str]:
+def _first_party_config_override(user_config: Path) -> str | None:
     """Build a ``lint.isort.known-first-party`` override for the sandbox.
 
     Ruff's default src-walk classification is unreliable inside a Bazel
