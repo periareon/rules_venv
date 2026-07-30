@@ -1,0 +1,39 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_library")
+load("//python/ruff:defs.bzl", "py_ruff_test")
+
+write_file(
+    name = "generated_greeter",
+    out = "generated/greeter.py",
+    content = [
+        "\"\"\"Generated first-party module used to test isort classification.\"\"\"",
+        "",
+        "",
+        "def greet(name: str) -> str:",
+        "    \"\"\"Return a greeting.\"\"\"",
+        "    return f\"Hello, {name}\"",
+        "",
+    ],
+    newline = "unix",
+)
+
+py_library(
+    name = "generated_greeter_lib",
+    srcs = ["generated/greeter.py"],
+)
+
+py_library(
+    name = "sorted_imports",
+    srcs = ["sorted_imports.py"],
+    deps = [
+        ":generated_greeter_lib",
+        "//python/ruff/private/tests/imports:fibonacci",
+        "@pip_deps//tomlkit",
+    ],
+)
+
+py_ruff_test(
+    name = "sorted_imports_ruff_test",
+    config = ":ruff.toml",
+    target = ":sorted_imports",
+)

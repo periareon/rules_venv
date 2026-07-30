@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import keyword
 import os
 import subprocess
 import sys
@@ -13,10 +14,58 @@ from python.runfiles import Runfiles
 from python.private import target_query
 from python.ruff.private.ruff_runner import (
     Modes,
-    collect_first_party_names_from_dir,
     find_ruff,
     user_known_first_party,
 )
+
+_PY_SUFFIXES: tuple[str, ...] = (".py", ".pyi")
+
+
+def _is_valid_module_name(name: str) -> bool:
+    """Return True if `name` is a legal top-level Python module identifier."""
+    return bool(name) and name.isidentifier() and not keyword.iskeyword(name)
+
+
+def _dir_has_python_content(root: Path) -> bool:
+    """Return True if `root` (a directory) contains any `.py` / `.pyi` file."""
+    try:
+        for suffix in _PY_SUFFIXES:
+            if next(root.rglob(f"*{suffix}"), None) is not None:
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def collect_first_party_names_from_dir(root: Path) -> list[str]:
+    """Collect first-party module names from the top level of ``root``.
+
+    Includes a top-level entry when its name is a valid Python identifier
+    AND either the entry is a ``.py`` / ``.pyi`` file or the directory holds
+    Python source content. Non-Python top-level dirs (``docs/`` etc.) are
+    skipped so they don't collide with third-party pip packages of the same
+    name.
+    """
+    names: list[str] = []
+    if not root.is_dir():
+        return names
+    try:
+        entries = list(root.iterdir())
+    except OSError:
+        return names
+    for entry in entries:
+        name = entry.name
+        if name.startswith("."):
+            continue
+        if entry.is_file():
+            stem = entry.stem if entry.suffix in _PY_SUFFIXES else None
+            if stem and _is_valid_module_name(stem):
+                names.append(stem)
+        elif entry.is_dir():
+            if _is_valid_module_name(name) and _dir_has_python_content(entry):
+                names.append(name)
+    return names
+
 
 _COMMON_IGNORE_TAGS: Sequence[str] = ("no_ruff", "noruff")
 

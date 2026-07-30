@@ -1,0 +1,7 @@
+# Enables I001 so this test discriminates between correct and incorrect
+# first-party detection. Intentionally does NOT declare
+# `lint.isort.known-first-party` — the aspect must supply that from
+# `PyInfo.transitive_sources`.
+
+[lint]
+select = ["I001"]

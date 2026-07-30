@@ -1,16 +1,14 @@
 """A script for running ruff within Bazel."""
 
 import argparse
-import io
 import json
-import keyword
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import tomllib
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
 
@@ -18,15 +16,7 @@ from python.runfiles import Runfiles
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
-    """Look up a runfile and ensure the file exists
-
-    Args:
-        runfiles: The runfiles object
-        rlocationpath: The runfile key
-
-    Returns:
-        The requested runfile.
-    """
+    """Look up a runfile and ensure the file exists."""
     runfile = runfiles.Rlocation(rlocationpath, source_repo=os.getenv("TEST_WORKSPACE"))
     if not runfile:
         raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
@@ -75,7 +65,7 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
         "--mode",
         type=Modes,
         required=True,
-        help="The `ruff` binary.",
+        help="Whether to run `ruff check` or `ruff format`.",
     )
     parser.add_argument(
         "--ruff",
@@ -95,6 +85,17 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
         type=_maybe_runfile,
         required=True,
         help="A source file to run ruff on.",
+    )
+    parser.add_argument(
+        "--first-party-module",
+        dest="first_party_modules",
+        action="append",
+        default=[],
+        help=(
+            "A top-level module name to treat as first-party for isort "
+            "classification. Repeatable. Computed by the aspect/test rule "
+            "at analysis time so no runtime workspace walk is needed."
+        ),
     )
 
     parsed_args = parser.parse_args(args)
@@ -118,220 +119,83 @@ def _load_args() -> Sequence[str]:
 
 
 def find_ruff(ruff_path: Path | None = None) -> Path:
-    """Locate ruff from the python environment
+    """Locate ruff.
 
-    Args:
-        ruff_path: An override to enforce the desired binary.
-
-    Returns:
-        The path to the ruff binary to use.
+    If `ruff_path` is passed, it wins. Otherwise fall back to importing the
+    `ruff` PyPI package and locating its bundled binary.
     """
+    if ruff_path is not None:
+        return ruff_path
 
-    if ruff_path is None:
-        try:
-            # pylint: disable-next=import-outside-toplevel
-            import ruff  # type: ignore
-
-            try:
-                ruff_str = ruff.find_ruff_bin()
-                if ruff_str:
-                    ruff_path = Path(ruff_str)
-            except FileNotFoundError:
-                # Depending on the repository rule used to provide ruff, the data path to
-                # the binary may differ. If the nominal lookup does not pass then fall back
-                # to something known to work with at least `rules_req_compile`.
-                ruff_module_path = Path(ruff.__file__)
-                ruff_site_packages = ruff_module_path.parent.parent
-                ruff_version = None
-                for entry in ruff_site_packages.iterdir():
-                    if entry.name.endswith(".data"):
-                        _, _, ruff_version = entry.name[: -len(".data")].partition("-")
-                        break
-
-                if ruff_version:
-                    ruff_scripts_dir = (
-                        ruff_site_packages / f"ruff-{ruff_version}.data/scripts"
-                    )
-
-                    ruff_path = ruff_scripts_dir / "ruff"
-                    if not ruff_path.exists():
-                        ruff_path = ruff_scripts_dir / "ruff.exe"
-
-        except ImportError as exc:
-            raise ModuleNotFoundError(
-                "No ruff binary was provided and ruff is not importable"
-            ) from exc
-
-    if not ruff_path:
-        raise FileNotFoundError("Failed to locate ruff binary.")
-
-    return ruff_path
-
-
-_PY_SUFFIXES = (".py", ".pyi")
-
-
-def _is_valid_module_name(name: str) -> bool:
-    """Return True if `name` is a legal top-level Python module identifier."""
-    return bool(name) and name.isidentifier() and not keyword.iskeyword(name)
-
-
-def _dir_has_python_content(root: Path) -> bool:
-    """Return True if `root` (a directory) contains any `.py` / `.pyi` file."""
     try:
-        for entry in root.rglob("*"):
-            if entry.is_file() and entry.suffix in _PY_SUFFIXES:
-                return True
-    except OSError:
-        return False
-    return False
+        # pylint: disable-next=import-outside-toplevel
+        import ruff  # type: ignore
+    except ImportError as exc:
+        raise ModuleNotFoundError(
+            "No ruff binary was provided and ruff is not importable"
+        ) from exc
 
-
-def collect_first_party_names_from_dir(root: Path) -> list[str]:
-    """Collect first-party module names from the top level of ``root``.
-
-    Includes a top-level entry when its name is a valid Python identifier
-    AND either the entry is a ``.py`` / ``.pyi`` file or the directory holds
-    Python source content. Non-Python top-level dirs (``docs/`` etc.) are
-    skipped so they don't collide with third-party pip packages of the same
-    name.
-    """
-    names: list[str] = []
-    if not root.is_dir():
-        return names
     try:
-        entries = list(root.iterdir())
-    except OSError:
-        return names
-    for entry in entries:
-        name = entry.name
-        if name.startswith("."):
-            continue
-        if entry.is_file():
-            stem = entry.stem if entry.suffix in _PY_SUFFIXES else None
-            if stem and _is_valid_module_name(stem):
-                names.append(stem)
-        elif entry.is_dir():
-            if _is_valid_module_name(name) and _dir_has_python_content(entry):
-                names.append(name)
-    return names
+        ruff_str = ruff.find_ruff_bin()
+        if ruff_str:
+            return Path(ruff_str)
+    except FileNotFoundError:
+        pass
 
+    # Fallback for repository rules whose data path to the binary differs
+    # from what `find_ruff_bin` expects (e.g. `rules_req_compile`).
+    ruff_module_path = Path(ruff.__file__)
+    ruff_site_packages = ruff_module_path.parent.parent
+    ruff_version: str | None = None
+    for entry in ruff_site_packages.iterdir():
+        if entry.name.endswith(".data"):
+            _, _, ruff_version = entry.name[: -len(".data")].partition("-")
+            break
 
-def _decode_manifest_key(escaped: str) -> str:
-    """Decode a runfiles manifest key that used the escape encoding."""
-    return escaped.replace(r"\s", " ").replace(r"\n", "\n").replace(r"\b", "\\")
+    if ruff_version:
+        ruff_scripts_dir = ruff_site_packages / f"ruff-{ruff_version}.data/scripts"
+        for candidate in (ruff_scripts_dir / "ruff", ruff_scripts_dir / "ruff.exe"):
+            if candidate.exists():
+                return candidate
 
-
-def collect_first_party_names_from_manifest(  # pylint: disable=too-many-locals,too-many-branches
-    manifest_file: Path, prefix: str
-) -> list[str]:
-    """Collect first-party names by parsing a runfiles manifest under ``prefix``.
-
-    Used when no materialized runfiles directory is available (e.g. Windows
-    Bazel with ``--enable_runfiles=false``, where only
-    ``RUNFILES_MANIFEST_FILE`` is set).
-    """
-    normalized = prefix.rstrip("/") + "/"
-    dir_has_py: dict[str, bool] = {}
-    root_files: dict[str, None] = {}
-    try:
-        with manifest_file.open("r", encoding="utf-8") as fh:
-            for raw in fh:
-                line = raw.rstrip("\n")
-                if not line:
-                    continue
-                if line.startswith(" "):
-                    key_field, _, _ = line[1:].partition(" ")
-                    rlp = _decode_manifest_key(key_field)
-                else:
-                    rlp, _, _ = line.partition(" ")
-                if not rlp.startswith(normalized):
-                    continue
-                rest = rlp[len(normalized) :]
-                head, sep, tail = rest.partition("/")
-                if not head or head.startswith("."):
-                    continue
-                if sep:
-                    is_py = tail.endswith(_PY_SUFFIXES)
-                    prior = dir_has_py.get(head, False)
-                    dir_has_py[head] = prior or is_py
-                else:
-                    root_files[head] = None
-    except OSError:
-        return []
-
-    names: list[str] = []
-    for name, has_py in dir_has_py.items():
-        if has_py and _is_valid_module_name(name):
-            names.append(name)
-    for name in root_files:
-        stem, dot, suffix = name.rpartition(".")
-        if dot and ("." + suffix) in _PY_SUFFIXES and _is_valid_module_name(stem):
-            names.append(stem)
-    return names
+    raise FileNotFoundError("Failed to locate ruff binary.")
 
 
 def user_known_first_party(config_path: Path) -> list[str]:
-    """Read `lint.isort.known-first-party` from a user's ruff config."""
+    """Read `lint.isort.known-first-party` from the user's ruff config."""
     try:
         with config_path.open("rb") as fh:
             data = tomllib.load(fh)
     except (OSError, tomllib.TOMLDecodeError):
         return []
 
-    # `ruff.toml` uses top-level keys; `pyproject.toml` nests them under `tool.ruff`.
-    if config_path.name == "pyproject.toml":
-        root = data.get("tool", {}).get("ruff", {})
-    else:
-        root = data
-
-    isort_section = root.get("lint", {}).get("isort", {})
-    values = isort_section.get("known-first-party", [])
+    # `ruff.toml` uses top-level keys; `pyproject.toml` nests under `tool.ruff`.
+    root = (
+        data.get("tool", {}).get("ruff", {})
+        if config_path.name == "pyproject.toml"
+        else data
+    )
+    values = root.get("lint", {}).get("isort", {}).get("known-first-party", [])
     if not isinstance(values, list):
         return []
     return [str(v) for v in values if isinstance(v, str)]
 
 
-def _iter_workspace_first_party_names(
-    workspace: str, runfiles: Runfiles | None
-) -> Iterable[str]:
-    """Yield first-party names discovered under `<workspace>/` in runfiles."""
-    if runfiles is not None:
-        resolved = runfiles.Rlocation(workspace, source_repo=workspace)
-        if resolved:
-            root = Path(resolved)
-            if root.is_dir():
-                yield from collect_first_party_names_from_dir(root)
-                return
+def _first_party_config_override(
+    explicit_modules: Sequence[str], user_config: Path
+) -> str | None:
+    """Build a `lint.isort.known-first-party` override.
 
-    manifest_env = os.environ.get("RUNFILES_MANIFEST_FILE")
-    if manifest_env:
-        manifest_file = Path(manifest_env)
-        if manifest_file.is_file():
-            yield from collect_first_party_names_from_manifest(manifest_file, workspace)
-            return
-
-
-def _first_party_config_override(user_config: Path) -> str | None:
-    """Build a ``lint.isort.known-first-party`` override for the sandbox.
-
-    Ruff's default src-walk classification is unreliable inside a Bazel
-    action sandbox — only the target's declared deps are staged, so files
-    that aren't in the closure look absent and get classified as
-    third-party. We supply an explicit list by scanning workspace runfiles
-    and merging with anything the user's ruff config already declares.
+    The aspect / test rule enumerates workspace first-party modules at
+    analysis time (from `PyInfo.transitive_sources`, deduped by the top
+    workspace-relative segment) and hands them in via `--first-party-module`.
+    We merge those with anything the user's config already declares so
+    isort classification is stable regardless of what happens to be in the
+    sandbox.
     """
-    workspace = os.environ.get("RULES_VENV_BAZEL_WORKSPACE")
-    if not workspace:
-        return None
-
-    runfiles = Runfiles.Create()
-    discovered = list(_iter_workspace_first_party_names(workspace, runfiles))
-
-    combined = set(discovered) | set(user_known_first_party(user_config))
+    combined = set(explicit_modules) | set(user_known_first_party(user_config))
     if not combined:
         return None
-
     quoted = ", ".join(json.dumps(name) for name in sorted(combined))
     return f"lint.isort.known-first-party = [{quoted}]"
 
@@ -339,8 +203,6 @@ def _first_party_config_override(user_config: Path) -> str | None:
 def main() -> None:
     """The main entrypoint."""
     args = parse_args(_load_args())
-
-    stream = io.StringIO()
 
     ruff = find_ruff(args.ruff)
 
@@ -354,7 +216,9 @@ def main() -> None:
         str(args.config),
     ]
 
-    first_party_override = _first_party_config_override(args.config)
+    first_party_override = _first_party_config_override(
+        args.first_party_modules, args.config
+    )
     if first_party_override is not None:
         ruff_args.extend(["--config", first_party_override])
         if "RULES_VENV_RUFF_DEBUG" in os.environ:
@@ -386,8 +250,6 @@ def main() -> None:
         env=env,
         check=False,
     )
-    if not is_test:
-        stream.write(result.stdout.decode("utf-8"))
 
     if "TEST_TMPDIR" not in os.environ:
         shutil.rmtree(tmp_dir)
@@ -395,8 +257,8 @@ def main() -> None:
     if args.marker:
         if result.returncode == 0:
             args.marker.write_bytes(b"")
-        else:
-            print(stream.getvalue(), file=sys.stderr)
+        elif not is_test:
+            sys.stderr.write(result.stdout.decode("utf-8"))
 
     sys.exit(result.returncode)
 
