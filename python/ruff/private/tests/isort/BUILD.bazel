@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//python:defs.bzl", "py_library")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
 load("//python/ruff:defs.bzl", "py_ruff_test")
 
 write_file(
@@ -22,11 +23,17 @@ py_library(
     srcs = ["generated/greeter.py"],
 )
 
+py_cc_extension(
+    name = "native_module",
+    srcs = ["native_module.cc"],
+)
+
 py_library(
     name = "sorted_imports",
     srcs = ["sorted_imports.py"],
     deps = [
         ":generated_greeter_lib",
+        ":native_module",
         "//python/ruff/private/tests/imports:fibonacci",
         "@pip_deps//tomlkit",
     ],

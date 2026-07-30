@@ -1,0 +1,42 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("//python/isort:defs.bzl", "py_isort_test")
+load("//python/isort/private/tests:isort_regex_test.bzl", "isort_regex_test")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+
+py_cc_extension(
+    name = "native_module",
+    srcs = ["native_module.cc"],
+)
+
+py_library(
+    name = "helper",
+    srcs = ["helper.py"],
+)
+
+py_library(
+    name = "example",
+    srcs = ["example.py"],
+    deps = [
+        ":helper",
+        ":native_module",
+        "@pip_deps//tomlkit",
+    ],
+)
+
+py_isort_test(
+    name = "example_isort_test",
+    target = ":example",
+)
+
+isort_regex_test(
+    name = "example_regex_test",
+    src = "example.py",
+    expectation = """\
+import argparse
+
+import tomlkit
+
+from python.isort.private.tests.native_module import native_module  # type: ignore
+from python.isort.private.tests.native_module.helper import HELPER_VALUE
+""",
+)

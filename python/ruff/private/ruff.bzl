@@ -2,55 +2,16 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//python:py_info.bzl", "PyInfo")
-load("//python/private:target_srcs.bzl", "find_srcs", "target_sources_aspect")
+load("//python/private:target_srcs.bzl", "PySourcesInfo", "find_srcs", "target_sources_aspect")
 load("//python/venv:defs.bzl", "py_venv_common")
 load(":ruff_toolchain.bzl", "TOOLCHAIN_TYPE", "rlocationpath")
 
-_PY_SUFFIXES = [".py", ".pyi"]
-
-def _is_valid_python_module_name(name):
-    if not name:
-        return False
-    first = name[0]
-    if not (first.isalpha() or first == "_"):
-        return False
-    for c in name.elems():
-        if not (c.isalnum() or c == "_"):
-            return False
-    return True
-
-def _first_party_module_from_file(file):
-    """Return the top-level workspace module name for a Python source File, or None to skip it."""
-    short_path = file.short_path
-    if short_path.startswith("../"):
-        return None
-
-    seg, sep, _ = short_path.partition("/")
-    if not seg:
-        return None
-
-    if not sep:
-        # Workspace-root file: only .py / .pyi count as a module.
-        stripped = False
-        for suffix in _PY_SUFFIXES:
-            if seg.endswith(suffix):
-                seg = seg[:-len(suffix)]
-                stripped = True
-                break
-        if not stripped:
-            return None
-
-    if not _is_valid_python_module_name(seg):
-        return None
-    return seg
-
-def _add_first_party_module_args(args, pyinfo):
-    """Emit `--first-party-module=<name>` for every top-level module in `pyinfo.transitive_sources`."""
+def _add_first_party_module_args(args, module_info):
+    """Emit `--first-party-module=<name>` for every top-level module in `module_info.first_party_modules`."""
     args.add_all(
-        pyinfo.transitive_sources,
-        map_each = _first_party_module_from_file,
-        uniquify = True,
+        module_info.first_party_modules,
         format_each = "--first-party-module=%s",
+        uniquify = True,
     )
 
 def _py_ruff_test_impl_common(ctx, mode):
@@ -89,7 +50,7 @@ def _py_ruff_test_impl_common(ctx, mode):
     args.add("--config", rlocationpath(ctx.file.config, ctx.workspace_name))
     for src in srcs.to_list():
         args.add("--src", rlocationpath(src, ctx.workspace_name))
-    _add_first_party_module_args(args, ctx.attr.target[PyInfo])
+    _add_first_party_module_args(args, ctx.attr.target[PySourcesInfo])
 
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
     if toolchain.ruff_bin:
@@ -238,7 +199,7 @@ def _py_ruff_aspect_impl(target, ctx):
     args = ctx.actions.args()
     args.add("--config", ctx.file._config)
     args.add_all(srcs, format_each = "--src=%s")
-    _add_first_party_module_args(args, target[PyInfo])
+    _add_first_party_module_args(args, target[PySourcesInfo])
 
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
     if toolchain.ruff_bin:
