@@ -1,5 +1,6 @@
 """Rules for producing zipapps"""
 
+load("@rules_python//python:py_executable_info.bzl", "PyExecutableInfo")
 load("//python:py_info.bzl", "PyInfo")
 load(":venv.bzl", "compute_main")
 load(
@@ -98,7 +99,9 @@ def create_python_zip_file(
         main (File): The main python entrypoint.
         inject_args (list): A list of arguments to inject to the beginning of all zipapp invocations.
         inject_env (dict): A map of arguments to inject to the beginning of all zipapp invocations.
-        runfiles (Runfiles): Runfiles associated with the executable.
+        runfiles (Runfiles): Runfiles associated with the executable, excluding the
+            executable's own bootstrap files. Zipapps cannot represent symlinks, so
+            these must not include a staged venv.
         files_to_run (FilesToRunProvider): Files to run associated with the executable.
         py_toolchain (ToolchainInfo, optional): A `py_toolchain` toolchain. If one is not
             provided one will be acquired via `py_venv_toolchain`.
@@ -235,6 +238,17 @@ def _py_venv_zipapp_impl(ctx):
     inject_args.extend(ctx.attr.args)
     inject_env.update(ctx.attr.env)
 
+    # Zipapps re-bootstrap through `venv_process_wrapper`, so the bootstrap
+    # machinery `rules_python` stages beside its executables is unused here and
+    # unrepresentable besides: under `bootstrap_impl=script` it includes a venv
+    # whose `bin/python3` symlink resolves only from the runfiles root.
+    # `runfiles_without_exe` omits exactly those parts. `py_venv_binary` does
+    # not advertise the provider, hence the fallback.
+    if PyExecutableInfo in ctx.attr.binary:
+        runfiles = ctx.attr.binary[PyExecutableInfo].runfiles_without_exe
+    else:
+        runfiles = ctx.attr.binary[DefaultInfo].default_runfiles
+
     python_zip_file = create_python_zip_file(
         ctx = ctx,
         venv_toolchain = venv_toolchain,
@@ -247,7 +261,7 @@ def _py_venv_zipapp_impl(ctx):
         inject_args = inject_args,
         inject_env = inject_env,
         shebang = ctx.attr.shebang,
-        runfiles = ctx.attr.binary[DefaultInfo].default_runfiles,
+        runfiles = runfiles,
         files_to_run = ctx.attr.binary[DefaultInfo].files_to_run,
     )
 
