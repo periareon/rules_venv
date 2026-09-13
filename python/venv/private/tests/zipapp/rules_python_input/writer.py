@@ -1,6 +1,6 @@
 """A small script for writing files.
 
-Kept parallel with the `zipapp/simple` test so the diff-based assertion
+Kept parallel with the `zipapp/with_runfiles` test so the diff-based assertion
 in both suites exercises identical zipapp semantics, only differing in
 whether the input to `py_venv_zipapp` is a `py_venv_binary` or a stock
 `py_binary`.
@@ -8,6 +8,8 @@ whether the input to `py_venv_zipapp` is a `py_venv_binary` or a stock
 
 import argparse
 from pathlib import Path
+
+from python.runfiles import Runfiles
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,11 +21,40 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
+    """Look up a runfile and ensure the file exists
+
+    Args:
+        runfiles: The runfiles object
+        rlocationpath: The runfile key
+
+    Returns:
+        The requested runifle.
+    """
+    runfile = runfiles.Rlocation(rlocationpath)
+    if not runfile:
+        raise FileNotFoundError(f"Failed to find runfile: {rlocationpath}")
+    path = Path(runfile)
+    if not path.exists():
+        raise FileNotFoundError(f"Runfile does not exist: ({rlocationpath}) {path}")
+    return path
+
+
 def main() -> None:
     """The main entrypoint."""
     args = parse_args()
 
-    args.output.write_bytes(b"La-Li-Lu-Le-Lo\n")
+    runfiles = Runfiles.Create()
+    if not runfiles:
+        raise OSError("Failed to locate runfiles.")
+
+    runfile = _rlocation(
+        runfiles,
+        "rules_venv/python/venv/private/tests/zipapp/rules_python_input/data.txt",
+    )
+
+    text = runfile.read_text(encoding="utf-8").strip()
+    args.output.write_bytes(f"{text}\n".encode())
 
 
 if __name__ == "__main__":
