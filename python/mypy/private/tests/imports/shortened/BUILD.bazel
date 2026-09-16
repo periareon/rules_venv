@@ -1,0 +1,33 @@
+load("//python:defs.bzl", "py_library")
+
+# A dependency reached by a shorter name than its own action gave it.
+#
+# `:helpers` sits inside `:consumer`'s package, and `:consumer` puts that
+# package on the search path, so the dependency's modules are reachable
+# under a name its own target never saw. What keeps that name answerable
+# is that neither action takes its naming from the roots in force where
+# it runs: the cache is keyed the same way in both, and the extra name
+# this one adds is a re-export forwarding to it. A run that named files
+# for the deepest root instead would find nothing under the short name
+# here, and the sources behind it are already gone from the venv.
+#
+# Nothing here is asserted by a `py_mypy_test`: that rule judges an
+# uncached run in which the whole closure is still present, where a miss
+# costs no more than a second analysis. It is the aspect's cached action
+# that has to get this right, so this package is left to be checked the
+# way any other target in the workspace is.
+
+py_library(
+    name = "helpers",
+    srcs = [
+        "helpers/__init__.py",
+        "helpers/support.py",
+    ],
+)
+
+py_library(
+    name = "consumer",
+    srcs = ["consumer.py"],
+    imports = ["."],
+    deps = [":helpers"],
+)

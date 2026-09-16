@@ -1,6 +1,6 @@
 """Tests confirming ruff is able to handle imports."""
 
-import fibonacci  # type: ignore
+import fibonacci
 import python.ruff.private.tests.imports
 
 del fibonacci

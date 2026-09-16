@@ -1,0 +1,15 @@
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "longname",
+    srcs = ["longname.py"],
+    deps = [
+        "//python/mypy/private/tests/imports/types_example",
+    ],
+)
+
+py_mypy_test(
+    name = "longname_mypy_test",
+    target = ":longname",
+)

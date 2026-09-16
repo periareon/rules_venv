@@ -1,0 +1,15 @@
+load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
+
+# An import root with nothing staged under it. Ordinary targets never
+# produce one, but pruning does: a dependency whose sources are all
+# replaced by something else leaves its root behind with no files.
+py_venv_library(
+    name = "empty_root",
+    imports = ["empty_root"],
+)
+
+py_venv_test(
+    name = "empty_import_root_test",
+    srcs = ["empty_import_root_test.py"],
+    deps = [":empty_root"],
+)

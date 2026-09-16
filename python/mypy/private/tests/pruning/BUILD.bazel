@@ -1,0 +1,5 @@
+load(":pruning_test.bzl", "pruning_test_suite")
+
+pruning_test_suite(
+    name = "pruning_test_suite",
+)

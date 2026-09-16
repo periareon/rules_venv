@@ -1,0 +1,22 @@
+load("//python:defs.bzl", "py_library")
+
+# A consumer of a package that came from another repository.
+#
+# Two things are only true here. The dependency's files are named by the
+# packages around them rather than by any root this workspace declares,
+# since the workspace root does not contain them; and the name that
+# names them is the one the dependency published, so what the consumer
+# reads is the cache entry itself rather than anything standing in for
+# it -- which is the only way an underscore name survives the trip.
+#
+# Nothing here is asserted by a `py_mypy_test`. That rule judges an
+# uncached run with the whole closure present as sources, where the
+# names in play are whatever the venv offers. It is the aspect's cached
+# action that has to agree with the dependency's, so this package is
+# left to be checked the way any other target in the workspace is.
+
+py_library(
+    name = "external_consumer",
+    srcs = ["external_consumer.py"],
+    deps = ["@mypy_external_example//:widgets"],
+)

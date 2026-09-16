@@ -1,0 +1,20 @@
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "vendored",
+    srcs = [
+        "toolkit/__init__.py",
+        "toolkit/parts.py",
+        "toolkit/tags.py",
+        "toolkit/whole.py",
+    ],
+    data = ["toolkit/py.typed"],
+    imports = ["."],
+    visibility = ["//python/mypy/private/tests:__subpackages__"],
+)
+
+py_mypy_test(
+    name = "vendored_mypy_test",
+    target = ":vendored",
+)

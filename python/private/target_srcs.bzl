@@ -126,7 +126,7 @@ def _get_imports(target, aspect_ctx):
         aspect_ctx (ctx, optional): The context object for an aspect if called within one.
 
     Returns:
-        List of strings.
+        List of strings: Runfiles-relative paths, `<repo>/<package>/<entry>`.
     """
     workspace_name = target.label.workspace_name
     if not workspace_name:

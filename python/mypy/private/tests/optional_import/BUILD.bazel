@@ -1,0 +1,26 @@
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "renderer",
+    srcs = ["renderer.py"],
+)
+
+py_mypy_test(
+    name = "renderer_mypy_test",
+    target = ":renderer",
+)
+
+py_library(
+    name = "app",
+    srcs = ["app.py"],
+    deps = [
+        ":renderer",
+        "//python/mypy/private/tests/optional_import/sidecar",
+    ],
+)
+
+py_mypy_test(
+    name = "app_mypy_test",
+    target = ":app",
+)
