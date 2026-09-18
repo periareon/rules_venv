@@ -1,0 +1,42 @@
+load("//python:defs.bzl", "py_library")
+
+# A consumer of an installed package whose types ship separately.
+#
+# This is the one case where the module and the file mypy reads it out
+# of belong to different targets, so the two caches have to agree about
+# a module neither target names the same way. The stubs publish theirs
+# under the module a consumer imports, with the `-stubs` taken off; the
+# package publishes nothing at all, because PEP 561 has mypy pass over
+# an installed package that ships no types. Depending on both is what a
+# consumer of such a distribution actually does.
+#
+# Nothing here is asserted by a `py_mypy_test`, for the reason given in
+# the external fixture next door: that rule judges an uncached run, and
+# what has to hold is what the aspect's cached action produces.
+
+py_library(
+    name = "stub_consumer",
+    srcs = ["stub_consumer.py"],
+    deps = [
+        "@mypy_stub_example//:shapes",
+        "@mypy_stub_example//:shapes_stubs",
+    ],
+)
+
+# The same thing, where the package is a namespace package.
+#
+# Nothing marks a namespace package, so mypy cannot prefer one directory
+# named `acme` over another and takes the first it is offered. A cache
+# is a tree of directories named after the modules in it, so a consumer
+# given this dependency's cache has a directory named `acme` that is not
+# the package, and whether the stubs are found at all comes down to
+# which of the two mypy reaches first.
+
+py_library(
+    name = "namespace_consumer",
+    srcs = ["namespace_consumer.py"],
+    deps = [
+        "@mypy_stub_example//:acme_gadgets",
+        "@mypy_stub_example//:acme_gadgets_stubs",
+    ],
+)

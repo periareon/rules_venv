@@ -64,3 +64,28 @@ register_toolchains(
 )
 
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2", dev_dependency = True)
+
+external_example_repository = use_repo_rule(
+    "//python/mypy/private/tests/external:external_example.bzl",
+    "external_example_repository",
+)
+
+# A typed package that is not in this workspace, which is the only way to
+# be standing where a consumer's naming rules differ from a producer's.
+external_example_repository(
+    name = "mypy_external_example",
+    dev_dependency = True,
+)
+
+stub_example_repository = use_repo_rule(
+    "//python/mypy/private/tests/stubs:stub_example.bzl",
+    "stub_example_repository",
+)
+
+# An installed package whose types arrive in a `-stubs` distribution of
+# its own, so that the module and the file it is read out of belong to
+# different targets.
+stub_example_repository(
+    name = "mypy_stub_example",
+    dev_dependency = True,
+)

@@ -1,0 +1,15 @@
+load("//python:defs.bzl", "py_library")
+load("//python/mypy:defs.bzl", "py_mypy_test")
+
+py_library(
+    name = "vendored_consumer",
+    srcs = ["vendored_consumer.py"],
+    deps = [
+        "//python/mypy/private/tests/imports/vendored",
+    ],
+)
+
+py_mypy_test(
+    name = "vendored_consumer_mypy_test",
+    target = ":vendored_consumer",
+)

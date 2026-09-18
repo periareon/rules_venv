@@ -300,7 +300,8 @@ def _create_venv_entrypoint(
         py_toolchain = None,
         name = None,
         use_runfiles_in_entrypoint = True,
-        force_runfiles = False):
+        force_runfiles = False,
+        use_source_deps_in_place = None):
     """Create an executable which constructs a python venv and subprocesses a given entrypoint.
 
     Args:
@@ -316,6 +317,13 @@ def _create_venv_entrypoint(
             relies on runfiles.
         force_runfiles (bool, optional): If True, a rendered runfiles directory will be used over
             builtin runfiles where `RUNFILES_DIR` would be provided.
+        use_source_deps_in_place (bool, optional): Overrides
+            `--@rules_venv//python/venv/settings:experimental_windows_use_source_deps_in_place`
+            for this venv. The default of `None` follows the setting. `False` renders every
+            file the venv uses into the runfiles tree instead of referencing it where Bazel
+            already put it, which a caller needs when the venv's contents are read by path and
+            those paths have to hold outside this machine: a file referenced in place is named
+            through the execution root, and so through the user's checkout and sandbox.
 
     Returns:
         Tuple[File, Runfiles]: The generated entrypoint and associated runfiles.
@@ -345,7 +353,8 @@ def _create_venv_entrypoint(
     is_windows = venv_toolchain.entrypoint.basename.endswith(".bat")
     entrypoint = ctx.actions.declare_file("{}.{}".format(name, "bat" if is_windows else "sh"))
 
-    use_source_deps_in_place = venv_toolchain._experimental_windows_use_source_deps_in_place
+    if use_source_deps_in_place == None:
+        use_source_deps_in_place = venv_toolchain._experimental_windows_use_source_deps_in_place
 
     collection_runfiles = ctx.runfiles(transitive_files = depset(transitive = [
         py_info.transitive_sources,

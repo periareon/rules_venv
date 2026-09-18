@@ -1,4 +1,4 @@
-"""# rules_mypy
+"""# Mypy rules
 
 Bazel rules for the Python linter [mypy][mp].
 
@@ -28,6 +28,7 @@ py_library(
 py_mypy_toolchain(
     name = "toolchain_impl",
     mypy = ":mypy_deps",
+    config = "//:.mypyrc.toml",
     visibility = ["//visibility:public"]
 )
 
@@ -46,12 +47,20 @@ register_toolchains("//tools/python/mypy:toolchain")
 ```
 
 From here, [py_mypy_test](#py_mypy_test) and the [py_mypy_aspect](#py_mypy_aspect)
-should now be usable. Both of these rules use a global flag to determine which mypy configuration
-file to use with in actions. The following snippet can be added to the `.bazelrc` file to chose the
-desired configuration file
+should now be usable.
+
+The toolchain settles both halves of what a mypy result means: the version that
+produced it and the settings it ran under. They are named together because they
+are only meaningful together -- the type information the aspect shares between
+targets is keyed on the two agreeing, so the aspect reads the toolchain's
+configuration file and no other. A [py_mypy_test](#py_mypy_test) shares nothing,
+and can override it per target with its own `config` attribute.
+
+The toolchain's `config` is optional. Left unset it tracks a global flag, which
+is how a workspace with no toolchain of its own picks a configuration file:
 
 ```text
-build --@rules_mypy//python/mypy:config=//:.mypyrc.toml
+build --@rules_venv//python/mypy:config=//:.mypyrc.toml
 ```
 
 Note that these files will need to be available via [exports_files](https://bazel.build/reference/be/functions#exports_files)

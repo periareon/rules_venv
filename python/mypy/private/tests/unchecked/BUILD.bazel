@@ -1,0 +1,26 @@
+load("//python:defs.bzl", "py_library")
+
+# A dependency analyzed for its cache alone, reached by import so that
+# the name it publishes is one its own action proved resolvable and so
+# that an error in it does not take the cache with it. See `faulty.py`.
+#
+# Nothing here is asserted by a `py_mypy_test`. That rule judges an
+# uncached run in which the whole closure is still present as sources, so
+# it cannot tell a published cache from a missing one. It is the aspect's
+# cached action that has to get this right, so this package is left to be
+# checked the way any other target in the workspace is.
+
+py_library(
+    name = "faulty",
+    srcs = ["faulty.py"],
+    tags = [
+        "no-mypy",
+        "no-ty",
+    ],
+)
+
+py_library(
+    name = "consumer",
+    srcs = ["consumer.py"],
+    deps = [":faulty"],
+)

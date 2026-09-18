@@ -6,10 +6,55 @@ exports_files([
 ])
 
 py_library(
+    name = "mypy_cache",
+    srcs = ["mypy_cache.py"],
+    visibility = ["//python/mypy:__subpackages__"],
+    deps = [":mypy_modules"],
+)
+
+py_library(
+    name = "mypy_modules",
+    srcs = ["mypy_modules.py"],
+    visibility = ["//python/mypy:__subpackages__"],
+)
+
+py_library(
+    name = "mypy_metadata",
+    srcs = ["mypy_metadata.py"],
+    visibility = ["//python/mypy:__subpackages__"],
+    deps = [
+        ":mypy_modules",
+        "//python/mypy:current_py_mypy_toolchain",
+    ],
+)
+
+py_library(
+    name = "mypy_paths",
+    srcs = ["mypy_paths.py"],
+    visibility = ["//python/mypy:__subpackages__"],
+    deps = [":mypy_modules"],
+)
+
+py_library(
+    name = "mypy_options",
+    srcs = ["mypy_options.py"],
+    visibility = ["//python/mypy:__subpackages__"],
+    deps = [
+        ":mypy_metadata",
+        "//python/mypy:current_py_mypy_toolchain",
+    ],
+)
+
+py_library(
     name = "mypy_runner",
     srcs = ["mypy_runner.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":mypy_cache",
+        ":mypy_metadata",
+        ":mypy_modules",
+        ":mypy_options",
+        ":mypy_paths",
         "//python/mypy:current_py_mypy_toolchain",
         "//python/runfiles",
     ],

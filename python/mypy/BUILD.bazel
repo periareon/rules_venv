@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python/mypy/private:mypy.bzl", "py_mypy_stdlib_cache")
 load("//python/mypy/private:mypy_toolchain.bzl", "current_py_mypy_toolchain")
 
 package(default_visibility = ["//visibility:public"])
@@ -15,6 +16,12 @@ exports_files([
 label_flag(
     name = "config",
     build_setting_default = ":.mypy.ini",
+)
+
+# Inherited by every mypy action so that no other cache has to carry a
+# copy of the typeshed core.
+py_mypy_stdlib_cache(
+    name = "stdlib_cache",
 )
 
 toolchain_type(

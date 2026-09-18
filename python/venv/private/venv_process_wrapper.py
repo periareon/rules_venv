@@ -112,6 +112,22 @@ class ExtendedEnvBuilder(venv.EnvBuilder):
         pth_data = []
         for pth in self.bazel_pth:
             abs_pth = Path(pth.format(runfiles_dir=runfiles_path))
+
+            # `site` silently drops a `.pth` line whose directory does
+            # not exist, so a root that nothing happens to stage a file
+            # under would leave the venv without it. Creating it keeps
+            # the venv's import paths a function of what was asked for
+            # rather than of what else landed there, which is what lets a
+            # caller stage files under a root after the venv is built.
+            #
+            # Only within the runfiles tree, which is either a Bazel
+            # output or this wrapper's own temp directory. A root can
+            # also name a repository read in place from where it was
+            # fetched, and creating directories there would edit the
+            # fetched sources -- or fail where they are not writable.
+            if abs_pth.is_relative_to(runfiles_path):
+                abs_pth.mkdir(parents=True, exist_ok=True)
+
             pth_data.append(str(abs_pth))
 
         pth_file = site_packages / "rules_venv.pth"
