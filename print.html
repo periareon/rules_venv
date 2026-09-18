@@ -409,7 +409,8 @@ py_venv_common.create_venv_config_info(*, <a href="venv.html#py_venv_common.crea
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
 py_venv_common.create_venv_entrypoint(*, <a href="venv.html#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
-                                      <a href="venv.html#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
+                                      <a href="venv.html#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="venv.html#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>,
+                                      <a href="venv.html#py_venv_common.create_venv_entrypoint-use_source_deps_in_place">use_source_deps_in_place</a>)
 </pre>
 <p>Create an executable which constructs a python venv and subprocesses a given entrypoint.</p>
 <p><strong>PARAMETERS</strong></p>
@@ -423,6 +424,7 @@ py_venv_common.create_venv_entrypoint(*, <a href="venv.html#py_venv_common.creat
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-name"></a>name</td><td style="text-align: left">An alternate name to use in the output instead of <code>ctx.label.name</code>.</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint"></a>use_runfiles_in_entrypoint</td><td style="text-align: left">If true, an entrypoint will be created that relies on runfiles.</td><td style="text-align: left"><code>True</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-force_runfiles"></a>force_runfiles</td><td style="text-align: left">If True, a rendered runfiles directory will be used over builtin runfiles where <code>RUNFILES_DIR</code> would be provided.</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-use_source_deps_in_place"></a>use_source_deps_in_place</td><td style="text-align: left">Overrides <code>--@rules_venv//python/venv/settings:experimental_windows_use_source_deps_in_place</code> for this venv. The default of <code>None</code> follows the setting. <code>False</code> renders every file the venv uses into the runfiles tree instead of referencing it where Bazel already put it, which a caller needs when the venv's contents are read by path and those paths have to hold outside this machine: a file referenced in place is named through the execution root, and so through the user's checkout and sandbox.</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
 <p><strong>RETURNS</strong></p>
@@ -797,7 +799,7 @@ py_cc_extension(*, <a href="module_extension.html#py_cc_extension-name">name</a>
 <tr><td style="text-align: left"><a id="py_cc_extension-kwargs"></a>kwargs</td><td style="text-align: left">Additional keyword arguments for common definition attributes.</td><td style="text-align: left">none</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
-<h1 id="rules_mypy"><a class="header" href="#rules_mypy">rules_mypy</a></h1>
+<h1 id="mypy-rules"><a class="header" href="#mypy-rules">Mypy rules</a></h1>
 <p>Bazel rules for the Python linter <a href="https://mypy.readthedocs.io/">mypy</a>.</p>
 <h3 id="setup-3"><a class="header" href="#setup-3">Setup</a></h3>
 <p>First ensure <code>rules_venv</code> is setup by referring to <a href="../index.html#setup">rules_venv setup</a>.</p>
@@ -820,6 +822,7 @@ py_library(
 py_mypy_toolchain(
     name = "toolchain_impl",
     mypy = ":mypy_deps",
+    config = "//:.mypyrc.toml",
     visibility = ["//visibility:public"]
 )
 
@@ -834,10 +837,16 @@ toolchain(
 <pre><code class="language-python">register_toolchains("//tools/python/mypy:toolchain")
 </code></pre>
 <p>From here, <a href="mypy.html#py_mypy_test">py_mypy_test</a> and the <a href="mypy.html#py_mypy_aspect">py_mypy_aspect</a>
-should now be usable. Both of these rules use a global flag to determine which mypy configuration
-file to use with in actions. The following snippet can be added to the <code>.bazelrc</code> file to chose the
-desired configuration file</p>
-<pre><code class="language-text">build --@rules_mypy//python/mypy:config=//:.mypyrc.toml
+should now be usable.</p>
+<p>The toolchain settles both halves of what a mypy result means: the version that
+produced it and the settings it ran under. They are named together because they
+are only meaningful together -- the type information the aspect shares between
+targets is keyed on the two agreeing, so the aspect reads the toolchain's
+configuration file and no other. A <a href="mypy.html#py_mypy_test">py_mypy_test</a> shares nothing,
+and can override it per target with its own <code>config</code> attribute.</p>
+<p>The toolchain's <code>config</code> is optional. Left unset it tracks a global flag, which
+is how a workspace with no toolchain of its own picks a configuration file:</p>
+<pre><code class="language-text">build --@rules_venv//python/mypy:config=//:.mypyrc.toml
 </code></pre>
 <p>Note that these files will need to be available via <a href="https://bazel.build/reference/be/functions#exports_files">exports_files</a></p>
 <h2 id="rules-3"><a class="header" href="#rules-3">Rules</a></h2>
@@ -860,7 +869,7 @@ py_mypy_test(<a href="mypy.html#py_mypy_test-name">name</a>, <a href="mypy.html#
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_mypy_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_mypy_test-config"></a>config</td><td style="text-align: left">The config file (<code>mypy.ini</code>) containing mypy settings.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/mypy:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_test-config"></a>config</td><td style="text-align: left">The config file (<code>mypy.ini</code>) containing mypy settings. Defaults to the one the <code>py_mypy_toolchain</code> names.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="py_mypy_test-target"></a>target</td><td style="text-align: left">The target to run <code>mypy</code> on.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
 </tbody></table>
 </div>
@@ -869,13 +878,14 @@ py_mypy_test(<a href="mypy.html#py_mypy_test-name">name</a>, <a href="mypy.html#
 <pre>
 load("@rules_venv//python/mypy:defs.bzl", "py_mypy_toolchain")
 
-py_mypy_toolchain(<a href="mypy.html#py_mypy_toolchain-name">name</a>, <a href="mypy.html#py_mypy_toolchain-mypy">mypy</a>)
+py_mypy_toolchain(<a href="mypy.html#py_mypy_toolchain-name">name</a>, <a href="mypy.html#py_mypy_toolchain-config">config</a>, <a href="mypy.html#py_mypy_toolchain-mypy">mypy</a>)
 </pre>
 <p>A toolchain for the <a href="https://mypy.readthedocs.io/">mypy</a> formatter rules.</p>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
 <tr><td style="text-align: left"><a id="py_mypy_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_mypy_toolchain-mypy"></a>mypy</td><td style="text-align: left">The mypy <code>py_library</code> to use with the rules.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_toolchain-config"></a>config</td><td style="text-align: left">The config file (<code>mypy.ini</code>) containing mypy settings.<br><br>Settings and mypy version together decide what a cache entry means, so they are named in one place. The default tracks the <code>@rules_venv//python/mypy:config</code> flag, which is how a workspace that has not defined its own toolchain chooses a config file.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@rules_venv//python/mypy:config"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_mypy_toolchain-mypy"></a>mypy</td><td style="text-align: left">The mypy <code>py_library</code> to use with the rules.<br><br>Must be mypy 2.0 or newer. These rules analyze a dependency once and share the result with everything that imports it, which rests on mypy checking function bodies only where the errors are wanted -- a split mypy grew in 2.0. An older release is refused rather than tolerated, since on a large dependency the difference is seconds against half an hour.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
 </tbody></table>
 </div>
 <p><a id="py_mypy_aspect"></a></p>
@@ -886,6 +896,17 @@ load("@rules_venv//python/mypy:defs.bzl", "py_mypy_aspect")
 py_mypy_aspect()
 </pre>
 <p>An aspect for running mypy on targets with Python sources.</p>
+<p>Every Python target the aspect reaches publishes a
+<a href="mypy.html#pymypycacheinfo">PyMypyCacheInfo</a>, including the ones it does not
+check. Targets that opt out with a <code>no_mypy</code> tag, and third-party
+packages, are analyzed but not reported on.</p>
+<p>It travels every attribute rather than <code>deps</code> alone, since a rule is
+free to build its <code>PyInfo</code> from any of them. A library reached through
+a <em>toolchain</em> cannot be followed that way at all, so a target whose
+Python none of its attributes accounts for caches everything it
+publishes as one unit. That needs nothing of the rule but the <code>PyInfo</code>
+it already returns, so a toolchain defined outside this repository gets
+the same treatment without doing anything.</p>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->

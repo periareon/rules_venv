@@ -386,7 +386,8 @@ py_venv_common.create_venv_config_info(*, <a href="#py_venv_common.create_venv_c
 load("@rules_venv//python/venv:defs.bzl", "py_venv_common")
 
 py_venv_common.create_venv_entrypoint(*, <a href="#py_venv_common.create_venv_entrypoint-ctx">ctx</a>, <a href="#py_venv_common.create_venv_entrypoint-venv_toolchain">venv_toolchain</a>, <a href="#py_venv_common.create_venv_entrypoint-py_info">py_info</a>, <a href="#py_venv_common.create_venv_entrypoint-main">main</a>, <a href="#py_venv_common.create_venv_entrypoint-runfiles">runfiles</a>, <a href="#py_venv_common.create_venv_entrypoint-py_toolchain">py_toolchain</a>,
-                                      <a href="#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>)
+                                      <a href="#py_venv_common.create_venv_entrypoint-name">name</a>, <a href="#py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint">use_runfiles_in_entrypoint</a>, <a href="#py_venv_common.create_venv_entrypoint-force_runfiles">force_runfiles</a>,
+                                      <a href="#py_venv_common.create_venv_entrypoint-use_source_deps_in_place">use_source_deps_in_place</a>)
 </pre>
 <p>Create an executable which constructs a python venv and subprocesses a given entrypoint.</p>
 <p><strong>PARAMETERS</strong></p>
@@ -400,6 +401,7 @@ py_venv_common.create_venv_entrypoint(*, <a href="#py_venv_common.create_venv_en
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-name"></a>name</td><td style="text-align: left">An alternate name to use in the output instead of <code>ctx.label.name</code>.</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-use_runfiles_in_entrypoint"></a>use_runfiles_in_entrypoint</td><td style="text-align: left">If true, an entrypoint will be created that relies on runfiles.</td><td style="text-align: left"><code>True</code></td></tr>
 <tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-force_runfiles"></a>force_runfiles</td><td style="text-align: left">If True, a rendered runfiles directory will be used over builtin runfiles where <code>RUNFILES_DIR</code> would be provided.</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_venv_common.create_venv_entrypoint-use_source_deps_in_place"></a>use_source_deps_in_place</td><td style="text-align: left">Overrides <code>--@rules_venv//python/venv/settings:experimental_windows_use_source_deps_in_place</code> for this venv. The default of <code>None</code> follows the setting. <code>False</code> renders every file the venv uses into the runfiles tree instead of referencing it where Bazel already put it, which a caller needs when the venv's contents are read by path and those paths have to hold outside this machine: a file referenced in place is named through the execution root, and so through the user's checkout and sandbox.</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
 <p><strong>RETURNS</strong></p>
