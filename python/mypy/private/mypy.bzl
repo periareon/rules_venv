@@ -412,7 +412,9 @@ py_mypy_test = rule(
     attrs = {
         "config": attr.label(
             doc = (
-                "The config file (`mypy.ini`) containing mypy settings. " +
+                "The config file (`mypy.ini`, `setup.cfg` or `pyproject.toml`) " +
+                "containing mypy settings. A `.toml` file is read from its " +
+                "`tool.mypy` table, anything else from its `[mypy]` section. " +
                 "Defaults to the one the `py_mypy_toolchain` names."
             ),
             cfg = "target",

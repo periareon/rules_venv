@@ -1,0 +1,21 @@
+load("//python:defs.bzl", "py_library")
+load("//python/isort:defs.bzl", "py_isort_test")
+
+package(default_testonly = 1)
+
+py_library(
+    name = "single_line",
+    srcs = ["single_line.py"],
+    # The source is sorted the way this package's config asks and not
+    # the way the workspace's does, which is what makes the test below
+    # evidence that the TOML config was the one that was read. The
+    # aspect has no say in which config it runs under, so it is kept off
+    # this target.
+    tags = ["no_isort"],
+)
+
+py_isort_test(
+    name = "single_line_isort_test",
+    config = "pyproject.toml",
+    target = ":single_line",
+)

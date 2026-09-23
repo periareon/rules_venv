@@ -1,8 +1,15 @@
+load("//python:defs.bzl", "py_test")
 load("//python/isort:defs.bzl", "py_isort_test")
 
 exports_files([
     "isort_regex_test.py",
 ])
+
+py_test(
+    name = "isort_runner_test",
+    srcs = ["isort_runner_test.py"],
+    deps = ["//python/isort/private:isort_runner"],
+)
 
 py_isort_test(
     name = "isort_runner_isort_test",

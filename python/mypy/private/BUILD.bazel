@@ -42,6 +42,7 @@ py_library(
     deps = [
         ":mypy_metadata",
         "//python/mypy:current_py_mypy_toolchain",
+        "//python/private:tomli_w",
     ],
 )
 

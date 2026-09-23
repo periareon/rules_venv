@@ -25,10 +25,14 @@ closure is not made to find out the hard way.
 import configparser
 import os
 import sys
+import tomllib
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
+from mypy.config_parser import is_toml
 from mypy.version import __version__ as MYPY_VERSION
+from rules_venv_vendor import tomli_w
 
 from python.mypy.private import mypy_metadata
 
@@ -105,6 +109,102 @@ def cache_flags() -> list[str]:
     return flags
 
 
+def _silencing_settings() -> dict[str, Any]:
+    """The settings that keep a target answerable for its own sources.
+
+    A target is answerable for its own sources and no others. Every
+    dependency arrives here as a cache, and a cache mypy finds fresh
+    replays the errors recorded in it, so without `follow_imports` a
+    target fails over a type error somewhere in its transitive closure
+    -- for third-party code, over a package nobody asked to have
+    checked. `silent` is mypy's own name for analyze-but-do-not-report,
+    and it applies to imported modules only: sources named on the
+    command line are still judged in full.
+
+    Silencing also settles what a dependency costs. mypy checks the
+    bodies of a module's functions only where it might report on them,
+    so a module reached this way is analyzed to its interface -- which
+    is all a cache holds -- and no further.
+
+    `follow_imports` alone does not reach stubs: mypy exempts a `.pyi`
+    from it and analyzes the file as though it had been named, unless
+    `follow_imports_for_stubs` says otherwise. That exemption is wrong
+    twice over. It reports, so a target fails over a type error in a
+    dependency's stub -- the very thing the first setting is for,
+    arriving by the one door it does not close. And it decides what a
+    cache is worth: mypy records on each module whether the run that
+    wrote it was silencing that module and refuses a silenced cache to a
+    run that is not silencing, so a consumer left un-silencing a stub
+    rejects everything it was given and reaches for the emptied source
+    behind it instead.
+
+    Silencing a stub costs nothing that is not covered elsewhere: the
+    target that owns it names it, and a named source is judged in full
+    whatever this says.
+
+    Both are cache-affecting options, so they have to be set the same
+    way in every action. They are, because every action reads the one
+    configuration file the toolchain names.
+
+    Returns:
+        The settings, as the types a TOML config would give them. The
+        INI writer renders them back to strings.
+    """
+    return {"follow_imports": "silent", "follow_imports_for_stubs": True}
+
+
+def _generate_ini_config(
+    original_config: Path, tmp_dir: Path, settings: dict[str, Any]
+) -> Path:
+    """Write an INI copy of the config with `settings` merged into it.
+
+    Returns:
+        Path to the generated config file.
+    """
+    config = configparser.ConfigParser()
+    config.read(str(original_config), encoding="utf-8")
+
+    if not config.has_section("mypy"):
+        config.add_section("mypy")
+
+    for key, value in settings.items():
+        config.set("mypy", key, str(value))
+
+    merged = tmp_dir / "mypy.ini"
+    with open(merged, "w", encoding="utf-8") as f:
+        config.write(f)
+    return merged
+
+
+def _generate_toml_config(
+    original_config: Path, tmp_dir: Path, settings: dict[str, Any]
+) -> Path:
+    """Write a TOML copy of the config with `settings` merged into it.
+
+    Only `tool.mypy` is carried across, that being all mypy reads out of
+    a TOML file. The rest of a `pyproject.toml` -- the build system, the
+    other tools' tables -- would be dead weight in a file mypy is the
+    only reader of, and dead weight that has to survive a round trip
+    through a writer to stay valid.
+
+    Returns:
+        Path to the generated config file.
+    """
+    with original_config.open("rb") as f:
+        data = tomllib.load(f)
+
+    section = dict(data.get("tool", {}).get("mypy", {}))
+    section.update(settings)
+
+    # Any `.toml` name works: mypy picks the TOML reader off the
+    # extension and then looks for `tool.mypy` whatever the file is
+    # called. Only `pyproject.toml` and `setup.cfg` are treated as
+    # shared with other tools, and this file is shared with nobody.
+    merged = tmp_dir / "mypy.toml"
+    merged.write_text(tomli_w.dumps({"tool": {"mypy": section}}), encoding="utf-8")
+    return merged
+
+
 def generate_config(
     original_config: Path,
     search_paths: Sequence[str],
@@ -113,6 +213,14 @@ def generate_config(
     silence_imports: bool = False,
 ) -> Path:
     """Generate a copy of the mypy config, and point mypy at the venv.
+
+    The copy is written in the format the original was in, since that is
+    the format mypy will read it back in: a `.toml` config keeps its
+    settings under `tool.mypy` with their own types, and anything else
+    is INI. Which of the two a workspace writes changes nothing about
+    the run -- both end at the same options -- so a cache written from
+    one is readable by an action reading the other, as long as they
+    agree on what the settings say.
 
     The search paths go through `MYPYPATH` rather than into the config's
     own `mypy_path`, because the config's is split on `,` and `:` on
@@ -150,52 +258,14 @@ def generate_config(
     Returns:
         Path to the generated config file.
     """
-    config = configparser.ConfigParser()
-    config.read(str(original_config), encoding="utf-8")
+    settings = _silencing_settings() if silence_imports else {}
 
-    if not config.has_section("mypy"):
-        config.add_section("mypy")
-
-    if silence_imports:
-        # A target is answerable for its own sources and no others. Every
-        # dependency arrives here as a cache, and a cache mypy finds fresh
-        # replays the errors recorded in it, so without this a target
-        # fails over a type error somewhere in its transitive closure --
-        # for third-party code, over a package nobody asked to have
-        # checked. `silent` is mypy's own name for analyze-but-do-not-
-        # report, and it applies to imported modules only: sources named
-        # on the command line are still judged in full.
-        #
-        # Silencing also settles what a dependency costs. mypy checks the
-        # bodies of a module's functions only where it might report on
-        # them, so a module reached this way is analyzed to its interface
-        # -- which is all a cache holds -- and no further.
-        #
-        # This is a cache-affecting option, so it has to be set the same
-        # way in every action. It is, because every action reads the one
-        # configuration file the toolchain names.
-        config.set("mypy", "follow_imports", "silent")
-
-        # `follow_imports` alone does not reach stubs: mypy exempts a
-        # `.pyi` from it and analyzes the file as though it had been
-        # named, unless told otherwise here. That exemption is wrong
-        # twice over. It reports, so a target fails over a type error in
-        # a dependency's stub -- the very thing the line above is for,
-        # arriving by the one door it does not close. And it decides what
-        # a cache is worth: mypy records on each module whether the run
-        # that wrote it was silencing that module and refuses a silenced
-        # cache to a run that is not silencing, so a consumer left
-        # un-silencing a stub rejects everything it was given and reaches
-        # for the emptied source behind it instead.
-        #
-        # Silencing a stub costs nothing that is not covered elsewhere:
-        # the target that owns it names it, and a named source is judged
-        # in full whatever this says.
-        config.set("mypy", "follow_imports_for_stubs", "True")
-
-    merged = tmp_dir / "mypy.ini"
-    with open(merged, "w", encoding="utf-8") as f:
-        config.write(f)
+    # mypy's own test, rather than a restatement of it, so that the copy
+    # is written in whichever format mypy will read it back in.
+    if is_toml(str(original_config)):
+        merged = _generate_toml_config(original_config, tmp_dir, settings)
+    else:
+        merged = _generate_ini_config(original_config, tmp_dir, settings)
 
     os.environ["MYPYPATH"] = os.pathsep.join(search_paths)
     os.environ["MYPY_CONFIG_FILE_DIR"] = str(original_config.parent)

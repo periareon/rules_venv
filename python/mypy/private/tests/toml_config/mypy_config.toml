@@ -1,0 +1,17 @@
+# A TOML spelling of a mypy config. These rules read `tool.mypy` out of
+# any `.toml` file, which is the table a `pyproject.toml` keeps mypy's
+# settings in.
+[tool.mypy]
+
+# See the workspace's own `.mypy.ini`, which this otherwise matches.
+explicit_package_bases = true
+pretty = true
+strict = true
+
+# The workspace's config is strict, so the source this is pointed at is
+# an error under it. Permitting it here -- through the array of tables
+# only a TOML config can spell -- is what makes the test evidence that
+# the config that was read was this one, carried across whole.
+[[tool.mypy.overrides]]
+module = ["python.mypy.private.tests.toml_config.*"]
+disallow_untyped_defs = false
