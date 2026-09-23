@@ -9,15 +9,18 @@ import platform
 import shutil
 import sys
 import tempfile
-from collections.abc import Generator, Sequence
+import tomllib
+from collections.abc import Generator, Iterable, Sequence
 from pathlib import Path
 from typing import Any, cast
 
 from python.runfiles import Runfiles
+from rules_venv_vendor import tomli_w
 
 # isort gets confused seeing itself in a file, explicitly skip sorting this
 # isort: off
 from isort.main import main as isort_main
+from isort.settings import CONFIG_SECTIONS, FALLBACK_CONFIG_SECTIONS
 
 
 def _rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
@@ -118,50 +121,118 @@ def locate_first_party_src_paths(
     return [str(runfiles_dir / path) for path in imports]
 
 
+# The INI-flavored suffixes isort reads. Which sections it reads out of
+# such a file is `_config_sections`, not a second table here.
+_INI_SUFFIXES = (".cfg", ".ini")
+
+
+def _config_sections(existing: Path) -> Sequence[str]:
+    """Find the sections isort keeps a config file's settings in.
+
+    Taken from isort rather than restated here, so that a release which
+    teaches it a new name teaches this at the same time.
+    `CONFIG_SECTIONS` is keyed by file name and `FALLBACK_CONFIG_SECTIONS`
+    covers every name not in it, which is the lookup
+    `isort.settings.Config` itself performs.
+
+    Args:
+        existing: The location of an existing config file.
+
+    Returns:
+        The sections isort would read, in the order it reads them.
+    """
+    return CONFIG_SECTIONS.get(existing.name, FALLBACK_CONFIG_SECTIONS)
+
+
+def _merge_src_paths(known: Iterable[Any], src_paths: Sequence[str]) -> list[str]:
+    """Combine the config's own source paths with Bazel's.
+
+    Args:
+        known: The source paths the user's config already declares.
+        src_paths: The first party directories Bazel knows about.
+
+    Returns:
+        The two sets as one, sorted so that the same inputs give the
+        same config file.
+    """
+    combined = set(src_paths)
+    combined.update(str(path).strip() for path in known)
+    return sorted(path for path in combined if path)
+
+
+def _generate_ini_config(existing: Path, output: Path, src_paths: list[str]) -> None:
+    """Write an INI config with first party imports merged into it."""
+    section = _config_sections(existing)[0]
+
+    config = configparser.ConfigParser()
+    config.read(str(existing))
+
+    if section not in config.sections():
+        config.add_section(section)
+
+    known_src_paths = config.get(section, "src_paths", fallback="")
+
+    config.set(
+        section,
+        "src_paths",
+        ",".join(_merge_src_paths(known_src_paths.split(","), src_paths)),
+    )
+
+    with output.open("w", encoding="utf-8") as fhd:
+        config.write(fhd)
+
+
+def _generate_toml_config(existing: Path, output: Path, src_paths: list[str]) -> None:
+    """Write a TOML config with first party imports merged into it.
+
+    Only isort's own settings are carried across. The rest of a
+    `pyproject.toml` -- the build system, the other tools' tables -- is
+    nothing isort reads, and leaving it out keeps the generated file to
+    the one table this has to be able to write back out.
+
+    isort reads a TOML config's settings out of whichever sections its
+    file name calls for, so the sections are read the way isort would
+    read them and written back under the one name every lookup finds.
+    """
+    with existing.open("rb") as fhd:
+        data = tomllib.load(fhd)
+
+    settings: dict[str, Any] = {}
+    for section in _config_sections(existing):
+        found: Any = data
+        for key in section.split("."):
+            found = found.get(key, {}) if isinstance(found, dict) else {}
+        settings.update(found)
+
+    settings["src_paths"] = _merge_src_paths(settings.get("src_paths", []), src_paths)
+
+    # `tool.isort` whatever the settings were read out of, that being the
+    # one name every lookup above ends at.
+    output.write_text(tomli_w.dumps({"tool": {"isort": settings}}), encoding="utf-8")
+
+
 def generate_config_with_projects(
     existing: Path, output: Path, src_paths: list[str]
 ) -> None:
     """Write a new config file with first party imports merged into it.
 
+    The copy is written in the format the original was in, since that is
+    the format isort will read it back in.
+
     Args:
         existing: The location of an existing config file
         output: The output location for the new config file.
         src_paths: A list of directories to consider source paths
+
+    Raises:
+        ValueError: If the config file is not one isort can read.
     """
-    cfg_pairs = [
-        (".isort.cfg", "settings"),
-        (".cfg", "isort"),
-        (".ini", "isort"),
-        ("pyproject.toml", "tool.isort"),
-    ]
-    for suffix, section in cfg_pairs:
-        if not existing.name.endswith(suffix):
-            continue
+    if existing.suffix == ".toml":
+        _generate_toml_config(existing, output, src_paths)
+        return
 
-        if suffix.endswith(".toml"):
-            raise NotImplementedError("There is no writer for tomllib")
-
-        config = configparser.ConfigParser()
-        config.read(str(existing))
-
-        if section not in config.sections():
-            config.add_section(section)
-
-        known_src_paths = config.get(section, "src_paths", fallback="")
-
-        config.set(
-            section,
-            "src_paths",
-            ",".join(
-                pkg
-                for pkg in sorted(set(src_paths + known_src_paths.split(",")))
-                if pkg
-            ),
-        )
-
-        with output.open("w", encoding="utf-8") as fhd:
-            config.write(fhd)
-
+    if existing.suffix in _INI_SUFFIXES:
+        _generate_ini_config(existing, output, src_paths)
         return
 
     raise ValueError(f"Unexpected isort config file '{existing}'.")

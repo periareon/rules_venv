@@ -1,6 +1,14 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//python:py_library.bzl", "py_library")
 
+# The one place the vendored repository is named, so that what the
+# linter runners depend on is a label in this workspace.
+alias(
+    name = "tomli_w",
+    actual = "@rules_venv_wheel_tomli_w//:tomli_w",
+    visibility = ["//python:__subpackages__"],
+)
+
 py_library(
     name = "target_query",
     srcs = ["target_query.py"],

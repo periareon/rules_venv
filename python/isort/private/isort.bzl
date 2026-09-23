@@ -72,7 +72,7 @@ py_isort_test = rule(
     doc = "A rule for running isort on a Python target.",
     attrs = {
         "config": attr.label(
-            doc = "The config file (isort.cfg) containing isort settings.",
+            doc = "The config file (`.isort.cfg`, `setup.cfg`, `tox.ini` or `pyproject.toml`) containing isort settings.",
             cfg = "target",
             allow_single_file = True,
             default = Label("//python/isort:config"),
@@ -175,7 +175,7 @@ py_isort_aspect = aspect(
     doc = "An aspect for running isort on targets with Python sources.",
     attrs = {
         "_config": attr.label(
-            doc = "The config file (isortrc) containing isort settings.",
+            doc = "The config file (`.isort.cfg`, `setup.cfg`, `tox.ini` or `pyproject.toml`) containing isort settings.",
             cfg = "target",
             allow_single_file = True,
             default = Label("//python/isort:config"),
