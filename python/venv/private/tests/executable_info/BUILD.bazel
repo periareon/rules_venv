@@ -1,0 +1,5 @@
+load(":executable_info_test.bzl", "executable_info_test_suite")
+
+executable_info_test_suite(
+    name = "executable_info_test_suite",
+)

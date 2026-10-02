@@ -1,5 +1,6 @@
 """Bazel rules for Python venvs"""
 
+load("//python:py_executable_info.bzl", "PyExecutableInfo")
 load("//python:py_info.bzl", "PyInfo")
 load("//python/private:coverage.bzl", "COVERAGE_ATTRS")
 load(":venv_common.bzl", venv_common = "py_venv_common")
@@ -174,15 +175,25 @@ def _py_venv_binary_impl(ctx):
         ],
     )
 
+    main = compute_main(
+        label = ctx.label,
+        main = ctx.file.main,
+        srcs = ctx.files.srcs,
+    )
+
     executable, runfiles = venv_common.create_venv_entrypoint(
         ctx = ctx,
         venv_toolchain = venv_toolchain,
         py_info = py_info,
-        main = compute_main(
-            label = ctx.label,
-            main = ctx.file.main,
-            srcs = ctx.files.srcs,
-        ),
+        main = main,
+        runfiles = direct_runfiles,
+    )
+
+    py_executable_info = venv_common.create_py_executable_info(
+        ctx = ctx,
+        venv_toolchain = venv_toolchain,
+        py_info = py_info,
+        main = main,
         runfiles = direct_runfiles,
     )
 
@@ -193,6 +204,7 @@ def _py_venv_binary_impl(ctx):
             executable = executable,
         ),
         py_info,
+        py_executable_info,
         coverage_common.instrumented_files_info(
             ctx,
             dependency_attributes = ["deps"],
@@ -244,7 +256,7 @@ py_venv_binary(
 """,
     implementation = _py_venv_binary_impl,
     attrs = _EXECUTABLE_ATTRS,
-    provides = [PyInfo],
+    provides = [PyInfo, PyExecutableInfo],
     toolchains = [venv_common.TOOLCHAIN_TYPE],
     executable = True,
 )
@@ -274,15 +286,25 @@ def _py_venv_test_impl(ctx):
         ],
     )
 
+    main = compute_main(
+        label = ctx.label,
+        main = ctx.file.main,
+        srcs = ctx.files.srcs,
+    )
+
     executable, runfiles = venv_common.create_venv_entrypoint(
         ctx = ctx,
         venv_toolchain = venv_toolchain,
         py_info = py_info,
-        main = compute_main(
-            label = ctx.label,
-            main = ctx.file.main,
-            srcs = ctx.files.srcs,
-        ),
+        main = main,
+        runfiles = direct_runfiles,
+    )
+
+    py_executable_info = venv_common.create_py_executable_info(
+        ctx = ctx,
+        venv_toolchain = venv_toolchain,
+        py_info = py_info,
+        main = main,
         runfiles = direct_runfiles,
     )
 
@@ -302,6 +324,7 @@ def _py_venv_test_impl(ctx):
             executable = executable,
         ),
         py_info,
+        py_executable_info,
         coverage_common.instrumented_files_info(
             ctx,
             dependency_attributes = ["deps"],
@@ -326,7 +349,7 @@ A `py_venv_test` rule compiles a test. A test is a binary wrapper around some te
             doc = "Specifies additional environment variables to inherit from the external environment when the test is executed by `bazel test`.",
         ),
     },
-    provides = [PyInfo],
+    provides = [PyInfo, PyExecutableInfo],
     toolchains = [venv_common.TOOLCHAIN_TYPE],
     test = True,
 )

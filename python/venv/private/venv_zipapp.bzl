@@ -1,6 +1,6 @@
 """Rules for producing zipapps"""
 
-load("@rules_python//python:py_executable_info.bzl", "PyExecutableInfo")
+load("//python:py_executable_info.bzl", "PyExecutableInfo")
 load("//python:py_info.bzl", "PyInfo")
 load(":venv.bzl", "compute_main")
 load(
@@ -242,8 +242,9 @@ def _py_venv_zipapp_impl(ctx):
     # machinery `rules_python` stages beside its executables is unused here and
     # unrepresentable besides: under `bootstrap_impl=script` it includes a venv
     # whose `bin/python3` symlink resolves only from the runfiles root.
-    # `runfiles_without_exe` omits exactly those parts. `py_venv_binary` does
-    # not advertise the provider, hence the fallback.
+    # `runfiles_without_exe` omits exactly those parts. `py_venv_binary` omits
+    # its own entrypoint files from it the same way. The fallback covers custom
+    # rules built on `py_venv_common` that only advertise `PyInfo`.
     if PyExecutableInfo in ctx.attr.binary:
         runfiles = ctx.attr.binary[PyExecutableInfo].runfiles_without_exe
     else:
