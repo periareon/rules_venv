@@ -24,3 +24,20 @@ suffers from a few issues which this repo aims to solve:
 ```python
 bazel_dep(name = "rules_venv", version = "{version}")
 ```
+
+## Environment variables
+
+### `RULES_VENV_EXTRACT_ROOT`
+
+By default each launch of a `py_venv_binary` or `py_venv_test` builds its venv in a temporary directory that is
+deleted on exit, so `sys.executable` is only valid while the process runs. When this variable is set, the venv
+is instead built at `$RULES_VENV_EXTRACT_ROOT/<repo>/<package>/<name>.venv` (with `_main` for the main
+repository) and, on platforms without runfiles support, the rendered runfiles tree beside it as `<name>.runfiles`.
+Both are left in place and reused by later launches of the same target unless the interpreter, import paths, or
+runfiles collection have changed. Cleaning up the root is the responsibility of the caller. A relative path is
+resolved against the working directory.
+
+### `RULES_PYTHON_EXTRACT_ROOT`
+
+Honored like `RULES_VENV_EXTRACT_ROOT` so a root configured for `rules_python` is shared, but
+`RULES_VENV_EXTRACT_ROOT` takes priority when both are set.
