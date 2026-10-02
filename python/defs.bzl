@@ -25,6 +25,10 @@ load(
     "py_venv_test",
 )
 load(
+    ":py_executable_info.bzl",
+    _PyExecutableInfo = "PyExecutableInfo",
+)
+load(
     ":py_info.bzl",
     _PyInfo = "PyInfo",
 )
@@ -33,6 +37,7 @@ py_binary = py_venv_binary
 py_library = py_venv_library
 py_test = py_venv_test
 
+PyExecutableInfo = _PyExecutableInfo
 PyInfo = _PyInfo
 PyRuntimeInfo = _PyRuntimeInfo
 py_import = _py_import

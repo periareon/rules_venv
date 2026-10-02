@@ -24,12 +24,12 @@ bzl_library(
     srcs = glob(["*.bzl"]),
     visibility = ["//python/venv:__pkg__"],
     deps = [
+        "//python:py_executable_info_bzl",
         "//python:py_info_bzl",
         "//python/private:bzl_lib",
         "@bazel_skylib//lib:selects",
         "@bazel_skylib//rules:common_settings",
         "@rules_python//python:defs_bzl",
-        "@rules_python//python:py_executable_info_bzl",
     ],
 )
 
