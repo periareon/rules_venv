@@ -177,6 +177,18 @@ more expensive than systems which support runfiles.</p>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
 <pre><code class="language-python">bazel_dep(name = "rules_venv", version = "{version}")
 </code></pre>
+<h2 id="environment-variables"><a class="header" href="#environment-variables">Environment variables</a></h2>
+<h3 id="rules_venv_extract_root"><a class="header" href="#rules_venv_extract_root"><code>RULES_VENV_EXTRACT_ROOT</code></a></h3>
+<p>By default each launch of a <code>py_venv_binary</code> or <code>py_venv_test</code> builds its venv in a temporary directory that is
+deleted on exit, so <code>sys.executable</code> is only valid while the process runs. When this variable is set, the venv
+is instead built at <code>$RULES_VENV_EXTRACT_ROOT/&lt;repo&gt;/&lt;package&gt;/&lt;name&gt;.venv</code> (with <code>_main</code> for the main
+repository) and, on platforms without runfiles support, the rendered runfiles tree beside it as <code>&lt;name&gt;.runfiles</code>.
+Both are left in place and reused by later launches of the same target unless the interpreter, import paths, or
+runfiles collection have changed. Cleaning up the root is the responsibility of the caller. A relative path is
+resolved against the working directory.</p>
+<h3 id="rules_python_extract_root"><a class="header" href="#rules_python_extract_root"><code>RULES_PYTHON_EXTRACT_ROOT</code></a></h3>
+<p>Honored like <code>RULES_VENV_EXTRACT_ROOT</code> so a root configured for <code>rules_python</code> is shared, but
+<code>RULES_VENV_EXTRACT_ROOT</code> takes priority when both are set.</p>
 
                     </main>
 
