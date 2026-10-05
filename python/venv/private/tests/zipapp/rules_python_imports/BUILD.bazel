@@ -1,0 +1,76 @@
+"""Regression test: `py_venv_zipapp` must put the workspace root on the import
+path for a stock `py_binary`, which relies on the `rules_python` bootstrap for
+that and advertises nothing in `PyInfo.imports`."""
+
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("//python/venv:defs.bzl", "py_venv_zipapp")
+load("//python/venv/private/tests/zipapp:bootstrap_script_zipapp.bzl", "bootstrap_script_zipapp")
+load("//python/venv/private/tests/zipapp:python_zip_file_consumer.bzl", "python_zip_file_consumer")
+
+# `bootstrap_impl=script` is force-overridden back to `system_python` on Windows
+# by `rules_python`, so the transitioned targets would build a byte-identical
+# zipapp in a second configuration there for no added coverage.
+_NOT_WINDOWS = select({
+    "@platforms//os:windows": ["@platforms//:incompatible"],
+    "//conditions:default": [],
+})
+
+# Stock rules_python targets only. `writer.py` imports `lib` via its full
+# workspace-rooted module path, which no `imports` attribute provides.
+py_library(
+    name = "lib",
+    srcs = ["lib.py"],
+)
+
+py_binary(
+    name = "writer",
+    srcs = ["writer.py"],
+    deps = [":lib"],
+)
+
+py_venv_zipapp(
+    name = "writer_zipapp",
+    binary = ":writer",
+)
+
+write_file(
+    name = "expected",
+    out = "expected.txt",
+    content = [
+        "La-Li-Lu-Le-Lo",
+        "",
+    ],
+    newline = "unix",
+)
+
+python_zip_file_consumer(
+    name = "python_zip_file_consumer",
+    zip_file = ":writer_zipapp",
+)
+
+diff_test(
+    name = "python_zip_file_diff_test",
+    file1 = "expected.txt",
+    file2 = ":python_zip_file_consumer",
+)
+
+bootstrap_script_zipapp(
+    name = "writer_zipapp_bootstrap_script",
+    target_compatible_with = _NOT_WINDOWS,
+    zipapp = ":writer_zipapp",
+)
+
+python_zip_file_consumer(
+    name = "bootstrap_script_python_zip_file_consumer",
+    target_compatible_with = _NOT_WINDOWS,
+    zip_file = ":writer_zipapp_bootstrap_script",
+)
+
+diff_test(
+    name = "bootstrap_script_python_zip_file_diff_test",
+    file1 = "expected.txt",
+    file2 = ":bootstrap_script_python_zip_file_consumer",
+    target_compatible_with = _NOT_WINDOWS,
+)

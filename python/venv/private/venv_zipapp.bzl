@@ -229,6 +229,18 @@ def _py_venv_zipapp_impl(ctx):
     py_info = ctx.attr.binary[PyInfo]
     main_info = ctx.attr.binary[PyMainInfo]
 
+    # A stock `py_binary` relies on the `rules_python` bootstrap to put the
+    # workspace root on `sys.path`, which zipapps never run. Add it here. This
+    # is a no-op for `py_venv_binary`, whose `PyInfo.imports` already has it.
+    binary_workspace_name = ctx.attr.binary.label.workspace_name or ctx.workspace_name
+    py_info = PyInfo(
+        imports = depset(
+            [binary_workspace_name, ctx.workspace_name],
+            transitive = [py_info.imports],
+        ),
+        transitive_sources = py_info.transitive_sources,
+    )
+
     inject_args = []
     inject_env = {}
     if ctx.attr.inherit_args:
