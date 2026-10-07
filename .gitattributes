@@ -1,0 +1,4 @@
+# cmd.exe resolves labels unreliably in batch files with LF line endings, so
+# batch files are always checked out (and archived from a checkout) as CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
