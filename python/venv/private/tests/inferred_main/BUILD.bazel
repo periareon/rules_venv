@@ -1,0 +1,21 @@
+load("//python/venv:defs.bzl", "py_venv_test")
+
+# These targets do not set `main`. It must be inferred from the target
+# name regardless of where the matching source sits in `srcs`.
+
+py_venv_test(
+    name = "main_first",
+    srcs = [
+        "main_first.py",
+        "shared.py",
+    ],
+)
+
+py_venv_test(
+    name = "main_last",
+    # buildifier: leave-alone
+    srcs = [
+        "shared.py",
+        "main_last.py",
+    ],
+)

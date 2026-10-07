@@ -134,17 +134,29 @@ def compute_main(label, srcs, main = None):
     if len(srcs) == 1:
         main = srcs[0]
     else:
+        candidates = []
         for src in srcs:
-            if main:
-                fail("Multiple files match candidates for `main`. Please explicitly specify which to use for {}".format(
-                    label,
-                ))
-
+            if not src.basename.endswith(".py"):
+                continue
             basename = src.basename[:-len(".py")]
             if basename == label.name:
-                main = src
+                candidates.append(src)
+
+        if len(candidates) > 1:
+            fail("Multiple files match candidates for `main` ({}). Please explicitly specify which to use for {}".format(
+                ", ".join([src.short_path for src in candidates]),
+                label,
+            ))
+
+        if candidates:
+            main = candidates[0]
 
     if not main:
+        if srcs:
+            fail("No file in `srcs` matches `{}.py`. Please explicitly specify `main` for {}".format(
+                label.name,
+                label,
+            ))
         fail("`main` and no `srcs` were specified. Please update {}".format(
             label,
         ))
