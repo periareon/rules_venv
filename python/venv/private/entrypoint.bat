@@ -3,8 +3,6 @@
 SETLOCAL ENABLEEXTENSIONS
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-@REM {RUNFILES_API}
-
 @REM Function to replace forward slashes with backslashes.
 goto :slocation_end
 :slocation
@@ -21,29 +19,32 @@ exit /b 0
 :slocation_end
 
 
+@REM When started directly from `bazel-bin` rather than via `bazel run` or
+@REM `bazel test`, the runfiles tree sits beside this script. Manifest discovery
+@REM is handled by `:runfiles_export_envvars` from the appended runfiles library,
+@REM which also ensures both RUNFILES_DIR and RUNFILES_MANIFEST_FILE are exported
+@REM for child processes.
 if {USE_RUNFILES}==1 (
-    if not defined RUNFILES_DIR if not defined RUNFILES_MANIFEST_FILE (
-        if exist "%~f0.runfiles" (
-            set "RUNFILES_DIR=%~f0.runfiles"
-        ) else if exist "%~f0.runfiles_manifest" (
-            set "RUNFILES_MANIFEST_FILE=%~f0.runfiles_manifest"
-        ) else if exist "%~f0.exe.runfiles_manifest" (
-            set "RUNFILES_MANIFEST_FILE=%~f0.exe.runfiles_manifest"
-        ) else (
-            echo>&2 ERROR: cannot find runfiles
-            exit /b 1
-        )
-    )
+    if not defined RUNFILES_DIR if exist "%~f0.runfiles\" set "RUNFILES_DIR=%~f0.runfiles"
 
     call :runfiles_export_envvars
+    if errorlevel 1 (
+        echo>&2 ERROR: cannot find runfiles
+        exit /b 1
+    )
 
     call :rlocation "{PY_RUNTIME}" PY_RUNTIME
+    if errorlevel 1 exit /b 1
     call :rlocation "{VENV_PROCESS_WRAPPER}" VENV_PROCESS_WRAPPER
+    if errorlevel 1 exit /b 1
     call :rlocation "{VENV_CONFIG}" VENV_CONFIG
+    if errorlevel 1 exit /b 1
     call :rlocation "{MAIN}" MAIN
+    if errorlevel 1 exit /b 1
 
     if "{VENV_RUNFILES_COLLECTION}" NEQ "" (
         call :rlocation "{VENV_RUNFILES_COLLECTION}" RULES_VENV_RUNFILES_COLLECTION
+        if errorlevel 1 exit /b 1
     )
 ) else (
     call :slocation "{PY_RUNTIME}" PY_RUNTIME
@@ -56,8 +57,13 @@ if {USE_RUNFILES}==1 (
     )
 )
 
-%PY_RUNTIME% ^
-    %VENV_PROCESS_WRAPPER% ^
-    %VENV_CONFIG% ^
-    %MAIN% ^
+"%PY_RUNTIME%" ^
+    "%VENV_PROCESS_WRAPPER%" ^
+    "%VENV_CONFIG%" ^
+    "%MAIN%" ^
     %*
+
+@REM Exit before falling through into the runfiles library appended below.
+exit /b %ERRORLEVEL%
+
+@REM {RUNFILES_API}
