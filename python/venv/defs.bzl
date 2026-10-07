@@ -2,8 +2,22 @@
 
 Core Bazel rules for defining Python targets.
 
+The `py_venv_binary`, `py_venv_library`, `py_venv_test`, and `py_venv_zipapp`
+symbols are aliases of `py_binary`, `py_library`, `py_test`, and `py_zipapp`.
 """
 
+load(
+    ":py_binary.bzl",
+    _py_binary = "py_binary",
+)
+load(
+    ":py_library.bzl",
+    _py_library = "py_library",
+)
+load(
+    ":py_test.bzl",
+    _py_test = "py_test",
+)
 load(
     ":py_venv_binary.bzl",
     _py_venv_binary = "py_venv_binary",
@@ -28,6 +42,15 @@ load(
     ":py_venv_zipapp.bzl",
     _py_venv_zipapp = "py_venv_zipapp",
 )
+load(
+    ":py_zipapp.bzl",
+    _py_zipapp = "py_zipapp",
+)
+
+py_binary = _py_binary
+py_zipapp = _py_zipapp
+py_library = _py_library
+py_test = _py_test
 
 py_venv_binary = _py_venv_binary
 py_venv_zipapp = _py_venv_zipapp

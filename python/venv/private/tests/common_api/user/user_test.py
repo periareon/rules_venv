@@ -32,7 +32,7 @@ def rlocation(runfiles: Runfiles, rlocationpath: str) -> Path:
 
 
 class AspectConsumerTest(unittest.TestCase):
-    """Test the outputs of a `py_venv_binary` created in an aspect."""
+    """Test the outputs of a `py_binary` created in an aspect."""
 
     def test_output(self) -> None:
         """Test the action output exists and is formed correctly."""

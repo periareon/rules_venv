@@ -1,7 +1,7 @@
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_test")
+load("//python/venv:defs.bzl", "py_binary", "py_test")
 
-py_venv_binary(
+py_binary(
     name = "data_writer",
     srcs = ["data_writer.py"],
     data = [
@@ -25,7 +25,7 @@ run_binary(
     tool = ":data_writer",
 )
 
-py_venv_test(
+py_test(
     name = "data_test",
     srcs = ["data_test.py"],
     data = [

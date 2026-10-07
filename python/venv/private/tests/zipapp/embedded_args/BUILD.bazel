@@ -1,14 +1,14 @@
-load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_test", "py_venv_zipapp")
+load("//python/venv:defs.bzl", "py_binary", "py_test", "py_zipapp")
 load("//python/venv/private/tests/zipapp:python_zip_file_consumer.bzl", "python_zip_file_consumer")
 
-py_venv_binary(
+py_binary(
     name = "from_binary",
     srcs = ["greeting.py"],
     args = ["From Binary"],
     main = "greeting.py",
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "from_binary.pyz",
     binary = ":from_binary",
     inherit_args = True,
@@ -19,13 +19,13 @@ python_zip_file_consumer(
     zip_file = ":from_binary.pyz",
 )
 
-py_venv_binary(
+py_binary(
     name = "from_zipapp",
     srcs = ["greeting.py"],
     main = "greeting.py",
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "from_zipapp.pyz",
     args = ["From Zipapp"],
     binary = ":from_zipapp",
@@ -36,7 +36,7 @@ python_zip_file_consumer(
     zip_file = ":from_zipapp.pyz",
 )
 
-py_venv_test(
+py_test(
     name = "embedded_args_test",
     srcs = ["embedded_args_test.py"],
     data = [

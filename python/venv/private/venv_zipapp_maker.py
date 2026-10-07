@@ -72,7 +72,7 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "The on-disk source of the process wrapper. Used to stage the "
             "wrapper into the zipapp when the input binary's runfiles "
-            "manifest does not already list it (e.g. a stock py_binary)."
+            "manifest does not already list it (e.g. a rules_python py_binary)."
         ),
     )
     parser.add_argument(
@@ -265,9 +265,9 @@ def main() -> None:
             runfiles_dir=runfiles_dir,
         )
 
-        # `py_venv_binary` already stages the process wrapper into its
-        # runfiles manifest, so `install_runfiles` will have copied it above.
-        # A stock `py_binary` does not, so copy it in ourselves — otherwise
+        # A `rules_venv` `py_binary` already stages the process wrapper into
+        # its runfiles manifest, so `install_runfiles` will have copied it
+        # above. A `rules_python` one does not, so copy it in ourselves — otherwise
         # the generated __main__.py will fail at runtime with a missing
         # `venv_process_wrapper.py`.
         wrapper_dest = runfiles_dir / args.venv_process_wrapper

@@ -1,5 +1,5 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("//python/venv:defs.bzl", "py_venv_library", "py_venv_test")
+load("//python/venv:defs.bzl", "py_library", "py_test")
 
 write_file(
     name = "generated",
@@ -23,7 +23,7 @@ def greeting(name: str) -> str:
     newline = "unix",
 )
 
-py_venv_library(
+py_library(
     name = "generated_srcs",
     srcs = [
         "generated/__init__.py",
@@ -32,7 +32,7 @@ py_venv_library(
     tags = ["no-mypy"],
 )
 
-py_venv_test(
+py_test(
     name = "generated_srcs_test",
     srcs = ["source_test.py"],
     main = "source_test.py",
@@ -40,7 +40,7 @@ py_venv_test(
     deps = [":generated_srcs"],
 )
 
-py_venv_library(
+py_library(
     name = "generated_srcs_imports",
     srcs = [
         "generated/__init__.py",
@@ -50,7 +50,7 @@ py_venv_library(
     tags = ["no-mypy"],
 )
 
-py_venv_test(
+py_test(
     name = "generated_srcs_imports_test",
     srcs = ["source_imports_test.py"],
     main = "source_imports_test.py",
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     newline = "unix",
 )
 
-py_venv_test(
+py_test(
     name = "generated_test",
     srcs = [":generated_test.py"],
     main = ":generated_test.py",

@@ -2,8 +2,8 @@
 
 Kept parallel with the `zipapp/with_runfiles` test so the diff-based assertion
 in both suites exercises identical zipapp semantics, only differing in
-whether the input to `py_venv_zipapp` is a `py_venv_binary` or a stock
-`py_binary`.
+whether the input to `py_zipapp` is a `rules_venv` `py_binary` or a
+`rules_python` one.
 """
 
 import argparse

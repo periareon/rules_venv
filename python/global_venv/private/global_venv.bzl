@@ -1,7 +1,7 @@
 """Utilities for setting up a venv with all available Bazel targets"""
 
 load("//python:py_info.bzl", "PyInfo")
-load("//python/venv:defs.bzl", "py_venv_binary")
+load("//python/venv:defs.bzl", "py_binary")
 
 def py_global_venv(
         *,
@@ -77,7 +77,7 @@ def py_global_venv(
             of `gen_entrypoints`. When `gen_entrypoints` is also enabled, manual
             entries take precedence over auto-discovered ones.
         build_srcs (bool): Build all python sources to ensure they're available for loading.
-        **kwargs (dict): Additional keyword arguments for the `py_venv_binary`.
+        **kwargs (dict): Additional keyword arguments for the `py_binary`.
     """
     main = Label("//python/global_venv/private:global_venv.py")
 
@@ -94,7 +94,7 @@ def py_global_venv(
     if build_srcs:
         args.append("--build_srcs")
 
-    py_venv_binary(
+    py_binary(
         name = name,
         srcs = [main],
         main = main,

@@ -3,15 +3,35 @@
 if [ "{USE_RUNFILES}" = "1" ]; then
 
     if [ -z "${RUNFILES_DIR:-}" ] && [ -z "${RUNFILES_MANIFEST_FILE:-}" ]; then
-        if [ -d "$0.runfiles" ]; then
-            export RUNFILES_DIR="$0.runfiles"
-        elif [ -d "$0.exe.runfiles" ]; then
-            export RUNFILES_DIR="$0.exe.runfiles"
-        elif [ -f "$0.runfiles_manifest" ]; then
-            export RUNFILES_MANIFEST_FILE="$0.runfiles_manifest"
-        elif [ -f "$0.exe.runfiles_manifest" ]; then
-            export RUNFILES_MANIFEST_FILE="$0.exe.runfiles_manifest"
-        else
+        # Runfiles live beside the real script. When invoked through a symlink,
+        # such as the extensionless alias Bazel builds next to this script, the
+        # resolved path is tried after the invoked one.
+        __rules_venv_self="$0"
+        while [ -L "${__rules_venv_self}" ]; do
+            __rules_venv_link="$(readlink "${__rules_venv_self}")"
+            case "${__rules_venv_link}" in
+                /*) __rules_venv_self="${__rules_venv_link}" ;;
+                *) __rules_venv_self="$(dirname "${__rules_venv_self}")/${__rules_venv_link}" ;;
+            esac
+        done
+
+        for __rules_venv_candidate in "$0" "${__rules_venv_self}"; do
+            if [ -d "${__rules_venv_candidate}.runfiles" ]; then
+                export RUNFILES_DIR="${__rules_venv_candidate}.runfiles"
+                break
+            elif [ -d "${__rules_venv_candidate}.exe.runfiles" ]; then
+                export RUNFILES_DIR="${__rules_venv_candidate}.exe.runfiles"
+                break
+            elif [ -f "${__rules_venv_candidate}.runfiles_manifest" ]; then
+                export RUNFILES_MANIFEST_FILE="${__rules_venv_candidate}.runfiles_manifest"
+                break
+            elif [ -f "${__rules_venv_candidate}.exe.runfiles_manifest" ]; then
+                export RUNFILES_MANIFEST_FILE="${__rules_venv_candidate}.exe.runfiles_manifest"
+                break
+            fi
+        done
+
+        if [ -z "${RUNFILES_DIR:-}" ] && [ -z "${RUNFILES_MANIFEST_FILE:-}" ]; then
             echo >&2 "ERROR: cannot find runfiles"
             exit 1
         fi

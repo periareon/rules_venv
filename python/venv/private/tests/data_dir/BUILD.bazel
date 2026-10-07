@@ -1,4 +1,4 @@
-load("//python/venv:defs.bzl", "py_venv_test")
+load("//python/venv:defs.bzl", "py_test")
 load("//python/venv/private/tests/data_dir/private:directory_maker.bzl", "directory_maker")
 
 # Create a directory with nested files using declare_directory
@@ -8,7 +8,7 @@ directory_maker(
 )
 
 # Test that accesses the directory via runfiles
-py_venv_test(
+py_test(
     name = "data_dir_test",
     srcs = ["data_dir_test.py"],
     data = [":test_data_directory"],
