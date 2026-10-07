@@ -13,16 +13,16 @@ load(
     _PyRuntimeInfo = "PyRuntimeInfo",
 )
 load(
-    "//python/venv:py_venv_binary.bzl",
-    "py_venv_binary",
+    "//python/venv:py_binary.bzl",
+    _py_binary = "py_binary",
 )
 load(
-    "//python/venv:py_venv_library.bzl",
-    "py_venv_library",
+    "//python/venv:py_library.bzl",
+    _py_library = "py_library",
 )
 load(
-    "//python/venv:py_venv_test.bzl",
-    "py_venv_test",
+    "//python/venv:py_test.bzl",
+    _py_test = "py_test",
 )
 load(
     ":py_executable_info.bzl",
@@ -33,9 +33,9 @@ load(
     _PyInfo = "PyInfo",
 )
 
-py_binary = py_venv_binary
-py_library = py_venv_library
-py_test = py_venv_test
+py_binary = _py_binary
+py_library = _py_library
+py_test = _py_test
 
 PyExecutableInfo = _PyExecutableInfo
 PyInfo = _PyInfo

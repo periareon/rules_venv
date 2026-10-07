@@ -18,7 +18,7 @@ def _bootstrap_script_zipapp_impl(ctx):
 
 bootstrap_script_zipapp = rule(
     doc = """\
-Rebuild a `py_venv_zipapp` with `bootstrap_impl=script`, the mode in which
+Rebuild a `py_zipapp` with `bootstrap_impl=script`, the mode in which
 `rules_python` stages a build time venv into a `py_binary`'s runfiles. The
 venv's interpreter is a symlink whose target only resolves within a runfiles
 directory, so it must never be copied into a zipapp.
@@ -29,7 +29,7 @@ travels with the artifact and any rule or test may consume the result.
     implementation = _bootstrap_script_zipapp_impl,
     attrs = {
         "zipapp": attr.label(
-            doc = "A `py_venv_zipapp` target.",
+            doc = "A `py_zipapp` target.",
             mandatory = True,
             allow_single_file = True,
             cfg = _bootstrap_script_transition,

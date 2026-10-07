@@ -6,6 +6,16 @@ stardoc(
     name = "venv",
     out = "src/venv.md",
     input = "//python/venv:defs.bzl",
+    # The `py_venv_*` aliases are described in the module docstring rather
+    # than documented a second time.
+    symbol_names = [
+        "py_binary",
+        "py_library",
+        "py_test",
+        "py_venv_common",
+        "py_venv_toolchain",
+        "py_zipapp",
+    ],
     table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
     tags = ["manual"],
     deps = ["@rules_venv//python/venv:bzl_lib"],

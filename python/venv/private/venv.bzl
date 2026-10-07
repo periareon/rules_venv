@@ -23,7 +23,7 @@ _COMMON_ATTRS = {
     ),
 }
 
-def _py_venv_library_impl(ctx):
+def _py_library_impl(ctx):
     dep_info = venv_common.create_dep_info(
         ctx = ctx,
         deps = ctx.attr.deps,
@@ -59,11 +59,11 @@ def _py_venv_library_impl(ctx):
         ),
     ]
 
-py_venv_library = rule(
+py_library = rule(
     doc = """\
 A library of Python code that can be depended upon.
 """,
-    implementation = _py_venv_library_impl,
+    implementation = _py_library_impl,
     attrs = _COMMON_ATTRS,
     provides = [PyInfo],
 )
@@ -163,7 +163,34 @@ def compute_main(label, srcs, main = None):
 
     return main
 
-def _py_venv_binary_impl(ctx):
+def _create_compat_symlink(ctx, executable):
+    """Create an extensionless alias of an executable's entrypoint.
+
+    `rules_python` names its executables `<name>`, so tooling that locates
+    `bazel-bin/<package>/<name>` expects that file to exist. The entrypoint
+    itself keeps its `.sh` suffix; the alias is a symlink and is only created
+    on platforms where the entrypoint is a shell script, as Windows cannot
+    be relied on for symlink support.
+
+    Args:
+        ctx (ctx): The rule's context object.
+        executable (File): The entrypoint produced by `create_venv_entrypoint`.
+
+    Returns:
+        list: The symlink, or an empty list when none was created.
+    """
+    if executable.extension != "sh":
+        return []
+
+    symlink = ctx.actions.declare_file(ctx.label.name)
+    ctx.actions.symlink(
+        output = symlink,
+        target_file = executable,
+        is_executable = True,
+    )
+    return [symlink]
+
+def _py_binary_impl(ctx):
     venv_toolchain = ctx.toolchains[venv_common.TOOLCHAIN_TYPE]
 
     dep_info = venv_common.create_dep_info(
@@ -211,7 +238,7 @@ def _py_venv_binary_impl(ctx):
 
     return [
         DefaultInfo(
-            files = depset([executable] + ctx.files.srcs + ctx.files.data),
+            files = depset([executable] + _create_compat_symlink(ctx, executable) + ctx.files.srcs + ctx.files.data),
             runfiles = runfiles,
             executable = executable,
         ),
@@ -245,18 +272,18 @@ _EXECUTABLE_ATTRS = _COMMON_ATTRS | {
     ),
 }
 
-py_venv_binary = rule(
+py_binary = rule(
     doc = """\
-A `py_venv_binary` is an executable Python program consisting of a collection of
+A `py_binary` is an executable Python program consisting of a collection of
 `.py` source files (possibly belonging to other `py_library` rules), a `*.runfiles`
 directory tree containing all the code and data needed by the program at run-time,
 and a stub script that starts up the program with the correct initial environment
 and data.
 
 ```python
-load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+load("@rules_venv//python/venv:defs.bzl", "py_binary")
 
-py_venv_binary(
+py_binary(
     name = "foo",
     srcs = ["foo.py"],
     data = [":transform"],  # a cc_binary which we invoke at run time
@@ -266,14 +293,14 @@ py_venv_binary(
 )
 ```
 """,
-    implementation = _py_venv_binary_impl,
+    implementation = _py_binary_impl,
     attrs = _EXECUTABLE_ATTRS,
     provides = [PyInfo, PyExecutableInfo],
     toolchains = [venv_common.TOOLCHAIN_TYPE],
     executable = True,
 )
 
-def _py_venv_test_impl(ctx):
+def _py_test_impl(ctx):
     venv_toolchain = ctx.toolchains[venv_common.TOOLCHAIN_TYPE]
     py_toolchain = venv_toolchain.py_toolchain
 
@@ -331,7 +358,7 @@ def _py_venv_test_impl(ctx):
 
     return [
         DefaultInfo(
-            files = depset([executable] + ctx.files.srcs + ctx.files.data),
+            files = depset([executable] + _create_compat_symlink(ctx, executable) + ctx.files.srcs + ctx.files.data),
             runfiles = runfiles,
             executable = executable,
         ),
@@ -351,11 +378,11 @@ def _py_venv_test_impl(ctx):
         ),
     ]
 
-py_venv_test = rule(
+py_test = rule(
     doc = """\
-A `py_venv_test` rule compiles a test. A test is a binary wrapper around some test code.
+A `py_test` rule compiles a test. A test is a binary wrapper around some test code.
 """,
-    implementation = _py_venv_test_impl,
+    implementation = _py_test_impl,
     attrs = _EXECUTABLE_ATTRS | COVERAGE_ATTRS | {
         "env_inherit": attr.string_list(
             doc = "Specifies additional environment variables to inherit from the external environment when the test is executed by `bazel test`.",

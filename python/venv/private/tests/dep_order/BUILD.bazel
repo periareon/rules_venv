@@ -1,6 +1,6 @@
-load("//python/venv:defs.bzl", "py_venv_test")
+load("//python/venv:defs.bzl", "py_test")
 
-py_venv_test(
+py_test(
     name = "dep_order_test",
     srcs = ["dep_order_test.py"],
     deps = [

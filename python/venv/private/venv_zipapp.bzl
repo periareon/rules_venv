@@ -157,9 +157,9 @@ def create_python_zip_file(
     args.add("--venv_process_wrapper", _rlocationpath(venv_toolchain.process_wrapper, ctx.workspace_name))
 
     # Pass the on-disk path too so the zipapp maker can stage the process
-    # wrapper itself when the input binary did not (i.e. a stock `py_binary`
-    # rather than a `py_venv_binary`). The file is already in `venv_runfiles`,
-    # so no additional action inputs are needed.
+    # wrapper itself when the input binary did not (i.e. a `rules_python`
+    # `py_binary` rather than a `rules_venv` one). The file is already in
+    # `venv_runfiles`, so no additional action inputs are needed.
     args.add("--venv_process_wrapper_source", venv_toolchain.process_wrapper)
     optional_shebang = shebang or venv_toolchain.zipapp_shebang
     if optional_shebang:
@@ -224,14 +224,14 @@ def create_python_zip_file(
 
     return python_zip_file
 
-def _py_venv_zipapp_impl(ctx):
+def _py_zipapp_impl(ctx):
     venv_toolchain = ctx.toolchains[venv_common.TOOLCHAIN_TYPE]
     py_info = ctx.attr.binary[PyInfo]
     main_info = ctx.attr.binary[PyMainInfo]
 
-    # A stock `py_binary` relies on the `rules_python` bootstrap to put the
-    # workspace root on `sys.path`, which zipapps never run. Add it here. This
-    # is a no-op for `py_venv_binary`, whose `PyInfo.imports` already has it.
+    # A `rules_python` `py_binary` relies on its bootstrap to put the workspace
+    # root on `sys.path`, which zipapps never run. Add it here. This is a no-op
+    # for a `rules_venv` `py_binary`, whose `PyInfo.imports` already has it.
     binary_workspace_name = ctx.attr.binary.label.workspace_name or ctx.workspace_name
     py_info = PyInfo(
         imports = depset(
@@ -254,9 +254,10 @@ def _py_venv_zipapp_impl(ctx):
     # machinery `rules_python` stages beside its executables is unused here and
     # unrepresentable besides: under `bootstrap_impl=script` it includes a venv
     # whose `bin/python3` symlink resolves only from the runfiles root.
-    # `runfiles_without_exe` omits exactly those parts. `py_venv_binary` omits
-    # its own entrypoint files from it the same way. The fallback covers custom
-    # rules built on `py_venv_common` that only advertise `PyInfo`.
+    # `runfiles_without_exe` omits exactly those parts. The `rules_venv`
+    # `py_binary` omits its own entrypoint files from it the same way. The
+    # fallback covers custom rules built on `py_venv_common` that only
+    # advertise `PyInfo`.
     if PyExecutableInfo in ctx.attr.binary:
         runfiles = ctx.attr.binary[PyExecutableInfo].runfiles_without_exe
     else:
@@ -282,26 +283,26 @@ def _py_venv_zipapp_impl(ctx):
         files = depset([python_zip_file]),
     )]
 
-py_venv_zipapp = rule(
+py_zipapp = rule(
     doc = """\
-A `py_venv_zipapp` is an executable [Python zipapp](https://docs.python.org/3/library/zipapp.html)
+A `py_zipapp` is an executable [Python zipapp](https://docs.python.org/3/library/zipapp.html)
 which contains all of the dependencies and runfiles for a given executable.
 
 ```python
-load("@rules_venv//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+load("@rules_venv//python/venv:defs.bzl", "py_binary", "py_zipapp")
 
-py_venv_binary(
+py_binary(
     name = "foo",
     srcs = ["foo.py"],
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "foo_pyz",
     binary = ":foo",
 )
 ```
 """,
-    implementation = _py_venv_zipapp_impl,
+    implementation = _py_zipapp_impl,
     attrs = {
         "args": attr.string_list(
             doc = "Arguments to add to the beginning of all invocations of the zipapp.",

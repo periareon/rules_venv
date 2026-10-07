@@ -1,11 +1,11 @@
-"""Regression test: `py_venv_zipapp` must put the workspace root on the import
-path for a stock `py_binary`, which relies on the `rules_python` bootstrap for
-that and advertises nothing in `PyInfo.imports`."""
+"""Regression test: `py_zipapp` must put the workspace root on the import
+path for a `rules_python` `py_binary`, which relies on the `rules_python`
+bootstrap for that and advertises nothing in `PyInfo.imports`."""
 
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
-load("//python/venv:defs.bzl", "py_venv_zipapp")
+load("@rules_python//python:defs.bzl", rules_python_py_binary = "py_binary", rules_python_py_library = "py_library")
+load("//python/venv:defs.bzl", "py_zipapp")
 load("//python/venv/private/tests/zipapp:bootstrap_script_zipapp.bzl", "bootstrap_script_zipapp")
 load("//python/venv/private/tests/zipapp:python_zip_file_consumer.bzl", "python_zip_file_consumer")
 
@@ -17,20 +17,20 @@ _NOT_WINDOWS = select({
     "//conditions:default": [],
 })
 
-# Stock rules_python targets only. `writer.py` imports `lib` via its full
+# `rules_python` targets only. `writer.py` imports `lib` via its full
 # workspace-rooted module path, which no `imports` attribute provides.
-py_library(
+rules_python_py_library(
     name = "lib",
     srcs = ["lib.py"],
 )
 
-py_binary(
+rules_python_py_binary(
     name = "writer",
     srcs = ["writer.py"],
     deps = [":lib"],
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "writer_zipapp",
     binary = ":writer",
 )

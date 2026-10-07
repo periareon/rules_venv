@@ -2,8 +2,8 @@
 
 Unlike the `zipapp/rules_python_input` test, nothing here depends on a
 `rules_venv` target, so the only thing that can put the workspace root on
-`sys.path` is `py_venv_zipapp` itself. A stock `py_binary` relies on the
-`rules_python` bootstrap for that and advertises nothing in `PyInfo.imports`.
+`sys.path` is `py_zipapp` itself. A `rules_python` `py_binary` relies on
+its bootstrap for that and advertises nothing in `PyInfo.imports`.
 """
 
 import argparse

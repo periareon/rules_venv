@@ -1,9 +1,9 @@
-"""Regression test: `py_venv_zipapp` must accept a stock `py_binary` and still resolve runfiles."""
+"""Regression test: `py_zipapp` must accept a `rules_python` `py_binary` and still resolve runfiles."""
 
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@rules_python//python:defs.bzl", "py_binary")
-load("//python/venv:defs.bzl", "py_venv_zipapp")
+load("@rules_python//python:defs.bzl", rules_python_py_binary = "py_binary")
+load("//python/venv:defs.bzl", "py_zipapp")
 load("//python/venv/private/tests/zipapp:bootstrap_script_zipapp.bzl", "bootstrap_script_zipapp")
 load("//python/venv/private/tests/zipapp:python_zip_file_consumer.bzl", "python_zip_file_consumer")
 
@@ -15,8 +15,8 @@ _NOT_WINDOWS = select({
     "//conditions:default": [],
 })
 
-# Stock py_binary (NOT py_venv_binary) — the whole point of this test.
-py_binary(
+# A `rules_python` `py_binary` (NOT the `rules_venv` one) — the whole point of this test.
+rules_python_py_binary(
     name = "writer",
     srcs = ["writer.py"],
     data = [
@@ -27,7 +27,7 @@ py_binary(
     ],
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "writer_zipapp",
     binary = ":writer",
 )

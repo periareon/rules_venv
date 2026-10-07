@@ -1,8 +1,8 @@
-"""Unittests verifying `py_venv_binary` and `py_venv_test` return `PyExecutableInfo`."""
+"""Unittests verifying `py_binary`, `py_test`, and their `py_venv_*` counterparts return `PyExecutableInfo`."""
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("//python:py_executable_info.bzl", "PyExecutableInfo")
-load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_library", "py_venv_test")
+load("//python/venv:defs.bzl", "py_binary", "py_library", "py_test", "py_venv_binary", "py_venv_test")
 
 def _executable_info_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -71,14 +71,14 @@ def executable_info_test_suite(name, **kwargs):
         name (str): The name of the test suite.
         **kwargs (dict): Additional keyword arguments for the test suite.
     """
-    py_venv_library(
+    py_library(
         name = "lib",
         srcs = ["lib.py"],
         data = ["data.txt"],
         tags = ["manual"],
     )
 
-    py_venv_binary(
+    py_binary(
         name = "binary",
         srcs = ["main.py"],
         main = "main.py",
@@ -86,32 +86,47 @@ def executable_info_test_suite(name, **kwargs):
         tags = ["manual"],
     )
 
-    py_venv_test(
+    py_test(
         name = "test",
         srcs = ["main_test.py"],
         deps = [":lib"],
         tags = ["manual"],
     )
 
-    executable_info_test(
-        name = "binary_executable_info_test",
-        target_under_test = ":binary",
+    py_venv_binary(
+        name = "venv_binary",
+        srcs = ["main.py"],
         main = "main.py",
-        expected = ["lib.py", "data.txt"],
+        deps = [":lib"],
+        tags = ["manual"],
     )
 
-    executable_info_test(
-        name = "test_executable_info_test",
-        target_under_test = ":test",
+    py_venv_test(
+        name = "venv_test",
+        srcs = ["main_test.py"],
         main = "main_test.py",
-        expected = ["lib.py", "data.txt"],
+        deps = [":lib"],
+        tags = ["manual"],
     )
+
+    tests = []
+    for target, main in [
+        ("binary", "main.py"),
+        ("test", "main_test.py"),
+        ("venv_binary", "main.py"),
+        ("venv_test", "main_test.py"),
+    ]:
+        test_name = "{}_executable_info_test".format(target)
+        executable_info_test(
+            name = test_name,
+            target_under_test = ":" + target,
+            main = main,
+            expected = ["lib.py", "data.txt"],
+        )
+        tests.append(":" + test_name)
 
     native.test_suite(
         name = name,
-        tests = [
-            ":binary_executable_info_test",
-            ":test_executable_info_test",
-        ],
+        tests = tests,
         **kwargs
     )
