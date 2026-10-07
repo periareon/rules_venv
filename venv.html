@@ -158,13 +158,15 @@
                         <!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="venv"><a class="header" href="#venv">Venv</a></h1>
 <p>Core Bazel rules for defining Python targets.</p>
+<p>The <code>py_venv_binary</code>, <code>py_venv_library</code>, <code>py_venv_test</code>, and <code>py_venv_zipapp</code>
+symbols are aliases of <code>py_binary</code>, <code>py_library</code>, <code>py_test</code>, and <code>py_zipapp</code>.</p>
 <h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
 <ul>
-<li><a href="#py_venv_binary">py_venv_binary</a></li>
-<li><a href="#py_venv_library">py_venv_library</a></li>
-<li><a href="#py_venv_test">py_venv_test</a></li>
+<li><a href="#py_binary">py_binary</a></li>
+<li><a href="#py_library">py_library</a></li>
+<li><a href="#py_test">py_test</a></li>
 <li><a href="#py_venv_toolchain">py_venv_toolchain</a></li>
-<li><a href="#py_venv_zipapp">py_venv_zipapp</a></li>
+<li><a href="#py_zipapp">py_zipapp</a></li>
 </ul>
 <h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
 <ul>
@@ -177,21 +179,21 @@
 <li><a href="#py_venv_common.create_venv_entrypoint">py_venv_common.create_venv_entrypoint</a></li>
 <li><a href="#py_venv_common.get_toolchain">py_venv_common.get_toolchain</a></li>
 </ul>
-<p><a id="py_venv_binary"></a></p>
-<h2 id="py_venv_binary"><a class="header" href="#py_venv_binary">py_venv_binary</a></h2>
+<p><a id="py_binary"></a></p>
+<h2 id="py_binary"><a class="header" href="#py_binary">py_binary</a></h2>
 <pre>
-load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+load("@rules_venv//python/venv:defs.bzl", "py_binary")
 
-py_venv_binary(<a href="#py_venv_binary-name">name</a>, <a href="#py_venv_binary-deps">deps</a>, <a href="#py_venv_binary-srcs">srcs</a>, <a href="#py_venv_binary-data">data</a>, <a href="#py_venv_binary-env">env</a>, <a href="#py_venv_binary-imports">imports</a>, <a href="#py_venv_binary-main">main</a>)
+py_binary(<a href="#py_binary-name">name</a>, <a href="#py_binary-deps">deps</a>, <a href="#py_binary-srcs">srcs</a>, <a href="#py_binary-data">data</a>, <a href="#py_binary-env">env</a>, <a href="#py_binary-imports">imports</a>, <a href="#py_binary-main">main</a>)
 </pre>
-<p>A <code>py_venv_binary</code> is an executable Python program consisting of a collection of
+<p>A <code>py_binary</code> is an executable Python program consisting of a collection of
 <code>.py</code> source files (possibly belonging to other <code>py_library</code> rules), a <code>*.runfiles</code>
 directory tree containing all the code and data needed by the program at run-time,
 and a stub script that starts up the program with the correct initial environment
 and data.</p>
-<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_venv_binary")
+<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_binary")
 
-py_venv_binary(
+py_binary(
     name = "foo",
     srcs = ["foo.py"],
     data = [":transform"],  # a cc_binary which we invoke at run time
@@ -202,50 +204,50 @@ py_venv_binary(
 </code></pre>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="py_venv_binary-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_binary-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_binary-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
-<p><a id="py_venv_library"></a></p>
-<h2 id="py_venv_library"><a class="header" href="#py_venv_library">py_venv_library</a></h2>
+<p><a id="py_library"></a></p>
+<h2 id="py_library"><a class="header" href="#py_library">py_library</a></h2>
 <pre>
-load("@rules_venv//python/venv:defs.bzl", "py_venv_library")
+load("@rules_venv//python/venv:defs.bzl", "py_library")
 
-py_venv_library(<a href="#py_venv_library-name">name</a>, <a href="#py_venv_library-deps">deps</a>, <a href="#py_venv_library-srcs">srcs</a>, <a href="#py_venv_library-data">data</a>, <a href="#py_venv_library-imports">imports</a>)
+py_library(<a href="#py_library-name">name</a>, <a href="#py_library-deps">deps</a>, <a href="#py_library-srcs">srcs</a>, <a href="#py_library-data">data</a>, <a href="#py_library-imports">imports</a>)
 </pre>
 <p>A library of Python code that can be depended upon.</p>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="py_venv_library-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_library-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_library-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_library-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_library-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_library-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_library-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_library-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_library-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_library-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 </tbody></table>
 </div>
-<p><a id="py_venv_test"></a></p>
-<h2 id="py_venv_test"><a class="header" href="#py_venv_test">py_venv_test</a></h2>
+<p><a id="py_test"></a></p>
+<h2 id="py_test"><a class="header" href="#py_test">py_test</a></h2>
 <pre>
-load("@rules_venv//python/venv:defs.bzl", "py_venv_test")
+load("@rules_venv//python/venv:defs.bzl", "py_test")
 
-py_venv_test(<a href="#py_venv_test-name">name</a>, <a href="#py_venv_test-deps">deps</a>, <a href="#py_venv_test-srcs">srcs</a>, <a href="#py_venv_test-data">data</a>, <a href="#py_venv_test-env">env</a>, <a href="#py_venv_test-env_inherit">env_inherit</a>, <a href="#py_venv_test-imports">imports</a>, <a href="#py_venv_test-main">main</a>)
+py_test(<a href="#py_test-name">name</a>, <a href="#py_test-deps">deps</a>, <a href="#py_test-srcs">srcs</a>, <a href="#py_test-data">data</a>, <a href="#py_test-env">env</a>, <a href="#py_test-env_inherit">env_inherit</a>, <a href="#py_test-imports">imports</a>, <a href="#py_test-main">main</a>)
 </pre>
-<p>A <code>py_venv_test</code> rule compiles a test. A test is a binary wrapper around some test code.</p>
+<p>A <code>py_test</code> rule compiles a test. A test is a binary wrapper around some test code.</p>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="py_venv_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-env_inherit"></a>env_inherit</td><td style="text-align: left">Specifies additional environment variables to inherit from the external environment when the test is executed by <code>bazel test</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_test-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_test-deps"></a>deps</td><td style="text-align: left">Other python targets to link to the current target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-srcs"></a>srcs</td><td style="text-align: left">The list of source (.py) files that are processed to create the target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-data"></a>data</td><td style="text-align: left">Files needed by this rule at runtime. May list file or rule targets. Generally allows any target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-env"></a>env</td><td style="text-align: left">Dictionary of strings; values are subject to <code>$(location)</code> and "Make variable" substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-env_inherit"></a>env_inherit</td><td style="text-align: left">Specifies additional environment variables to inherit from the external environment when the test is executed by <code>bazel test</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-imports"></a>imports</td><td style="text-align: left">List of import directories to be added to the <code>PYTHONPATH</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_test-main"></a>main</td><td style="text-align: left">The name of the source file that is the main entry point of the application. This file must also be listed in <code>srcs</code>. If left unspecified, <code>name</code> is used instead. If <code>name</code> does not match any filename in <code>srcs</code>, <code>main</code> must be specified.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 </tbody></table>
 </div>
 <p><a id="py_venv_toolchain"></a></p>
@@ -262,36 +264,36 @@ py_venv_toolchain(<a href="#py_venv_toolchain-name">name</a>, <a href="#py_venv_
 <tr><td style="text-align: left"><a id="py_venv_toolchain-zipapp_shebang"></a>zipapp_shebang</td><td style="text-align: left">The shebang to use when creating zipapps (<code>OutputGroupInfo.python_zip_file</code>).</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 </tbody></table>
 </div>
-<p><a id="py_venv_zipapp"></a></p>
-<h2 id="py_venv_zipapp"><a class="header" href="#py_venv_zipapp">py_venv_zipapp</a></h2>
+<p><a id="py_zipapp"></a></p>
+<h2 id="py_zipapp"><a class="header" href="#py_zipapp">py_zipapp</a></h2>
 <pre>
-load("@rules_venv//python/venv:defs.bzl", "py_venv_zipapp")
+load("@rules_venv//python/venv:defs.bzl", "py_zipapp")
 
-py_venv_zipapp(<a href="#py_venv_zipapp-name">name</a>, <a href="#py_venv_zipapp-args">args</a>, <a href="#py_venv_zipapp-binary">binary</a>, <a href="#py_venv_zipapp-env">env</a>, <a href="#py_venv_zipapp-inherit_args">inherit_args</a>, <a href="#py_venv_zipapp-inherit_env">inherit_env</a>, <a href="#py_venv_zipapp-shebang">shebang</a>)
+py_zipapp(<a href="#py_zipapp-name">name</a>, <a href="#py_zipapp-args">args</a>, <a href="#py_zipapp-binary">binary</a>, <a href="#py_zipapp-env">env</a>, <a href="#py_zipapp-inherit_args">inherit_args</a>, <a href="#py_zipapp-inherit_env">inherit_env</a>, <a href="#py_zipapp-shebang">shebang</a>)
 </pre>
-<p>A <code>py_venv_zipapp</code> is an executable <a href="https://docs.python.org/3/library/zipapp.html">Python zipapp</a>
+<p>A <code>py_zipapp</code> is an executable <a href="https://docs.python.org/3/library/zipapp.html">Python zipapp</a>
 which contains all of the dependencies and runfiles for a given executable.</p>
-<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+<pre><code class="language-python">load("@rules_venv//python/venv:defs.bzl", "py_binary", "py_zipapp")
 
-py_venv_binary(
+py_binary(
     name = "foo",
     srcs = ["foo.py"],
 )
 
-py_venv_zipapp(
+py_zipapp(
     name = "foo_pyz",
     binary = ":foo",
 )
 </code></pre>
 <p><strong>ATTRIBUTES</strong></p>
 <div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-args"></a>args</td><td style="text-align: left">Arguments to add to the beginning of all invocations of the zipapp.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-binary"></a>binary</td><td style="text-align: left">The binary to package as a zipapp.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-env"></a>env</td><td style="text-align: left">Environment variables to inject into all invocations of the zipapp.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-inherit_args"></a>inherit_args</td><td style="text-align: left">Inherit template variable expanded arguments from <code>binary</code>.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-inherit_env"></a>inherit_env</td><td style="text-align: left">Inherit template variable expanded environment variables from <code>binary</code>.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
-<tr><td style="text-align: left"><a id="py_venv_zipapp-shebang"></a>shebang</td><td style="text-align: left">Optional shebang line to prepend to the zip (provided as content after <code>#!</code>).</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-args"></a>args</td><td style="text-align: left">Arguments to add to the beginning of all invocations of the zipapp.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-binary"></a>binary</td><td style="text-align: left">The binary to package as a zipapp.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-env"></a>env</td><td style="text-align: left">Environment variables to inject into all invocations of the zipapp.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-inherit_args"></a>inherit_args</td><td style="text-align: left">Inherit template variable expanded arguments from <code>binary</code>.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-inherit_env"></a>inherit_env</td><td style="text-align: left">Inherit template variable expanded environment variables from <code>binary</code>.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="py_zipapp-shebang"></a>shebang</td><td style="text-align: left">Optional shebang line to prepend to the zip (provided as content after <code>#!</code>).</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 </tbody></table>
 </div>
 <p><a id="py_venv_common.create_dep_info"></a></p>
