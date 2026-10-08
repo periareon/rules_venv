@@ -287,6 +287,7 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
         arguments = [python_args, runfiles_args],
         env = ctx.configuration.default_shell_env,
         resource_set = resource_set,
+        toolchain = None,
     )
 
     return output, output_runfiles

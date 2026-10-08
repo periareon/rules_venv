@@ -143,6 +143,7 @@ def _py_wheel_package_impl(ctx):
 
     ctx.actions.run(
         mnemonic = "PyWheelRequire",
+        toolchain = None,
         outputs = [out_requires],
         arguments = [requires_args],
         executable = ctx.executable._requires_parser,

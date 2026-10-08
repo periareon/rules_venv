@@ -152,6 +152,7 @@ def _py_ty_aspect_impl(target, ctx):
 
     ctx.actions.run(
         mnemonic = "PyTy",
+        toolchain = TOOLCHAIN_TYPE,
         progress_message = "PyTy %{label}",
         executable = executable,
         inputs = depset([ctx.file._config], transitive = [srcs]),

@@ -44,6 +44,7 @@ def _venv_action_aspect_impl(target, ctx):
         tools = runfiles.files,
         outputs = [out],
         arguments = [args],
+        toolchain = None,
     )
 
     return [OutputGroupInfo(

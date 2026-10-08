@@ -23,6 +23,7 @@ def _python_zip_file_consumer_impl(ctx):
         outputs = [output],
         inputs = [ctx.file.zip_file],
         tools = py_runtime.files,
+        toolchain = "@rules_python//python:toolchain_type",
     )
 
     return [DefaultInfo(

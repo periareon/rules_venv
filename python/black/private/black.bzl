@@ -157,6 +157,7 @@ def _py_black_aspect_impl(target, ctx):
         tools = runfiles.files,
         outputs = [marker],
         arguments = [args],
+        toolchain = None,
     )
 
     return [OutputGroupInfo(

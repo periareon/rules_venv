@@ -230,6 +230,7 @@ def _py_ruff_aspect_impl(target, ctx):
 
         ctx.actions.run(
             mnemonic = "PyRuff{}".format(mode.capitalize()),
+            toolchain = TOOLCHAIN_TYPE,
             progress_message = "PyRuff ({}) %{{label}}".format(mode.capitalize()),
             executable = executable,
             inputs = depset([ctx.file._config], transitive = [srcs]),
