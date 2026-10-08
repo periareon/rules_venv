@@ -631,6 +631,7 @@ def _py_mypy_aspect_impl(target, ctx):
 
     ctx.actions.run(
         mnemonic = mnemonic,
+        toolchain = None,
         progress_message = mnemonic + " %{label}",
         executable = executable,
         inputs = depset(
@@ -714,6 +715,7 @@ def _py_mypy_stdlib_cache_impl(ctx):
 
     ctx.actions.run(
         mnemonic = "PyMypyStdlibCache",
+        toolchain = None,
         progress_message = "PyMypyStdlibCache %{label}",
         executable = executable,
         inputs = depset([config]),

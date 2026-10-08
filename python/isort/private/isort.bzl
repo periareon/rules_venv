@@ -163,6 +163,7 @@ def _py_isort_aspect_impl(target, ctx):
         tools = runfiles.files,
         outputs = [marker],
         arguments = [args],
+        toolchain = None,
         env = ctx.configuration.default_shell_env,
     )
 

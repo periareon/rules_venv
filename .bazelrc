@@ -16,6 +16,9 @@ coverage --combined_report=lcov
 # https://bazel.build/reference/command-line-reference#flag--experimental_fetch_all_coverage_outputs
 coverage --experimental_fetch_all_coverage_outputs
 
+# https://github.com/bazelbuild/bazel/issues/19981
+common --incompatible_auto_exec_groups
+
 # https://github.com/bazelbuild/bazel/issues/8195
 build --incompatible_disallow_empty_glob=true
 

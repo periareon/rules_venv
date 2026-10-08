@@ -23,6 +23,14 @@ bazel_dep(name = "rules_req_compile", version = "1.1.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 bazel_dep(name = "rules_rust_mdbook", version = "0.74.0", dev_dependency = True)
 
+# Temporary compatibility patch for the documentation tools' protobuf actions.
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = ["//tools/patches:protobuf-auto-exec-groups.patch"],
+    version = "33.4",
+)
+
 python = use_extension("//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
     configure_coverage_tool = True,

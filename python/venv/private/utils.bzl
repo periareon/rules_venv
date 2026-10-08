@@ -54,6 +54,7 @@ def _venv_entrypoint_impl(ctx):
         inputs = inputs,
         tools = depset([ctx.file._maker], transitive = [py_runtime.files]),
         outputs = [output],
+        toolchain = None,
     )
 
     return [DefaultInfo(
