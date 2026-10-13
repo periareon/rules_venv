@@ -191,7 +191,9 @@ def _create_runfiles_collection(*, ctx, venv_toolchain, py_toolchain, runfiles, 
     Args:
         ctx (ctx): The rule's context object.
         venv_toolchain (ToolchainInfo): A `py_venv_toolchain` toolchain.
-        py_toolchain (ToolchainInfo): A `py_toolchain` toolchain.
+        py_toolchain (ToolchainInfo): A `py_toolchain` toolchain for the execution platform. The
+            collection is rendered by a build time action, so this must not be the target
+            platform's toolchain.
         runfiles (Runfiles): The runfiles to render into a directory
         exclude_files (depset): A collection of files to exclude from the collection despite them appearing
             in `runfiles`.
@@ -421,10 +423,12 @@ def _create_venv_entrypoint(
     venv_runfiles = collection_runfiles
 
     if force_runfiles or not venv_toolchain.runfiles_enabled:
+        # The collection is rendered at build time, so the action runs with the
+        # execution platform's interpreter rather than the one the venv is for.
         runfiles_collection, associated_runfiles = _create_runfiles_collection(
             ctx = ctx,
             venv_toolchain = venv_toolchain,
-            py_toolchain = py_toolchain,
+            py_toolchain = venv_toolchain.py_toolchain_exec,
             runfiles = collection_runfiles,
             exclude_files = interpreter_runfiles.files,
             name = name,

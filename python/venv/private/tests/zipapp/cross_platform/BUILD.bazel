@@ -1,0 +1,70 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//python/venv:defs.bzl", "py_venv_binary", "py_venv_zipapp")
+load(":platform_build.bzl", "platform_build")
+
+# A binary and its zipapp are built through a `--platforms` transition to
+# operating systems other than the host. Whatever the host is, at least one of
+# these platforms is foreign to it, so build time actions which mistakenly run
+# an interpreter for the target platform fail here instead of on a user's
+# machine. The binary is built on its own because a zipapp does not request
+# the binary's entrypoint and so does not exercise the actions behind it.
+
+platform(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+)
+
+platform(
+    name = "macos_aarch64",
+    constraint_values = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:macos",
+    ],
+)
+
+py_venv_binary(
+    name = "greeter",
+    srcs = ["greeter.py"],
+)
+
+py_venv_zipapp(
+    name = "greeter_zipapp",
+    binary = ":greeter",
+)
+
+platform_build(
+    name = "greeter_linux_x86_64",
+    platform = ":linux_x86_64",
+    target = ":greeter",
+)
+
+platform_build(
+    name = "greeter_zipapp_linux_x86_64",
+    platform = ":linux_x86_64",
+    target = ":greeter_zipapp",
+)
+
+platform_build(
+    name = "greeter_macos_aarch64",
+    platform = ":macos_aarch64",
+    target = ":greeter",
+)
+
+platform_build(
+    name = "greeter_zipapp_macos_aarch64",
+    platform = ":macos_aarch64",
+    target = ":greeter_zipapp",
+)
+
+build_test(
+    name = "cross_platform_build_test",
+    targets = [
+        ":greeter_linux_x86_64",
+        ":greeter_zipapp_linux_x86_64",
+        ":greeter_macos_aarch64",
+        ":greeter_zipapp_macos_aarch64",
+    ],
+)
