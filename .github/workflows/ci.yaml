@@ -168,6 +168,38 @@ jobs:
               exit 1
           }
 
+  # `py_wasm_module`: the module targets are `manual` (see their BUILD file),
+  # so they are named rather than reached by a wildcard.
+  ci-py-wasm:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+          - os: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+      # The linters run on the rule's code only: the module targets build
+      # under Python 3.13 and 3.14, for which the pinned linters' wheels are
+      # not resolved.
+      - name: Lint
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} build --config=strict //python/wasm/...
+      - name: Test
+        run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //python/wasm/private/tests/echo:echo_tests
+      # The example: a module that builds and publishes a module, and a
+      # consumer module whose repository rule calls it.
+      - name: Example
+        working-directory: examples/py_wasm_module
+        run: |
+          bazel ${BAZEL_STARTUP_FLAGS[@]} run //:publish
+          bazel ${BAZEL_STARTUP_FLAGS[@]} test //...
+
   ci-fixers:
     runs-on: ${{ matrix.os }}
     strategy:

@@ -1,0 +1,42 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//python:defs.bzl", "py_library")
+
+exports_files([
+    "bootstrap.py",
+    "bundle.py",
+    "freeze_encodings.py",
+    "merge_segments.py",
+    "shim.c",
+    "wasi_stubs.c",
+])
+
+# The build tools. `py_wasm_module` runs them as scripts under the Python
+# toolchain it builds with; this target has the linters cover them.
+py_library(
+    name = "tools",
+    srcs = [
+        "bundle.py",
+        "freeze_encodings.py",
+        "merge_segments.py",
+    ],
+)
+
+bzl_library(
+    name = "versions_bzl",
+    srcs = ["versions.bzl"],
+    visibility = ["//python/wasm:__subpackages__"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(
+        ["*.bzl"],
+        exclude = ["versions.bzl"],
+    ),
+    visibility = ["//python:__subpackages__"],
+    deps = [
+        ":versions_bzl",
+        "//python:py_info_bzl",
+        "//python/wasm:py_wasm_toolchain_bzl",
+    ],
+)

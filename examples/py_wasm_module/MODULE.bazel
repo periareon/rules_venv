@@ -1,0 +1,28 @@
+module(
+    name = "py_wasm_module_example",
+)
+
+bazel_dep(name = "rules_venv", version = "0.0.0")
+bazel_dep(name = "rules_python", version = "1.7.0")
+
+local_path_override(
+    module_name = "rules_venv",
+    path = "../..",
+)
+
+# A Python version `py_wasm_module` has a toolchain for.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.14",
+)
+
+# The consumer of the published module, a module of its own in `consumer/`
+# (which `.bazelignore` keeps out of this one). Its repository rule, which
+# calls the module, runs only when a target depends on `@consumer`, so
+# `//:publish` can run before the module exists.
+bazel_dep(name = "greeting_consumer", version = "0.0.0", repo_name = "consumer")
+local_path_override(
+    module_name = "greeting_consumer",
+    path = "consumer",
+)

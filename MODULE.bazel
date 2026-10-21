@@ -19,6 +19,14 @@ register_toolchains(
 vendor = use_extension("//python/private:vendor.bzl", "vendor")
 use_repo(vendor, "rules_venv_wheel_tomli_w")
 
+# The default `py_wasm_toolchain`s and what they are made of. The archives are
+# fetched only when a `py_wasm_module` is built, and only for the host that
+# builds it and the Python version it is for.
+py_wasm = use_extension("//python/wasm:extensions.bzl", "py_wasm")
+use_repo(py_wasm, "rules_venv_py_wasm_toolchains")
+
+register_toolchains("@rules_venv_py_wasm_toolchains//:all")
+
 bazel_dep(name = "rules_req_compile", version = "1.1.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 bazel_dep(name = "rules_rust_mdbook", version = "0.74.0", dev_dependency = True)
@@ -31,7 +39,10 @@ single_version_override(
     version = "33.4",
 )
 
-python = use_extension("//python/extensions:python.bzl", "python", dev_dependency = True)
+# rules_python's extension itself: a usage through the re-export in
+# `//python/extensions` is a separate instance whose toolchains are never
+# registered, so the versions declared here would not exist.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
     configure_coverage_tool = True,
     # Working around a rules_python issue with docker
@@ -40,6 +51,21 @@ python.toolchain(
     is_default = True,
     python_version = "3.11",
 )
+
+# The versions `py_wasm_module` has toolchains for with this rules_python, to
+# test it: those of `python/wasm/private/versions.bzl` that it maps to a final
+# release (3.15 is a pre-release in rules_python 1.7.0).
+[
+    python.toolchain(
+        ignore_root_user_error = True,
+        python_version = version,
+    )
+    for version in [
+        "3.13",
+        "3.14",
+    ]
+]
+
 use_repo(
     python,
     "python_3_11_aarch64-apple-darwin",
