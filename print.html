@@ -1396,6 +1396,263 @@ build --output_groups=+py_ruff_checks
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
+<h1 id="py_wasm_module"><a class="header" href="#py_wasm_module">py_wasm_module</a></h1>
+<p>Build Python into a self-contained WebAssembly module: CPython and the sources
+of <code>py_library</code> targets, callable from any WebAssembly runtime, with no Python
+interpreter on the host.</p>
+<p>The module is CPython built for <code>wasm32-wasi</code> and linked with an in-module
+implementation of the WASI functions it would otherwise import, so that it
+imports nothing and a runtime that provides no host functions at all can
+instantiate it. Inside it run the unmodified sources of the <code>py_library</code> targets
+named by <code>deps</code>, served by an importer over a bundle linked into the module,
+together with the standard library as bytecode. By default the interpreter is
+started and the entry module imported at build time, with Wizer, and the memory
+snapshot becomes the module, so a call does not pay for start-up.</p>
+<h2 id="setup-6"><a class="header" href="#setup-6">Setup</a></h2>
+<p>Nothing beyond depending on <code>rules_venv</code> and registering, with rules_python, a
+hermetic Python toolchain of a version the rule supports: 3.13, 3.14, and 3.15
+once rules_python maps it to a final release. Modules are built with a
+<code>py_wasm_toolchain</code>, and <code>rules_venv</code> registers one for each such version and
+each Linux and macOS host (x86_64 and arm64), made of the
+<code>wasm32-wasi</code> build of that CPython release from
+<a href="https://github.com/brettcannon/cpython-wasi-build">cpython-wasi-build</a>, the
+wasi-sdk release that built it and Wizer, which its <code>py_wasm</code> extension fetches
+when a module is first built. A compiler or CPython of one's own is another
+<code>py_wasm_toolchain</code>; see "Toolchains" below.</p>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<ul>
+<li>A hermetic rules_python toolchain of the module's <code>python_version</code>, a final
+release. Its C headers compile the module's host code and its interpreter
+produces the bytecode for the one in the module, so the two must be the same
+<code>X.Y</code> and a pre-release, whose bytecode and ABI may differ, is refused; the
+rule fails on either, and the build tools check again when they run.</li>
+<li>A <code>py_wasm_toolchain</code> for that version on the host, and Wizer when
+<code>preinitialize</code> is on. The rule fails when <code>preinitialize</code> has no Wizer.</li>
+<li>Code that runs on CPython for WASI: a source the embedded interpreter cannot
+import fails at build time with its traceback when <code>preinitialize</code> is on,
+else at the first call.</li>
+</ul>
+<h2 id="use"><a class="header" href="#use">Use</a></h2>
+<pre><code class="language-python">load("@rules_venv//python:defs.bzl", "py_library")
+load("@rules_venv//python/wasm:defs.bzl", "py_wasm_module")
+
+py_library(
+    name = "entry",
+    srcs = ["entry.py"],
+    deps = ["//my_rules:lib"],
+)
+
+py_wasm_module(
+    name = "my_rules",
+    entry = "my_rules.wasm.entry",
+    exports = ["run"],
+    python_version = "3.14",
+    deps = [":entry"],
+)
+</code></pre>
+<p>The entry module defines one function per export, taking the input of the call
+as <code>bytes</code> and returning <code>bytes</code>, or <code>(bytes, code)</code> to set the call's return
+code:</p>
+<pre><code class="language-python">import json
+
+def run(payload: bytes) -&gt; bytes:
+    request = json.loads(payload)
+    ...
+    return json.dumps(response).encode("utf-8")
+</code></pre>
+<h2 id="calling-the-module"><a class="header" href="#calling-the-module">Calling the module</a></h2>
+<p>The module exports its memory as <code>memory</code>, an allocator, and one function per
+entry of <code>exports</code>:</p>
+<pre><code class="language-text">allocate(size: u32, align: u32) -&gt; u32            the address of `size` bytes
+&lt;export&gt;(input: u32, input_len: u32,
+         out_ptr: u32, out_len: u32) -&gt; u32       the return code
+</code></pre>
+<p>A host writes the input into memory it obtained from <code>allocate</code>, calls the
+export with the addresses of two more words to receive the output's address and
+length, and reads the output back from memory. The return code is 0, or the
+code the function returned with <code>(bytes, code)</code>, or 2 when it raised, in which
+case the output holds the traceback and what was written to standard error.
+With Python's <code>wasmtime</code> package:</p>
+<pre><code class="language-python">import wasmtime
+
+store = wasmtime.Store(wasmtime.Engine())
+module = wasmtime.Module.from_file(store.engine, "my_rules.wasm")
+exports = wasmtime.Instance(store, module, []).exports(store)
+memory = exports["memory"]
+
+payload = json.dumps(request).encode("utf-8")
+input_ptr = exports["allocate"](store, len(payload), 1)
+memory.write(store, payload, input_ptr)
+out = exports["allocate"](store, 8, 4)
+code = exports["run"](store, input_ptr, len(payload), out, out + 4)
+out_ptr = int.from_bytes(memory.read(store, out, out + 4), "little")
+out_len = int.from_bytes(memory.read(store, out + 4, out + 8), "little")
+output = bytes(memory.read(store, out_ptr, out_ptr + out_len))
+</code></pre>
+<p>A call changes the instance's memory, and instances are independent, so a host
+that wants every call to be a function of its input alone instantiates the
+module per call. Any runtime that can instantiate a module without imports and
+call exports with integer arguments can be the host; <code>examples/py_wasm_module</code>
+in the rules_venv repository has a Bazel repository rule calling a module with
+<code>repository_ctx.execute_wasm</code> this way.</p>
+<h2 id="what-a-call-can-do"><a class="header" href="#what-a-call-can-do">What a call can do</a></h2>
+<p>Nothing outside the module: no files, network, clock or processes. Standard
+output and error are captured inside the module; the error stream of a failed
+call is returned with the traceback. A program that needs the outside world
+receives what it needs in its input and describes what it wants done in its
+output, in rounds if need be. Bytes cross the boundary unchanged in both
+directions.</p>
+<h2 id="the-cpython"><a class="header" href="#the-cpython">The CPython</a></h2>
+<p>The CPython in a module is an unmodified release built for <code>wasm32-wasi</code> by
+cpython-wasi-build, pinned by version and hash in
+<code>python/wasm/private/versions.bzl</code> together with the wasi-sdk release that
+built it. Of that build the rule uses <code>pyconfig.h</code>, <code>libpython</code> and the
+libraries of the modules compiled into it, and its standard library as source;
+the public headers are the rules_python toolchain's, and the bytecode is
+produced at build time by that toolchain's interpreter, which is why the two
+must be the same version.</p>
+<h2 id="toolchains"><a class="header" href="#toolchains">Toolchains</a></h2>
+<p>A module is built with a <code>py_wasm_toolchain</code>: the clang of a wasi-sdk, a
+CPython built for <code>wasm32-wasi</code> (<code>libpython</code>, the libraries of its modules,
+its <code>pyconfig.h</code> and its standard library), the flags that CPython links with,
+and Wizer. Two of rules_python's toolchains take part as well, resolved for the
+same Python version: its C toolchain, for the headers, and its exec tools
+toolchain, for the interpreter that produces the module's bytecode.</p>
+<h3 id="the-defaults"><a class="header" href="#the-defaults">The defaults</a></h3>
+<p><code>rules_venv</code> registers a toolchain for every Python version pinned in
+<code>python/wasm/private/versions.bzl</code> that the resolved rules_python maps to a
+final release, 3.13 and 3.14 today, for Linux and macOS on x86_64 and arm64.
+Its <code>py_wasm</code> extension declares the archives and writes the toolchains into
+the repository <code>@rules_venv_py_wasm_toolchains</code>. Nothing is fetched until a
+module is built, and then only what the resolved toolchain needs. Each
+toolchain is gated on rules_python's <code>is_python_X.Y</code>, which a module's
+<code>python_version</code> sets, so the embedded CPython always matches the Python
+toolchain the module is built with; a version rules_python maps to a
+pre-release is left out, and the rule refuses one, since its bytecode and ABI
+may differ from the release's.</p>
+<h3 id="one-of-your-own"><a class="header" href="#one-of-your-own">One of your own</a></h3>
+<p>Declare a <code>py_wasm_toolchain</code> and a <code>toolchain</code> gated on <code>is_python_X.Y</code>, as in
+the documentation of <code>py_wasm_toolchain</code>, and register it with
+<code>register_toolchains</code> in <code>MODULE.bazel</code> or with <code>--extra_toolchains</code>. A root
+module's toolchains take precedence over <code>rules_venv</code>'s, which remain as the
+fallback for other versions and hosts. Reasons to: a CPython built differently,
+with other configure options or patches; a version or host <code>rules_venv</code> has no
+build for; a policy of building from source; or a newer wasi-sdk, which must be
+the release that built the CPython so that their wasi-libc agree. <code>linkopts</code>
+and <code>stdlib</code> of the toolchain cover smaller adjustments: what the CPython links
+against, and which standard library modules go into a module.</p>
+<h3 id="replacing-one-archive"><a class="header" href="#replacing-one-archive">Replacing one archive</a></h3>
+<p>To keep a default toolchain but swap one of its parts, point the extension's
+repository for it elsewhere. In <code>MODULE.bazel</code>:</p>
+<pre><code class="language-python">py_wasm = use_extension("@rules_venv//python/wasm:extensions.bzl", "py_wasm")
+override_repo(py_wasm, rules_venv_py_wasm_cpython_3_14 = "my_cpython_wasi")
+</code></pre>
+<p>or, for a checkout on disk, <code>--override_repository=rules_venv++py_wasm+rules_venv_py_wasm_cpython_3_14=&lt;directory&gt;</code>.
+The repositories are <code>rules_venv_py_wasm_cpython_&lt;X_Y&gt;</code> (the build tree:
+<code>libpython3.X.a</code>, <code>pyconfig.h</code>, <code>Modules/**/*.a</code>), <code>..._cpython_&lt;X_Y&gt;_stdlib</code>
+(<code>lib/python3.X/**/*.py</code>), <code>rules_venv_py_wasm_wasi_sdk_&lt;release&gt;_&lt;host&gt;</code> and
+<code>rules_venv_py_wasm_wizer_&lt;host&gt;</code>; a replacement provides the same targets as
+the BUILD files in <code>extensions.bzl</code>.</p>
+<h2 id="rules-7"><a class="header" href="#rules-7">Rules</a></h2>
+<ul>
+<li><a href="wasm.html#py_wasm_module">py_wasm_module</a></li>
+<li><a href="wasm.html#py_wasm_toolchain">py_wasm_toolchain</a></li>
+</ul>
+<p><a id="py_wasm_module"></a></p>
+<h2 id="py_wasm_module-1"><a class="header" href="#py_wasm_module-1">py_wasm_module</a></h2>
+<pre>
+load("@rules_venv//python/wasm:defs.bzl", "py_wasm_module")
+
+py_wasm_module(<a href="wasm.html#py_wasm_module-name">name</a>, <a href="wasm.html#py_wasm_module-deps">deps</a>, <a href="wasm.html#py_wasm_module-entry">entry</a>, <a href="wasm.html#py_wasm_module-exports">exports</a>, <a href="wasm.html#py_wasm_module-initial_memory">initial_memory</a>, <a href="wasm.html#py_wasm_module-preinitialize">preinitialize</a>, <a href="wasm.html#py_wasm_module-python_version">python_version</a>,
+               <a href="wasm.html#py_wasm_module-stack_size">stack_size</a>, <a href="wasm.html#py_wasm_module-strip">strip</a>)
+</pre>
+<p>Build a self-contained WebAssembly module embedding CPython and Python sources.</p>
+<p>The output, <code>&lt;name&gt;.wasm</code>, imports nothing and exports <code>memory</code>, <code>allocate</code> and
+one function per entry of <code>exports</code>; the module documentation of <code>defs.bzl</code>
+gives the calling convention. Each export calls the function of the same name
+in the <code>entry</code> module with the call's input as <code>bytes</code> and returns what it
+returns: <code>bytes</code>, or <code>(bytes, code)</code> to set the return code. An exception
+becomes return code 2 with the traceback in the output.</p>
+<p>The module holds the sources of <code>deps</code> as a venv would import them, the
+standard library as bytecode, and, by default, a snapshot of the interpreter
+taken after the entry module was imported, so that a call does not pay for
+start-up. The CPython is the one of <code>python_version</code>, which also selects the
+rules_python toolchain the module is built with. See the module documentation
+of <code>defs.bzl</code> and <code>py_wasm_toolchain</code>.</p>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wasm_module-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-deps"></a>deps</td><td style="text-align: left">The Python libraries the entry module imports, bundled with their transitive dependencies.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-entry"></a>entry</td><td style="text-align: left">The dotted name of the module holding the exported functions, e.g. <code>my_rules.wasm.entry</code>.</td><td style="text-align: left">String</td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-exports"></a>exports</td><td style="text-align: left">The functions of <code>entry</code> to export, each under its own name.</td><td style="text-align: left">List of strings</td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-initial_memory"></a>initial_memory</td><td style="text-align: left">The initial size of the module's memory, in bytes. It grows as needed, up to any limit the runtime imposes.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>67108864</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-preinitialize"></a>preinitialize</td><td style="text-align: left">Snapshot the interpreter after importing <code>entry</code> with Wizer, so a call starts from there. Without it every call starts the interpreter, which can take seconds under an interpreting runtime.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>True</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-python_version"></a>python_version</td><td style="text-align: left">The Python version to build for, <code>X.Y</code>: the module embeds that CPython and is built with that rules_python toolchain, which must be registered. Unset, the build's current Python version, which must have a <code>py_wasm_toolchain</code>; see "Toolchains" in the module documentation of <code>defs.bzl</code>.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-stack_size"></a>stack_size</td><td style="text-align: left">The size of the C stack, in bytes.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>8388608</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_module-strip"></a>strip</td><td style="text-align: left">Strip the name section and other debug information from the module.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>True</code></td></tr>
+</tbody></table>
+</div>
+<p><a id="py_wasm_toolchain"></a></p>
+<h2 id="py_wasm_toolchain"><a class="header" href="#py_wasm_toolchain">py_wasm_toolchain</a></h2>
+<pre>
+load("@rules_venv//python/wasm:defs.bzl", "py_wasm_toolchain")
+
+py_wasm_toolchain(<a href="wasm.html#py_wasm_toolchain-name">name</a>, <a href="wasm.html#py_wasm_toolchain-clang">clang</a>, <a href="wasm.html#py_wasm_toolchain-compiler_files">compiler_files</a>, <a href="wasm.html#py_wasm_toolchain-cpython_libs">cpython_libs</a>, <a href="wasm.html#py_wasm_toolchain-linkopts">linkopts</a>, <a href="wasm.html#py_wasm_toolchain-pyconfig">pyconfig</a>, <a href="wasm.html#py_wasm_toolchain-python_version">python_version</a>,
+                  <a href="wasm.html#py_wasm_toolchain-stdlib">stdlib</a>, <a href="wasm.html#py_wasm_toolchain-sysroot">sysroot</a>, <a href="wasm.html#py_wasm_toolchain-wizer">wizer</a>)
+</pre>
+<p>Declare what <code>py_wasm_module</code> builds with: a C compiler for <code>wasm32-wasi</code>, a
+CPython built for it, and optionally Wizer.</p>
+<p><code>rules_venv</code> registers toolchains of this kind for Python 3.13 and 3.14 on
+Linux and macOS hosts from archives it fetches (see <code>extensions.bzl</code>); a module
+that wants a compiler or a CPython of its own declares one and registers it with
+<code>register_toolchains</code> or <code>--extra_toolchains</code>.</p>
+<p>A toolchain is for one Python version: the headers that compile the module's
+host code and the interpreter that produces its bytecode are the rules_python
+toolchain's, so the two must be the same <code>X.Y</code>. Registering a toolchain with
+rules_python's <code>is_python_X.Y</code> as a <code>target_setting</code>, as below, makes it
+eligible only then, and a module's <code>python_version</code> selects it.</p>
+<p>Requirements: <code>clang</code> must be the clang of a wasi-sdk (this rule fails on any
+other driver), of the release that built <code>cpython_libs</code>, so that their wasi-libc
+match; <code>cpython_libs</code> holds <code>libpython3.X.a</code> and the static libraries of the
+modules compiled into it; <code>pyconfig</code> is that build's <code>pyconfig.h</code>, which stands
+in for the host one of the rules_python toolchain's headers; <code>linkopts</code> names
+what that build links against beyond libc, by default what CPython's own
+<code>wasm32-wasi</code> configuration uses.</p>
+<pre><code class="language-python">load("@rules_venv//python/wasm:defs.bzl", "py_wasm_toolchain")
+
+py_wasm_toolchain(
+    name = "py_wasm_toolchain",
+    clang = "@my_wasi_sdk//:bin/clang",
+    compiler_files = "@my_wasi_sdk//:all_files",
+    cpython_libs = "@my_cpython_wasi//:libs",
+    pyconfig = "@my_cpython_wasi//:pyconfig.h",
+    python_version = "3.14",
+    stdlib = "@my_cpython_wasi_stdlib//:stdlib",
+    wizer = "@my_wizer//:wizer",
+)
+
+toolchain(
+    name = "toolchain",
+    exec_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+    target_settings = ["@rules_python//python/config_settings:is_python_3.14"],
+    toolchain = ":py_wasm_toolchain",
+    toolchain_type = "@rules_venv//python/wasm:toolchain_type",
+)
+</code></pre>
+<p><strong>ATTRIBUTES</strong></p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-clang"></a>clang</td><td style="text-align: left">The <code>clang</code> driver of a wasi-sdk, which also links.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-compiler_files"></a>compiler_files</td><td style="text-align: left">Every file of the wasi-sdk: the driver finds its resource directory and sysroot relative to itself.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-cpython_libs"></a>cpython_libs</td><td style="text-align: left"><code>libpython3.X.a</code> and the static libraries of the modules compiled into it, from a CPython build for <code>wasm32-wasi</code>.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-linkopts"></a>linkopts</td><td style="text-align: left">Linker flags for what <code>cpython_libs</code> needs beyond libc, after the libraries on the command line. The default is what CPython's <code>wasm32-wasi</code> configuration links: wasi-libc's emulated signals, getpid and process clocks, and <code>dl</code> and <code>m</code>.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>["-ldl", "-lwasi-emulated-signal", "-lwasi-emulated-getpid", "-lwasi-emulated-process-clocks", "-lm"]</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-pyconfig"></a>pyconfig</td><td style="text-align: left">The <code>pyconfig.h</code> of that build, which describes <code>wasm32-wasi</code> to the headers.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-python_version"></a>python_version</td><td style="text-align: left">The <code>X.Y</code> of the CPython, e.g. <code>3.14</code>. The rules_python toolchain a module builds with must be the same.</td><td style="text-align: left">String</td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-stdlib"></a>stdlib</td><td style="text-align: left">The standard library of that CPython as source, with <code>os.py</code> at its root.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-sysroot"></a>sysroot</td><td style="text-align: left">The sysroot, relative to the directory holding the driver's <code>bin/</code>.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>"share/wasi-sysroot"</code></td></tr>
+<tr><td style="text-align: left"><a id="py_wasm_toolchain-wizer"></a>wizer</td><td style="text-align: left">Wizer, to pre-initialize modules. Without it <code>preinitialize</code> cannot be used.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
 <h1 id="wheel"><a class="header" href="#wheel">Wheel</a></h1>
 <p>A framework for defining <a href="https://packaging.python.org/en/latest/specifications/binary-distribution-format/">wheels</a> from a tree of Bazel targets.</p>
 <h2 id="why-use-this-over-what-rules_python-provides"><a class="header" href="#why-use-this-over-what-rules_python-provides">Why use this over what <code>rules_python</code> provides?</a></h2>
@@ -1404,7 +1661,7 @@ build --output_groups=+py_ruff_checks
 <li>Requirements are collected from transitive dependencies and added as <code>Require-Dist</code> to the wheel.</li>
 <li>Sources and data are automatically collected.</li>
 </ol>
-<h2 id="setup-6"><a class="header" href="#setup-6">Setup</a></h2>
+<h2 id="setup-7"><a class="header" href="#setup-7">Setup</a></h2>
 <p>Building wheels requires no setup, however, to activate all features of
 the wheel rules, a toolchain must be registered.</p>
 <p>First some external python requirements will be required. There is guidance on
@@ -1435,7 +1692,7 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
-<h2 id="rules-7"><a class="header" href="#rules-7">Rules</a></h2>
+<h2 id="rules-8"><a class="header" href="#rules-8">Rules</a></h2>
 <ul>
 <li><a href="wheel.html#py_wheel_publisher">py_wheel_publisher</a></li>
 <li><a href="wheel.html#py_wheel_toolchain">py_wheel_toolchain</a></li>
