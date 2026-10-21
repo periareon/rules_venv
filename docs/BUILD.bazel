@@ -102,6 +102,15 @@ stardoc(
     deps = ["//python/wheel:bzl_lib"],
 )
 
+stardoc(
+    name = "wasm",
+    out = "src/wasm.md",
+    input = "//python/wasm:defs.bzl",
+    table_of_contents_template = "@io_bazel_stardoc//stardoc:templates/markdown_tables/table_of_contents.vm",
+    tags = ["manual"],
+    deps = ["//python/wasm:bzl_lib"],
+)
+
 mdbook(
     name = "book",
     srcs = glob(["src/**/*.md"]) + [
@@ -114,6 +123,7 @@ mdbook(
         ":pytest",
         ":ruff",
         ":venv",
+        ":wasm",
         ":wheel",
     ],
     book = "book.toml",

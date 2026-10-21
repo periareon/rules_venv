@@ -1,0 +1,36 @@
+load("@rules_venv//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_venv//python/wasm:defs.bzl", "py_wasm_module")
+
+py_library(
+    name = "greeter_lib",
+    srcs = ["greeter.py"],
+)
+
+# `greeter.wasm`: CPython 3.14 and `greeter.py`, exporting `greet`.
+py_wasm_module(
+    name = "greeter",
+    entry = "greeter",
+    python_version = "3.14",
+    exports = ["greet"],
+    deps = [":greeter_lib"],
+)
+
+# `bazel run //:publish` copies the module into `consumer/`, standing in for
+# publishing it where the consumer's repository rule would download it from.
+py_binary(
+    name = "publish",
+    srcs = ["publish.py"],
+    data = [":greeter"],
+    env = {"GREETER_WASM": "$(rlocationpath :greeter)"},
+    deps = ["@rules_venv//python/runfiles"],
+)
+
+# Checks the consumer's answer, which fetches `@greeting` and so calls the
+# published module; `bazel test //...` after `bazel run //:publish`.
+py_test(
+    name = "greeting_test",
+    srcs = ["greeting_test.py"],
+    data = ["@consumer//:greeting"],
+    env = {"GREETING": "$(rlocationpath @consumer//:greeting)"},
+    deps = ["@rules_venv//python/runfiles"],
+)

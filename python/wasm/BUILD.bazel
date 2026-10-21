@@ -1,0 +1,35 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+exports_files([
+    "defs.bzl",
+    "extensions.bzl",
+    "py_wasm_toolchain.bzl",
+])
+
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "py_wasm_toolchain_bzl",
+    srcs = ["py_wasm_toolchain.bzl"],
+    visibility = ["//python/wasm:__subpackages__"],
+    deps = ["@bazel_skylib//lib:paths"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = [
+        "defs.bzl",
+        "extensions.bzl",
+    ],
+    visibility = ["//visibility:public"],
+    # `extensions.bzl` also loads `@rules_python//python:versions.bzl`, whose
+    # `bzl_library` rules_python keeps private.
+    deps = [
+        ":py_wasm_toolchain_bzl",
+        "//python/wasm/private:bzl_lib",
+        "@bazel_tools//tools:bzl_srcs",
+    ],
+)

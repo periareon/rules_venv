@@ -1,0 +1,2 @@
+# `repository_ctx.execute_wasm` is experimental in Bazel 9.3 and later.
+common --experimental_repository_ctx_execute_wasm

@@ -1,0 +1,22 @@
+"""Copy the built module into the consumer module, standing in for publishing it."""
+
+import os
+import shutil
+from pathlib import Path
+
+from python.runfiles import Runfiles
+
+
+def main() -> None:
+    """The main entrypoint."""
+    runfiles = Runfiles.Create()
+    assert runfiles
+    module = runfiles.Rlocation(os.environ["GREETER_WASM"])
+    assert module
+    destination = Path(os.environ["BUILD_WORKSPACE_DIRECTORY"]) / "consumer" / "greeter.wasm"
+    shutil.copyfile(module, destination)
+    print(f"published {destination}")
+
+
+if __name__ == "__main__":
+    main()

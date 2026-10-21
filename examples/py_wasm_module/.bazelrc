@@ -1,0 +1,3 @@
+# `repository_ctx.execute_wasm`, which the consumer's repository rule uses, is
+# experimental in Bazel 9.3 and later.
+common --experimental_repository_ctx_execute_wasm

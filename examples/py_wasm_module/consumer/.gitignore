@@ -1,0 +1,2 @@
+# Published by `bazel run //:publish` in the module above.
+/greeter.wasm

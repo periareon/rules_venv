@@ -1,0 +1,10 @@
+# The consumer: it depends on neither rules_venv nor Python. All it needs is a
+# published `greeter.wasm` and a Bazel with `repository_ctx.execute_wasm`.
+module(
+    name = "greeting_consumer",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+greeting = use_extension("//:greeting.bzl", "greeting")
+use_repo(greeting, "greeting")

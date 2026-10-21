@@ -1,0 +1,63 @@
+load("@rules_python//python:versions.bzl", "MINOR_MAPPING")
+load("//python:defs.bzl", "py_library", "py_test")
+load("//python/wasm:defs.bzl", "py_wasm_module")
+load("//python/wasm/private:versions.bzl", "supported_python_versions")
+
+# These targets build a module, which fetches a CPython for wasm32-wasi and
+# needs a Linux or macOS host; they are run by CI's dedicated job through
+# `:echo_tests` rather than `//...`. One module per Python version the
+# `py_wasm` extension declares toolchains for with the resolved rules_python;
+# MODULE.bazel must register a Python toolchain for each.
+
+_VERSIONS = supported_python_versions(MINOR_MAPPING)
+
+py_library(
+    name = "echo_lib",
+    srcs = ["echo.py"],
+    tags = ["manual"],
+)
+
+[
+    py_wasm_module(
+        name = "echo_{}".format(version.replace(".", "_")),
+        entry = "python.wasm.private.tests.echo.echo",
+        python_version = version,
+        tags = ["manual"],
+        target_compatible_with = select({
+            "@platforms//os:windows": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+        }),
+        exports = [
+            "echo",
+            "info",
+            "raises",
+        ],
+        deps = [":echo_lib"],
+    )
+    for version in _VERSIONS
+]
+
+[
+    py_test(
+        name = "echo_{}_test".format(version.replace(".", "_")),
+        srcs = ["echo_test.py"],
+        data = [":echo_{}".format(version.replace(".", "_"))],
+        env = {
+            "ECHO_PYTHON_VERSION": version,
+            "ECHO_WASM": "$(rlocationpath :echo_{})".format(version.replace(".", "_")),
+        },
+        main = "echo_test.py",
+        tags = ["manual"],
+        deps = ["//python/runfiles"],
+    )
+    for version in _VERSIONS
+]
+
+test_suite(
+    name = "echo_tests",
+    tags = ["manual"],
+    tests = [
+        ":echo_{}_test".format(version.replace(".", "_"))
+        for version in _VERSIONS
+    ],
+)

@@ -13,4 +13,5 @@
     - [pylint](./pylint.md)
     - [pytest](./pytest.md)
     - [ruff](./ruff.md)
+    - [wasm](./wasm.md)
     - [wheel](./wheel.md)

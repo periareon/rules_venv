@@ -1,0 +1,10 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+# `bazel build //:greeting` fetches `@greeting`, whose repository rule calls the
+# module, and copies the answer to `bazel-bin/greeting.txt`.
+copy_file(
+    name = "greeting",
+    src = "@greeting//:greeting.txt",
+    out = "greeting.txt",
+    visibility = ["//visibility:public"],
+)
