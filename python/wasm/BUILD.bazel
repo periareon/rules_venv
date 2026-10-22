@@ -1,4 +1,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "defs.bzl",
@@ -8,7 +11,41 @@ exports_files([
 
 toolchain_type(
     name = "toolchain_type",
-    visibility = ["//visibility:public"],
+)
+
+# Which build of CPython the default toolchains embed; see `CPYTHON_WASI` in
+# `private/versions.bzl` for the variants and the default of each version.
+# `--@rules_venv//python/wasm:cpython_variant=stock` picks CPython's own build,
+# the fastest under wasmtime; `default` is the fastest under Bazel's runtime.
+string_flag(
+    name = "cpython_variant",
+    build_setting_default = "default",
+    values = [
+        "default",
+        "small-eval",
+        "stock",
+        "trampoline",
+    ],
+)
+
+config_setting(
+    name = "cpython_variant_default",
+    flag_values = {":cpython_variant": "default"},
+)
+
+config_setting(
+    name = "cpython_variant_small_eval",
+    flag_values = {":cpython_variant": "small-eval"},
+)
+
+config_setting(
+    name = "cpython_variant_stock",
+    flag_values = {":cpython_variant": "stock"},
+)
+
+config_setting(
+    name = "cpython_variant_trampoline",
+    flag_values = {":cpython_variant": "trampoline"},
 )
 
 bzl_library(
@@ -24,7 +61,6 @@ bzl_library(
         "defs.bzl",
         "extensions.bzl",
     ],
-    visibility = ["//visibility:public"],
     # `extensions.bzl` also loads `@rules_python//python:versions.bzl`, whose
     # `bzl_library` rules_python keeps private.
     deps = [

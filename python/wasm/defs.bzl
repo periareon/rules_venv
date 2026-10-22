@@ -21,10 +21,11 @@ once rules_python maps it to a final release. Modules are built with a
 `py_wasm_toolchain`, and `rules_venv` registers one for each such version and
 each Linux and macOS host (x86_64 and arm64), made of the
 `wasm32-wasi` build of that CPython release from
-[cpython-wasi-build](https://github.com/brettcannon/cpython-wasi-build), the
+[periareon/cpython-wasi-build](https://github.com/periareon/cpython-wasi-build), the
 wasi-sdk release that built it and Wizer, which its `py_wasm` extension fetches
-when a module is first built. A compiler or CPython of one's own is another
-`py_wasm_toolchain`; see "Toolchains" below.
+when a module is first built. The CPython comes in variants, the default being
+the fastest under Bazel's runtime; see "The CPython" below. A compiler or
+CPython of one's own is another `py_wasm_toolchain`; see "Toolchains" below.
 
 ## Requirements
 
@@ -127,14 +128,39 @@ directions.
 
 ## The CPython
 
-The CPython in a module is an unmodified release built for `wasm32-wasi` by
-cpython-wasi-build, pinned by version and hash in
-`python/wasm/private/versions.bzl` together with the wasi-sdk release that
-built it. Of that build the rule uses `pyconfig.h`, `libpython` and the
-libraries of the modules compiled into it, and its standard library as source;
-the public headers are the rules_python toolchain's, and the bytecode is
-produced at build time by that toolchain's interpreter, which is why the two
-must be the same version.
+The CPython in a module is a release built for `wasm32-wasi` by
+[periareon/cpython-wasi-build](https://github.com/periareon/cpython-wasi-build),
+pinned by version and hash in `python/wasm/private/versions.bzl` together with
+the wasi-sdk release that built it. Of that build the rule uses `pyconfig.h`,
+`libpython` and the libraries of the modules compiled into it, and its standard
+library as source; the public headers are the rules_python toolchain's, and the
+bytecode is produced at build time by that toolchain's interpreter, which is
+why the two must be the same version.
+
+Each version comes in variants that differ in how the interpreter is compiled,
+because the runtime decides which build is fast. Bazel runs a module with
+Chicory, which compiles each wasm function to one JVM method and interprets,
+silently, any function too large for one; CPython's evaluation loop is such a
+function in its normal build, and a Python-heavy call then spends most of its
+time in that interpreter (a solver call measured 88 s against 2.5 s). So:
+
+- `stock`: CPython's own WASI build, as brettcannon/cpython-wasi-build
+  publishes it; the fastest under wasmtime.
+- `small-eval`: built for size with the evaluation loop kept under the limit,
+  so that Chicory compiles everything; about ten times faster there.
+- `trampoline` (3.14 and newer): the tail-calling interpreter turned into a
+  call-threaded one, with no function anywhere near the limit; the fastest under
+  Chicory, about twice as slow as `stock` under wasmtime.
+
+The default is the fastest under Chicory: `trampoline` for 3.14, `small-eval`
+for 3.13, `stock` where it is the only build. Modules run elsewhere pick
+another with the `//python/wasm:cpython_variant` flag, in `.bazelrc` or on the
+command line; it applies to every version at once, and a version without the
+variant asked for fails saying which it has:
+
+```
+build --@rules_venv//python/wasm:cpython_variant=stock
+```
 
 ## Toolchains
 
@@ -179,12 +205,13 @@ repository for it elsewhere. In `MODULE.bazel`:
 
 ```python
 py_wasm = use_extension("@rules_venv//python/wasm:extensions.bzl", "py_wasm")
-override_repo(py_wasm, rules_venv_py_wasm_cpython_3_14 = "my_cpython_wasi")
+override_repo(py_wasm, rules_venv_py_wasm_cpython_3_14_trampoline = "my_cpython_wasi")
 ```
 
-or, for a checkout on disk, `--override_repository=rules_venv++py_wasm+rules_venv_py_wasm_cpython_3_14=<directory>`.
-The repositories are `rules_venv_py_wasm_cpython_<X_Y>` (the build tree:
-`libpython3.X.a`, `pyconfig.h`, `Modules/**/*.a`), `..._cpython_<X_Y>_stdlib`
+or, for a checkout on disk, `--override_repository=rules_venv++py_wasm+rules_venv_py_wasm_cpython_3_14_trampoline=<directory>`.
+The repositories are `rules_venv_py_wasm_cpython_<X_Y>_<variant>` (the build
+tree: `libpython3.X.a`, `pyconfig.h`, `Modules/**/*.a`; one per variant of the
+version, the flag choosing among them), `..._cpython_<X_Y>_<variant>_stdlib`
 (`lib/python3.X/**/*.py`), `rules_venv_py_wasm_wasi_sdk_<release>_<host>` and
 `rules_venv_py_wasm_wizer_<host>`; a replacement provides the same targets as
 the BUILD files in `extensions.bzl`.

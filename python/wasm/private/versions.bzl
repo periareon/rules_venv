@@ -1,47 +1,112 @@
 """The pinned inputs of `py_wasm_module`: CPython for wasm32-wasi, wasi-sdk and Wizer.
 
 Everything a module is built from is named here by version and hash. CPython
-comes prebuilt from [cpython-wasi-build](https://github.com/brettcannon/cpython-wasi-build),
-Brett Cannon's builds of every CPython release for `wasm32-wasi`; wasi-sdk and
-Wizer come from their own releases.
+comes prebuilt from [periareon/cpython-wasi-build](https://github.com/periareon/cpython-wasi-build),
+which builds each release for `wasm32-wasi` in variants that differ in how the
+interpreter is compiled (see `CPYTHON_WASI`), in the archive layout of
+[brettcannon/cpython-wasi-build](https://github.com/brettcannon/cpython-wasi-build),
+where versions it does not build yet still come from; wasi-sdk and Wizer come
+from their own releases.
 """
 
-# CPython for wasm32-wasi, one build per minor version `py_wasm_module`
+# CPython for wasm32-wasi, one release per minor version `py_wasm_module`
 # supports, keyed by the `X.Y` that `python_version` and rules_python's
-# `is_python_X.Y` name. Each release publishes two archives: the build tree,
-# with `libpython`, `pyconfig.h` and the static libraries of the modules
-# compiled into it, and the runtime, with the standard library as source.
-# `wasi_sdk` is the release that built it; the toolchain for the version
-# compiles with that same release, so that the module's objects match its
-# wasi-libc.
+# `is_python_X.Y` name. A release publishes two archives per variant: the
+# build tree, with `libpython`, `pyconfig.h` and the static libraries of the
+# modules compiled into it, and the runtime, with the standard library as
+# source. `wasi_sdk` is the release that built it; the toolchain for the
+# version compiles with that same release, so that the module's objects match
+# its wasi-libc.
+#
+# The variants, and why they exist: Bazel runs a module with Chicory, which
+# compiles each wasm function to one JVM method and interprets, silently, any
+# function too large for one. CPython's evaluation loop is such a function in
+# its normal build, and interpreting it costs a Python-heavy call most of its
+# time (a solver call measured 88 s against 2.5 s).
+#   stock       CPython's own WASI build; the fastest under wasmtime.
+#   small-eval  built for size with the evaluation loop kept under the limit,
+#               so Chicory compiles everything; about ten times faster there.
+#   trampoline  3.14 and newer: the tail-calling interpreter turned into a
+#               call-threaded one, no function near the limit; the fastest
+#               under Chicory, about twice as slow as stock under wasmtime.
+# `default` is the variant a toolchain embeds unless the
+# `//python/wasm:cpython_variant` flag names another: the fastest under
+# Bazel's runtime, which is where `py_wasm_module`s run.
 #
 # A version is offered only when the resolved rules_python maps it to a final
 # release (see `supported_python_versions`), so one may be pinned here ahead
-# of the rules_python that `rules_venv` tests with. Upstream also builds 3.11
-# and 3.12, with wasi-sdk 16 and 20, which only ship x86_64 hosts.
+# of the rules_python that `rules_venv` tests with.
 CPYTHON_WASI = {
     "3.13": struct(
-        version = "3.13.15",
+        version = "3.13.17",
         wasi_sdk = "24",
-        build_sha256 = "3906216e44a7322aa7bc615789df9550a58451a57aa5fbd74bd2a31d9a6f98d1",
-        stdlib_sha256 = "67e1c32a85d5e0600c0939f5fd4023ca0127f1a9e81f5499697467bda67af78d",
+        releases = "https://github.com/periareon/cpython-wasi-build/releases",
+        default = "small-eval",
+        variants = {
+            "small-eval": struct(
+                build_sha256 = "44629670f9ee7367b263b98989d5e5c6d04b04e9c6f8aa4e078a223facd016e8",
+                stdlib_sha256 = "54dd6356796b63f6ce34ed12b486cfdb508d4b5bdf0f5475a5564647dd97b49b",
+            ),
+            "stock": struct(
+                build_sha256 = "4461321ba6d3adb7164b971c5ebc944340a2dfe64c973b473bb59c8073757031",
+                stdlib_sha256 = "c507b841bfbaad09b9379f44c5b032f72a5f635107a63b1171a73acca55c3e35",
+            ),
+        },
     ),
     "3.14": struct(
-        version = "3.14.7",
+        version = "3.14.9",
         wasi_sdk = "24",
-        build_sha256 = "a2a9fca77dc47bb9d2b0dd7d04538f8aa188e5f0a87b362fd569c0d024039100",
-        stdlib_sha256 = "2e064d3fb8172471d39d741348efa722349c40b96301f69968dff714999c584b",
+        releases = "https://github.com/periareon/cpython-wasi-build/releases",
+        default = "trampoline",
+        variants = {
+            "small-eval": struct(
+                build_sha256 = "672106e9f79f311a347600a36dba3b21a82cf7e7f55c49f62f7562f96b414741",
+                stdlib_sha256 = "bf7d5291ce2f9795bc8abebfa70adef7a128c6d4b0518ca23c80952f35b20b9e",
+            ),
+            "stock": struct(
+                build_sha256 = "c1981153f9f08b074269468ac3ad1680c4320d52c9b2bd78aa64d0294608436b",
+                stdlib_sha256 = "162f1342b2a7f3a569a7bc6646ad662aecf527573db5af39c0510937160463ca",
+            ),
+            "trampoline": struct(
+                build_sha256 = "89e2c252df9919a3d5ec483278c8f2d8e42c9ad79cfcf190a32052b9078cb3f8",
+                stdlib_sha256 = "d31f7a5abe9f8939180fcd55aa497826e153f48b7f472758daf03591a215687e",
+            ),
+        },
     ),
+    # Not built by periareon/cpython-wasi-build yet: upstream's stock build.
     "3.15": struct(
         version = "3.15.0",
         wasi_sdk = "33",
-        build_sha256 = "f8aa92c30247c15dec36f90349148a092ea3daf80cf4eb4859e2a7a69effadb0",
-        stdlib_sha256 = "00b791b3729230f97a625087f534d71978433fb1e068e13a9cac8cd3f2541742",
+        releases = "https://github.com/brettcannon/cpython-wasi-build/releases",
+        default = "stock",
+        variants = {
+            "stock": struct(
+                build_sha256 = "f8aa92c30247c15dec36f90349148a092ea3daf80cf4eb4859e2a7a69effadb0",
+                stdlib_sha256 = "00b791b3729230f97a625087f534d71978433fb1e068e13a9cac8cd3f2541742",
+            ),
+        },
     ),
 }
 
-CPYTHON_WASI_BUILD_URL = "https://github.com/brettcannon/cpython-wasi-build/releases/download/v{version}/_build-python-{version}-wasi_sdk-{wasi_sdk}.zip"
-CPYTHON_WASI_STDLIB_URL = "https://github.com/brettcannon/cpython-wasi-build/releases/download/v{version}/python-{version}-wasi_sdk-{wasi_sdk}.zip"
+# The archives of a variant: `stock` carries no suffix, so its archives are
+# named as upstream names its own.
+def cpython_wasi_urls(cpython, variant):
+    """The build-tree and runtime archive URLs of a CPython release's variant.
+
+    Args:
+        cpython (struct): An entry of `CPYTHON_WASI`.
+        variant (str): A key of its `variants`.
+
+    Returns:
+        tuple: The URLs of the build tree and of the runtime.
+    """
+    suffix = "" if variant == "stock" else "-" + variant
+    stamp = "{}-wasi_sdk-{}{}".format(cpython.version, cpython.wasi_sdk, suffix)
+    base = "{}/download/v{}".format(cpython.releases, cpython.version)
+    return (
+        "{}/_build-python-{}.zip".format(base, stamp),
+        "{}/python-{}.zip".format(base, stamp),
+    )
 
 # The compiler and sysroot, per release and host. A CPython build names the
 # release that built it, whose wasi-libc the module's own objects must match.
