@@ -120,6 +120,7 @@ WASI_SDK = {
             "linux-x86_64": struct(name = "x86_64-linux", sha256 = "c6c38aab56e5de88adf6c1ebc9c3ae8da72f88ec2b656fb024eda8d4167a0bc5"),
             "macos-aarch64": struct(name = "arm64-macos", sha256 = "aeae999396d5f5caa5ce419f52e83c35869d5fd21d40af80acba2c80f51b0b3a"),
             "macos-x86_64": struct(name = "x86_64-macos", sha256 = "4bfc274ae8b68c771dd93e32ad4bd695336ca46b585beb3b1260e5602dbc11a2"),
+            "windows-x86_64": struct(name = "x86_64-windows", sha256 = "0f934c6e7e171b5627c81b697a9e57e96d65cd889f56ce6077350de48978afd3"),
         },
     ),
     "33": struct(
@@ -131,21 +132,24 @@ WASI_SDK = {
             "linux-x86_64": struct(name = "x86_64-linux", sha256 = "0ba8b5bfaeb2adf3f29bab5841d76cf5318ab8e1642ea195f88baba1abd47bce"),
             "macos-aarch64": struct(name = "arm64-macos", sha256 = "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78"),
             "macos-x86_64": struct(name = "x86_64-macos", sha256 = "18f3f201ba9734e6a4455b0b6410690395a55e9ffa9f6f5066f66083a94b93b3"),
+            "windows-x86_64": struct(name = "x86_64-windows", sha256 = "df14ca2a2127c2d6b6be07e6f5549b3af9c1b3c0112430c200a4749970c59f06"),
         },
     ),
 }
 
 # Wizer pre-initializes a module: it runs the interpreter start-up and the
-# imports at build time and snapshots the memory into the module.
+# imports at build time and snapshots the memory into the module. A release
+# is a `tar.xz` per Unix host and a `zip` for Windows.
 WIZER = struct(
     version = "11.0.3",
-    url = "https://github.com/bytecodealliance/wizer/releases/download/v11.0.3/wizer-v11.0.3-{host}.tar.xz",
+    url = "https://github.com/bytecodealliance/wizer/releases/download/v11.0.3/wizer-v11.0.3-{host}.{archive}",
     strip_prefix = "wizer-v11.0.3-{host}",
     hosts = {
-        "linux-aarch64": struct(name = "aarch64-linux", sha256 = "73bffcbaf736ef24109a48cac431d070c43cb2ee8a14a840576f7aec0133d8d6"),
-        "linux-x86_64": struct(name = "x86_64-linux", sha256 = "36016e7f846f38ad09f22eb4bafb99068f038c431eb9613ddf59e31ad8a21414"),
-        "macos-aarch64": struct(name = "aarch64-macos", sha256 = "7c54896b456b6ca024af6005ebc5538282dee7cd9f0c9c1155855d29b9c461b1"),
-        "macos-x86_64": struct(name = "x86_64-macos", sha256 = "325bcd4758e9509dd81849d7f4ab8cf69cbe084795e138a996c70f471b6f8b83"),
+        "linux-aarch64": struct(name = "aarch64-linux", archive = "tar.xz", sha256 = "73bffcbaf736ef24109a48cac431d070c43cb2ee8a14a840576f7aec0133d8d6"),
+        "linux-x86_64": struct(name = "x86_64-linux", archive = "tar.xz", sha256 = "36016e7f846f38ad09f22eb4bafb99068f038c431eb9613ddf59e31ad8a21414"),
+        "macos-aarch64": struct(name = "aarch64-macos", archive = "tar.xz", sha256 = "7c54896b456b6ca024af6005ebc5538282dee7cd9f0c9c1155855d29b9c461b1"),
+        "macos-x86_64": struct(name = "x86_64-macos", archive = "tar.xz", sha256 = "325bcd4758e9509dd81849d7f4ab8cf69cbe084795e138a996c70f471b6f8b83"),
+        "windows-x86_64": struct(name = "x86_64-windows", archive = "zip", sha256 = "5ddb3d3f3f3471b522b49cf88d106e94f33021b5d1d67343cae535246c455f8b"),
     },
 )
 

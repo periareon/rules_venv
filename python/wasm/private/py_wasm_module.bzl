@@ -90,6 +90,9 @@ def _exec_interpreter(ctx, toolchain):
     exec tools toolchain provides one built for the execution platform, as a
     tool run in an action must be, and is eligible by the same `is_python_X.Y`
     as the `py_wasm_toolchain`, which pairs the two.
+
+    Returns:
+        struct: `executable`, to run, and `tools`, the inputs it needs.
     """
     exec_tools = getattr(ctx.toolchains[_PY_EXEC_TOOLS_TOOLCHAIN_TYPE], "exec_tools", None)
     interpreter = getattr(exec_tools, "exec_interpreter", None)
@@ -102,7 +105,14 @@ def _exec_interpreter(ctx, toolchain):
     version = getattr(runtime, "interpreter_version_info", None)
     if version != None:
         _check_version(ctx, toolchain, "the exec tools toolchain's interpreter", version)
-    return interpreter[DefaultInfo].files_to_run
+
+    # The target's own executable is a link to the runtime's interpreter made
+    # in the output tree, which on a Windows host without symlinks is a copy of
+    # `python.exe` away from the DLLs beside the original and does not start.
+    # The interpreter in place, with the runtime's files, runs anywhere.
+    if getattr(runtime, "interpreter", None):
+        return struct(executable = runtime.interpreter, tools = runtime.files)
+    return struct(executable = interpreter[DefaultInfo].files_to_run, tools = depset())
 
 def _run_python(ctx, interpreter, *, mnemonic, script, arguments, inputs, outputs, progress_message):
     """Run one of the build tools with the exec interpreter."""
@@ -112,7 +122,8 @@ def _run_python(ctx, interpreter, *, mnemonic, script, arguments, inputs, output
     args.add_all(["-B", "-S", "-s", script])
     ctx.actions.run(
         mnemonic = mnemonic,
-        executable = interpreter,
+        executable = interpreter.executable,
+        tools = interpreter.tools,
         arguments = [args] + arguments,
         inputs = depset([script], transitive = [inputs]),
         outputs = outputs,
@@ -234,7 +245,10 @@ rules_venv_py_wasm_bootstrap_src:
 
     # 4. Compile the host pieces. The headers are the Python toolchain's, whose
     #    `pyconfig.h` describes the host; including the CPython build's first
-    #    makes the toolchain's a no-op, since both share the include guard.
+    #    makes the toolchain's a no-op, since both share the include guard,
+    #    `Py_PYCONFIG_H`. CPython's Windows `pyconfig.h` is a separate file
+    #    guarded by `Py_CONFIG_H`, which nothing else refers to; defining it
+    #    makes that one a no-op as well, when the toolchain is for Windows.
     py_cc_toolchain = ctx.toolchains[_PY_CC_TOOLCHAIN_TYPE].py_cc_toolchain
     if not py_cc_toolchain.python_version.startswith(toolchain.python_version + "."):
         fail(
@@ -268,8 +282,12 @@ rules_venv_py_wasm_bootstrap_src:
         args.add_all(["-O2", "-DNDEBUG"])
         if source.extension == "c":
             args.add("-include", toolchain.pyconfig)
+            args.add("-DPy_CONFIG_H")
             args.add_all(include_flags)
         args.add_all(["-c", source, "-o", obj])
+
+        # clang reads a response file, which a Windows command line may need.
+        args.use_param_file("@%s")
         ctx.actions.run(
             mnemonic = "PyWasmCompile",
             executable = clang,
@@ -296,6 +314,7 @@ rules_venv_py_wasm_bootstrap_src:
     args.add_all(toolchain.linkopts)
     args.add("-Wl,-z,stack-size={}".format(ctx.attr.stack_size))
     args.add("-Wl,--initial-memory={}".format(ctx.attr.initial_memory))
+    args.use_param_file("@%s")
     ctx.actions.run(
         mnemonic = "PyWasmLink",
         executable = clang,

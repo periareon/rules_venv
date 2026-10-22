@@ -8,6 +8,7 @@ also called through that convention.
 
 import json
 import os
+import platform
 import unittest
 
 from python.runfiles import Runfiles
@@ -64,7 +65,9 @@ def _export_names(body: bytes) -> list[str]:
 def _module_path() -> str:
     runfiles = Runfiles.Create()
     assert runfiles
-    path = runfiles.Rlocation(os.environ["ECHO_WASM"])
+    # TODO: https://github.com/periareon/rules_venv/issues/37
+    source_repo = "" if platform.system() == "Windows" else None
+    path = runfiles.Rlocation(os.environ["ECHO_WASM"], source_repo)
     assert path
     return path
 

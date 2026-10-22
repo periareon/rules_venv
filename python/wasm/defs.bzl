@@ -19,8 +19,8 @@ Nothing beyond depending on `rules_venv` and registering, with rules_python, a
 hermetic Python toolchain of a version the rule supports: 3.13, 3.14, and 3.15
 once rules_python maps it to a final release. Modules are built with a
 `py_wasm_toolchain`, and `rules_venv` registers one for each such version and
-each Linux and macOS host (x86_64 and arm64), made of the
-`wasm32-wasi` build of that CPython release from
+each Linux and macOS host (x86_64 and arm64) and Windows host (x86_64), made
+of the `wasm32-wasi` build of that CPython release from
 [periareon/cpython-wasi-build](https://github.com/periareon/cpython-wasi-build), the
 wasi-sdk release that built it and Wizer, which its `py_wasm` extension fetches
 when a module is first built. The CPython comes in variants, the default being
@@ -175,13 +175,13 @@ toolchain, for the interpreter that produces the module's bytecode.
 
 `rules_venv` registers a toolchain for every Python version pinned in
 `python/wasm/private/versions.bzl` that the resolved rules_python maps to a
-final release, 3.13 and 3.14 today, for Linux and macOS on x86_64 and arm64.
-Its `py_wasm` extension declares the archives and writes the toolchains into
-the repository `@rules_venv_py_wasm_toolchains`. Nothing is fetched until a
-module is built, and then only what the resolved toolchain needs. Each
-toolchain is gated on rules_python's `is_python_X.Y`, which a module's
-`python_version` sets, so the embedded CPython always matches the Python
-toolchain the module is built with; a version rules_python maps to a
+final release, 3.13 and 3.14 today, for Linux and macOS on x86_64 and arm64 and
+for Windows on x86_64. Its `py_wasm` extension declares the archives and writes
+the toolchains into the repository `@rules_venv_py_wasm_toolchains`. Nothing is
+fetched until a module is built, and then only what the resolved toolchain
+needs. Each toolchain is gated on rules_python's `is_python_X.Y`, which a
+module's `python_version` sets, so the embedded CPython always matches the
+Python toolchain the module is built with; a version rules_python maps to a
 pre-release is left out, and the rule refuses one, since its bytecode and ABI
 may differ from the release's.
 

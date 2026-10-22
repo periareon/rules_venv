@@ -178,6 +178,7 @@ jobs:
         include:
           - os: macos-latest
           - os: ubuntu-24.04
+          - os: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: bazel-contrib/setup-bazel@0.14.0
@@ -185,16 +186,28 @@ jobs:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
+
+      - name: Setup Bazelrc (Windows)
+        run: |
+          echo "TEMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "TMP=$env:RUNNER_TEMP" >> "$env:GITHUB_ENV"
+          echo "startup --output_user_root=D:/bzl" > ./user.bazelrc
+        if: startswith(runner.os, 'Windows')
+
+      # The steps below run under bash on every host, Windows included.
       # The linters run on the rule's code only: the module targets build
       # under Python 3.13 and 3.14, for which the pinned linters' wheels are
       # not resolved.
       - name: Lint
+        shell: bash
         run: bazel ${BAZEL_STARTUP_FLAGS[@]} build --config=strict //python/wasm/...
       - name: Test
+        shell: bash
         run: bazel ${BAZEL_STARTUP_FLAGS[@]} test //python/wasm/private/tests/echo:echo_tests
       # The example: a module that builds and publishes a module, and a
       # consumer module whose repository rule calls it.
       - name: Example
+        shell: bash
         working-directory: examples/py_wasm_module
         run: |
           bazel ${BAZEL_STARTUP_FLAGS[@]} run //:publish
