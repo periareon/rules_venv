@@ -1,9 +1,9 @@
 """The `py_wasm` module extension: the default toolchains and the archives they are made of.
 
 `py_wasm_module` builds with a `py_wasm_toolchain` (see `py_wasm_toolchain.bzl`).
-This extension declares one per supported Python version and per Linux and macOS
-host, assembled from a prebuilt CPython for `wasm32-wasi`, the wasi-sdk release
-that built it and Wizer, all pinned by version and hash in
+This extension declares one per supported Python version and per Linux, macOS
+and Windows host, assembled from a prebuilt CPython for `wasm32-wasi`, the
+wasi-sdk release that built it and Wizer, all pinned by version and hash in
 `python/wasm/private/versions.bzl`. The archives are `http_archive` repositories
 and the toolchains live in a hub repository, `rules_venv_py_wasm_toolchains`,
 which `rules_venv` registers, so that nothing is required of a module that
@@ -73,14 +73,14 @@ filegroup(
 
 filegroup(
     name = "clang",
-    srcs = ["bin/clang"],
+    srcs = ["bin/clang{exe}"],
 )
 """
 
 _WIZER_BUILD = """\
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["wizer"])
+exports_files(["wizer{exe}"])
 """
 
 TOOLCHAINS_REPOSITORY = "rules_venv_py_wasm_toolchains"
@@ -119,6 +119,10 @@ def _wasi_sdk_repository_name(wasi_sdk, host):
 def _wizer_repository_name(host):
     return "rules_venv_py_wasm_wizer_{}".format(host.replace("-", "_"))
 
+def _exe(host):
+    """The suffix of an executable on `host`, a key of `SUPPORTED_HOSTS`."""
+    return ".exe" if host.startswith("windows-") else ""
+
 _HUB_HEADER = """\
 # The default `py_wasm_toolchain`s, written by the `py_wasm` extension of
 # rules_venv: one per supported Python version and host.
@@ -135,7 +139,7 @@ py_wasm_toolchain_suite(
     pyconfig = {pyconfig},
     python_version = "{version}",
     stdlib = {stdlib},
-    wizer = "@{wizer}//:wizer",
+    wizer = "@{wizer}//:wizer{exe}",
 )
 """
 
@@ -170,7 +174,7 @@ def _py_wasm_impl(module_ctx):
         for key, host in sdk.hosts.items():
             http_archive(
                 name = _wasi_sdk_repository_name(release, key),
-                build_file_content = _WASI_SDK_BUILD,
+                build_file_content = _WASI_SDK_BUILD.format(exe = _exe(key)),
                 sha256 = host.sha256,
                 strip_prefix = sdk.strip_prefix.format(host = host.name),
                 url = sdk.url.format(host = host.name),
@@ -178,10 +182,10 @@ def _py_wasm_impl(module_ctx):
     for key, host in WIZER.hosts.items():
         http_archive(
             name = _wizer_repository_name(key),
-            build_file_content = _WIZER_BUILD,
+            build_file_content = _WIZER_BUILD.format(exe = _exe(key)),
             sha256 = host.sha256,
             strip_prefix = WIZER.strip_prefix.format(host = host.name),
-            url = WIZER.url.format(host = host.name),
+            url = WIZER.url.format(host = host.name, archive = host.archive),
         )
 
     # The toolchains: a hub that names the archives above, which it sees under
@@ -200,6 +204,7 @@ def _py_wasm_impl(module_ctx):
             suites.append(_HUB_SUITE.format(
                 version = minor,
                 host = host,
+                exe = _exe(host),
                 wasi_sdk = _wasi_sdk_repository_name(cpython.wasi_sdk, host),
                 libs = _cpython_select(cpython, minor, "libs"),
                 pyconfig = _cpython_select(cpython, minor, "pyconfig.h"),

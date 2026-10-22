@@ -3,8 +3,8 @@ load("//python:defs.bzl", "py_library", "py_test")
 load("//python/wasm:defs.bzl", "py_wasm_module")
 load("//python/wasm/private:versions.bzl", "supported_python_versions")
 
-# These targets build a module, which fetches a CPython for wasm32-wasi and
-# needs a Linux or macOS host; they are run by CI's dedicated job through
+# These targets build a module, which fetches a CPython for wasm32-wasi and a
+# wasi-sdk for the host; they are run by CI's dedicated job through
 # `:echo_tests` rather than `//...`. One module per Python version the
 # `py_wasm` extension declares toolchains for with the resolved rules_python;
 # MODULE.bazel must register a Python toolchain for each.
@@ -22,11 +22,6 @@ py_library(
         name = "echo_{}".format(version.replace(".", "_")),
         entry = "python.wasm.private.tests.echo.echo",
         python_version = version,
-        tags = ["manual"],
-        target_compatible_with = select({
-            "@platforms//os:windows": ["@platforms//:incompatible"],
-            "//conditions:default": [],
-        }),
         exports = [
             "echo",
             "info",

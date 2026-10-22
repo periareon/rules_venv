@@ -62,7 +62,7 @@ Declare what `py_wasm_module` builds with: a C compiler for `wasm32-wasi`, a
 CPython built for it, and optionally Wizer.
 
 `rules_venv` registers toolchains of this kind for Python 3.13 and 3.14 on
-Linux and macOS hosts from archives it fetches (see `extensions.bzl`); a module
+Linux, macOS and Windows hosts from archives it fetches (see `extensions.bzl`); a module
 that wants a compiler or a CPython of its own declares one and registers it with
 `register_toolchains` or `--extra_toolchains`.
 

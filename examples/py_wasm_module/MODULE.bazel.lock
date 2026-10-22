@@ -195,7 +195,7 @@
   "moduleExtensions": {
     "@@greeting_consumer+//:greeting.bzl%greeting": {
       "general": {
-        "bzlTransitiveDigest": "jY3Hp/fLCBYsIHtaqtcl4OrdbYiO+48TYXqvPag2cmw=",
+        "bzlTransitiveDigest": "R8ID1GsGmVN0X7d2ph2Or6+cePJxpW12CH/gXUmaM0M=",
         "usagesDigest": "mdu6PtAJ0Tx7afEo10eyieeKW09J9pSO4s4TedMG5rs=",
         "recordedInputs": [],
         "generatedRepoSpecs": {

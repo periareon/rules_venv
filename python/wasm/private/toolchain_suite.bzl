@@ -25,6 +25,10 @@ _CONSTRAINTS = {
         Label("@platforms//os:macos"),
         Label("@platforms//cpu:x86_64"),
     ],
+    "windows-x86_64": [
+        Label("@platforms//os:windows"),
+        Label("@platforms//cpu:x86_64"),
+    ],
 }
 
 SUPPORTED_HOSTS = _CONSTRAINTS.keys()

@@ -1,6 +1,7 @@
 """Checks the answer the consumer's repository rule got from the module."""
 
 import os
+import platform
 import unittest
 
 from python.runfiles import Runfiles
@@ -13,7 +14,9 @@ class GreetingTest(unittest.TestCase):
         """The answer names the caller and the embedded Python."""
         runfiles = Runfiles.Create()
         assert runfiles
-        path = runfiles.Rlocation(os.environ["GREETING"])
+        # TODO: https://github.com/periareon/rules_venv/issues/37
+        source_repo = "" if platform.system() == "Windows" else None
+        path = runfiles.Rlocation(os.environ["GREETING"], source_repo)
         assert path
         with open(path, encoding="utf-8") as handle:
             greeting = handle.read()
