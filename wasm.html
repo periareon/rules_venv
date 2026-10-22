@@ -173,8 +173,8 @@ snapshot becomes the module, so a call does not pay for start-up.</p>
 hermetic Python toolchain of a version the rule supports: 3.13, 3.14, and 3.15
 once rules_python maps it to a final release. Modules are built with a
 <code>py_wasm_toolchain</code>, and <code>rules_venv</code> registers one for each such version and
-each Linux and macOS host (x86_64 and arm64), made of the
-<code>wasm32-wasi</code> build of that CPython release from
+each Linux and macOS host (x86_64 and arm64) and Windows host (x86_64), made
+of the <code>wasm32-wasi</code> build of that CPython release from
 <a href="https://github.com/periareon/cpython-wasi-build">periareon/cpython-wasi-build</a>, the
 wasi-sdk release that built it and Wizer, which its <code>py_wasm</code> extension fetches
 when a module is first built. The CPython comes in variants, the default being
@@ -304,13 +304,13 @@ toolchain, for the interpreter that produces the module's bytecode.</p>
 <h3 id="the-defaults"><a class="header" href="#the-defaults">The defaults</a></h3>
 <p><code>rules_venv</code> registers a toolchain for every Python version pinned in
 <code>python/wasm/private/versions.bzl</code> that the resolved rules_python maps to a
-final release, 3.13 and 3.14 today, for Linux and macOS on x86_64 and arm64.
-Its <code>py_wasm</code> extension declares the archives and writes the toolchains into
-the repository <code>@rules_venv_py_wasm_toolchains</code>. Nothing is fetched until a
-module is built, and then only what the resolved toolchain needs. Each
-toolchain is gated on rules_python's <code>is_python_X.Y</code>, which a module's
-<code>python_version</code> sets, so the embedded CPython always matches the Python
-toolchain the module is built with; a version rules_python maps to a
+final release, 3.13 and 3.14 today, for Linux and macOS on x86_64 and arm64 and
+for Windows on x86_64. Its <code>py_wasm</code> extension declares the archives and writes
+the toolchains into the repository <code>@rules_venv_py_wasm_toolchains</code>. Nothing is
+fetched until a module is built, and then only what the resolved toolchain
+needs. Each toolchain is gated on rules_python's <code>is_python_X.Y</code>, which a
+module's <code>python_version</code> sets, so the embedded CPython always matches the
+Python toolchain the module is built with; a version rules_python maps to a
 pre-release is left out, and the rule refuses one, since its bytecode and ABI
 may differ from the release's.</p>
 <h3 id="one-of-your-own"><a class="header" href="#one-of-your-own">One of your own</a></h3>
@@ -387,7 +387,7 @@ py_wasm_toolchain(<a href="#py_wasm_toolchain-name">name</a>, <a href="#py_wasm_
 <p>Declare what <code>py_wasm_module</code> builds with: a C compiler for <code>wasm32-wasi</code>, a
 CPython built for it, and optionally Wizer.</p>
 <p><code>rules_venv</code> registers toolchains of this kind for Python 3.13 and 3.14 on
-Linux and macOS hosts from archives it fetches (see <code>extensions.bzl</code>); a module
+Linux, macOS and Windows hosts from archives it fetches (see <code>extensions.bzl</code>); a module
 that wants a compiler or a CPython of its own declares one and registers it with
 <code>register_toolchains</code> or <code>--extra_toolchains</code>.</p>
 <p>A toolchain is for one Python version: the headers that compile the module's
