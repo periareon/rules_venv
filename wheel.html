@@ -195,6 +195,15 @@ toolchain(
 )
 </code></pre>
 <p>This will ensure all features of the wheel rules are available and usable.</p>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<p>The dependencies of a <code>py_wheel_library</code> which are not part of the package are recorded
+as the requirements (<code>Requires-Dist</code>) of the wheel, with any constraints its <code>constraints_file</code>
+has for them. A dependency tagged <code>pypi_name=&lt;distribution&gt;</code>, as <code>rules_python</code> and
+<code>rules_req_compile</code> tag the targets of the wheels they fetch, requires that distribution.
+Failing the tag, the <code>&lt;distribution&gt;-&lt;version&gt;.dist-info</code> directory an installed wheel
+carries among its data names it, which covers the wheel repositories of every version of
+either. A dependency from another repository with neither is assumed to be named after its
+distribution, less the <code>&lt;hub&gt;.</code> prefix <code>rules_req_compile</code> hubs give their targets.</p>
 <h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
 <ul>
 <li><a href="#py_wheel_publisher">py_wheel_publisher</a></li>
@@ -313,6 +322,12 @@ py_wheel_library(
     deps = [":submodule"],
 )
 </code></pre>
+<p>Dependencies which are not part of the package become its requirements (<code>Requires-Dist</code>),
+with the constraints <code>constraints_file</code> has for them. A dependency tagged <code>pypi_name=&lt;distribution&gt;</code>,
+as <code>rules_python</code> and <code>rules_req_compile</code> tag the targets of the wheels they fetch, requires that
+distribution; failing the tag, the <code>&lt;distribution&gt;-&lt;version&gt;.dist-info</code> directory among the
+dependency's data names it. A dependency from another repository with neither is assumed to be
+named after its distribution.</p>
 <p>Targets created by this library:</p>
 <div class="table-wrapper"><table><thead><tr><th>name</th><th>details</th></tr></thead><tbody>
 <tr><td><code>{name}</code></td><td>The <code>py_library</code> target for the wheel.</td></tr>
