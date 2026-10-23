@@ -45,13 +45,6 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-PLATFORMS = [
-    "linux_aarch64",
-    "linux_x86_64",
-    "macos_aarch64",
-    "windows_x86_64",
-]
-
 filegroup(
     name = "requirements_in",
     srcs = [
@@ -69,31 +62,22 @@ filegroup(
     ],
 )
 
-[
-    py_reqs_compiler(
-        name = "requirements.{}.update".format(platform),
-        requirements_in = "requirements_in",
-        requirements_txt = "requirements_{}.txt".format(platform),
-        target_compatible_with = select({
-            ":{}".format(platform): [],
-            "//conditions:default": ["@platforms//:incompatible"],
-        }),
-    )
-    for platform in PLATFORMS
-]
-
-[
-    py_reqs_solution_test(
-        name = "requirements_{}_test".format(platform),
-        compiler = ":requirements.{}.update".format(platform),
-    )
-    for platform in PLATFORMS
-]
-
-alias(
+# The solutions of every platform are compiled together from any host and
+# share versions. `requirements.parse` in `MODULE.bazel` maps each to the
+# `config_setting` of its platform above.
+py_reqs_compiler(
     name = "requirements.update",
-    actual = select({
-        ":{}".format(platform): ":requirements.{}.update".format(platform)
-        for platform in PLATFORMS
-    }),
+    requirements_in = "requirements_in",
+    requirements_txts = {
+        "requirements_linux_aarch64.txt": "manylinux_2_28_aarch64",
+        "requirements_linux_x86_64.txt": "manylinux_2_28_x86_64",
+        "requirements_macos_aarch64.txt": "macosx_11_0_arm64",
+        "requirements_macos_x86_64.txt": "macosx_11_0_x86_64",
+        "requirements_windows_x86_64.txt": "win_amd64",
+    },
+)
+
+py_reqs_solution_test(
+    name = "requirements_test",
+    compiler = ":requirements.update",
 )

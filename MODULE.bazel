@@ -9,6 +9,20 @@ bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.4")
 bazel_dep(name = "rules_python", version = "1.7.0")
+
+# Security fixes from rules_python 2.4.4 that do not require moving the pin:
+# the pip and certifi of the eMudhra (emSign) CA incident,
+# https://github.com/bazel-contrib/rules_python/issues/4299
+single_version_override(
+    module_name = "rules_python",
+    patch_strip = 1,
+    patches = [
+        "//tools/patches:rules_python-certifi-2026.10.19.patch",
+        "//tools/patches:rules_python-pip-26.2.2.patch",
+    ],
+    version = "1.7.0",
+)
+
 bazel_dep(name = "rules_batch", version = "0.1.1")
 bazel_dep(name = "rules_shell", version = "0.7.1")
 
@@ -27,7 +41,7 @@ use_repo(py_wasm, "rules_venv_py_wasm_toolchains")
 
 register_toolchains("@rules_venv_py_wasm_toolchains//:all")
 
-bazel_dep(name = "rules_req_compile", version = "1.1.0", dev_dependency = True)
+bazel_dep(name = "rules_req_compile", version = "1.5.0", dev_dependency = True)
 bazel_dep(name = "stardoc", version = "0.8.0", dev_dependency = True, repo_name = "io_bazel_stardoc")
 bazel_dep(name = "rules_rust_mdbook", version = "0.74.0", dev_dependency = True)
 
@@ -79,11 +93,19 @@ use_repo(
 requirements = use_extension("@rules_req_compile//extensions:python.bzl", "requirements", dev_dependency = True)
 requirements.parse(
     name = "pip_deps",
+    config_settings = {
+        "//python/3rdparty:linux_aarch64": "linux_aarch64",
+        "//python/3rdparty:linux_x86_64": "linux_x86_64",
+        "//python/3rdparty:macos_aarch64": "macos_aarch64",
+        "//python/3rdparty:macos_x86_64": "macos_x86_64",
+        "//python/3rdparty:windows_x86_64": "windows_x86_64",
+    },
     requirements_locks = {
-        "//python/3rdparty:requirements_linux_aarch64.txt": "//python/3rdparty:linux_aarch64",
-        "//python/3rdparty:requirements_linux_x86_64.txt": "//python/3rdparty:linux_x86_64",
-        "//python/3rdparty:requirements_macos_aarch64.txt": "//python/3rdparty:macos_aarch64",
-        "//python/3rdparty:requirements_windows_x86_64.txt": "//python/3rdparty:windows_x86_64",
+        "//python/3rdparty:requirements_linux_aarch64.txt": "linux_aarch64",
+        "//python/3rdparty:requirements_linux_x86_64.txt": "linux_x86_64",
+        "//python/3rdparty:requirements_macos_aarch64.txt": "macos_aarch64",
+        "//python/3rdparty:requirements_macos_x86_64.txt": "macos_x86_64",
+        "//python/3rdparty:requirements_windows_x86_64.txt": "windows_x86_64",
     },
 )
 use_repo(requirements, "pip_deps")
@@ -111,6 +133,18 @@ external_example_repository = use_repo_rule(
 # be standing where a consumer's naming rules differ from a producer's.
 external_example_repository(
     name = "mypy_external_example",
+    dev_dependency = True,
+)
+
+wheel_tagged_example_repository = use_repo_rule(
+    "//python/wheel/private/tests/tagged_deps:tagged_example.bzl",
+    "tagged_example_repository",
+)
+
+# Targets of a wheel repository, one tagged with its distribution and one not,
+# which only another repository can stand in for.
+wheel_tagged_example_repository(
+    name = "wheel_tagged_example",
     dev_dependency = True,
 )
 

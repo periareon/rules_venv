@@ -11,6 +11,13 @@ def _find_path_indices(suffix: str) -> list[int]:
     return [i for i, p in enumerate(sys.path) if p.endswith(normalized)]
 
 
+def _find_package_indices(package: str) -> list[int]:
+    """Find sys.path indices whose entries contain the package as a directory"""
+    return [
+        i for i, p in enumerate(sys.path) if os.path.isdir(os.path.join(p, package))
+    ]
+
+
 class DepOrderTest(unittest.TestCase):
     """Test that dependency import paths appear on sys.path in deps order."""
 
@@ -50,7 +57,7 @@ class DepOrderTest(unittest.TestCase):
         a later dep's site-packages from shadowing modules expected by an
         earlier dep's transitive tree.
         """
-        pytest_indices = _find_path_indices("__pytest/site-packages")
+        pytest_indices = _find_package_indices("pytest")
         second_indices = _find_path_indices("/second")
 
         self.assertTrue(
