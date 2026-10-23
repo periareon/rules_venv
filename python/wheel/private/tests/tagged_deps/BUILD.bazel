@@ -1,0 +1,39 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//python:defs.bzl", "py_test")
+load("//python/wheel:defs.bzl", "py_wheel_library")
+load(":tagged_deps_test.bzl", "tagged_deps_test_suite")
+
+write_file(
+    name = "constraints",
+    out = "constraints.txt",
+    content = [
+        # Spelled unlike the `pypi_name=Fancy-Pkg` tag, to show the match is normalized.
+        "fancy.pkg>=1.0.0",
+        # Spelled unlike the `Dist_Info_Pkg-3.4.5.dist-info` directory, likewise.
+        "dist-info-pkg~=3.0",
+        "plain<2",
+    ],
+    newline = "unix",
+)
+
+py_wheel_library(
+    name = "tagged",
+    constraints_file = ":constraints.txt",
+    deps = [
+        "@wheel_tagged_example//:pip_deps.dist_info_pkg",
+        "@wheel_tagged_example//:pip_deps.fancy_pkg",
+        "@wheel_tagged_example//:pip_deps.plain",
+    ],
+)
+
+py_test(
+    name = "tagged_wheel_test",
+    srcs = ["tagged_wheel_test.py"],
+    data = [":tagged.whl"],
+    env = {"WHEEL": "$(rlocationpath :tagged.whl)"},
+    deps = ["//python/runfiles"],
+)
+
+tagged_deps_test_suite(
+    name = "tagged_deps_test_suite",
+)

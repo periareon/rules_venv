@@ -4,6 +4,27 @@ import argparse
 import re
 from pathlib import Path
 
+# The name of a distribution, as PEP 508 defines it:
+# https://peps.python.org/pep-0508/#names
+_NAME_PATTERN = re.compile(r"^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9])$")
+
+
+def normalize_name(name: str) -> str:
+    """Normalize the name of a distribution so that its spellings compare equal.
+
+    This is the normalization of PEP 503 with `_` for the separator instead of
+    `-`, which is how `req-compile` sanitizes names into target names, so that
+    names read from labels and from `pypi_name=` tags agree.
+    https://github.com/sputt/req-compile/blob/1.0.0rc24/private/utils.bzl#L3-L12
+
+    Args:
+        name: The name of a distribution, however spelled.
+
+    Returns:
+        The normalized name.
+    """
+    return re.sub(r"[-_.]+", "_", name).lower()
+
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
@@ -53,8 +74,9 @@ def parse_constraints(constraints_file: Path) -> dict[str, str]:
     # foo_pkg!=1.0.0,!=2.0.0
     # foo.pkg[extra]
     # f00.pkg[extra]<=1.0.0
+    # foo-pkg~=1.0
     # ```
-    pattern = re.compile(r"^([\w\-_\.\d]+)\w?([\[\]!=<>\-\.\d+\w,]*)$")
+    pattern = re.compile(r"^([\w\-_\.\d]+)\w?([\[\]!=<>~\-\.\d+\w,]*)$")
 
     for line in constraints_file.read_text(encoding="utf-8").splitlines():
         text = line.strip()
@@ -66,9 +88,7 @@ def parse_constraints(constraints_file: Path) -> dict[str, str]:
         if not match:
             continue
 
-        # Match the name sanitization from req-compile
-        # https://github.com/sputt/req-compile/blob/1.0.0rc24/private/utils.bzl#L3-L12
-        name = match.group(1).replace("-", "_").replace(".", "_").lower()
+        name = normalize_name(match.group(1))
         constraint = match.group(2).strip()
         constraints[name] = constraint
 
@@ -86,7 +106,13 @@ def main() -> None:
     requirements = []
 
     for dep in args.deps:
-        constraint = constraints.get(dep, "")
+        if not _NAME_PATTERN.match(dep):
+            raise ValueError(
+                f"`{dep}` is not the name of a distribution "
+                "(https://peps.python.org/pep-0508/#names). A dependency of a wheel is "
+                "named by its `pypi_name=` tag, or failing that by its label."
+            )
+        constraint = constraints.get(normalize_name(dep), "")
         requirements.append(f"{dep}{constraint}")
 
     args.output.write_text("\n".join(sorted(requirements)) + "\n", encoding="utf-8")

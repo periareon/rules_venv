@@ -52,6 +52,17 @@ register_toolchains(
 ```
 
 This will ensure all features of the wheel rules are available and usable.
+
+## Requirements
+
+The dependencies of a `py_wheel_library` which are not part of the package are recorded
+as the requirements (`Requires-Dist`) of the wheel, with any constraints its `constraints_file`
+has for them. A dependency tagged `pypi_name=<distribution>`, as `rules_python` and
+`rules_req_compile` tag the targets of the wheels they fetch, requires that distribution.
+Failing the tag, the `<distribution>-<version>.dist-info` directory an installed wheel
+carries among its data names it, which covers the wheel repositories of every version of
+either. A dependency from another repository with neither is assumed to be named after its
+distribution, less the `<hub>.` prefix `rules_req_compile` hubs give their targets.
 """
 
 load(

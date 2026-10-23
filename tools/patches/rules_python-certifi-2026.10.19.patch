@@ -1,0 +1,55 @@
+Upgrade certifi in the requirements of `@rules_python//tools/publish:twine`,
+the default `twine_binary` of `py_wheel`, to a release that no longer trusts
+the compromised eMudhra (emSign) CA. This is also what the `pip` extension
+records in `MODULE.bazel.lock`.
+See https://github.com/bazel-contrib/rules_python/issues/4299 and
+https://github.com/bazel-contrib/rules_python/pull/4297.
+
+diff --git a/tools/publish/requirements_darwin.txt b/tools/publish/requirements_darwin.txt
+--- a/tools/publish/requirements_darwin.txt
++++ b/tools/publish/requirements_darwin.txt
+@@ -8,5 +8,5 @@
+     # via jaraco-context
+-certifi==2025.10.5 \
+-    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+-    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
++certifi==2026.10.19 \
++    --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
++    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
+     # via requests
+diff --git a/tools/publish/requirements_linux.txt b/tools/publish/requirements_linux.txt
+--- a/tools/publish/requirements_linux.txt
++++ b/tools/publish/requirements_linux.txt
+@@ -8,5 +8,5 @@
+     # via jaraco-context
+-certifi==2025.10.5 \
+-    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+-    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
++certifi==2026.10.19 \
++    --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
++    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
+     # via requests
+diff --git a/tools/publish/requirements_universal.txt b/tools/publish/requirements_universal.txt
+--- a/tools/publish/requirements_universal.txt
++++ b/tools/publish/requirements_universal.txt
+@@ -8,5 +8,5 @@
+     # via jaraco-context
+-certifi==2025.10.5 \
+-    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+-    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
++certifi==2026.10.19 \
++    --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
++    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
+     # via requests
+diff --git a/tools/publish/requirements_windows.txt b/tools/publish/requirements_windows.txt
+--- a/tools/publish/requirements_windows.txt
++++ b/tools/publish/requirements_windows.txt
+@@ -8,5 +8,5 @@
+     # via jaraco-context
+-certifi==2025.10.5 \
+-    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+-    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
++certifi==2026.10.19 \
++    --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
++    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
+     # via requests

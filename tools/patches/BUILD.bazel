@@ -1,1 +1,5 @@
-exports_files(["protobuf-auto-exec-groups.patch"])
+exports_files([
+    "protobuf-auto-exec-groups.patch",
+    "rules_python-certifi-2026.10.19.patch",
+    "rules_python-pip-26.2.2.patch",
+])

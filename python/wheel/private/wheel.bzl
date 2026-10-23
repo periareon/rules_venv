@@ -9,6 +9,17 @@ _TOOLCHAIN_TYPE = str(Label("//python/wheel:toolchain_type"))
 
 _PY_PACKAGE_TAG = "py_package"
 
+# The tags `rules_python` and `rules_req_compile` put on every target of a wheel
+# they fetch, naming the distribution it came from, e.g. `pypi_name=Jinja2` and
+# `pypi_version=3.1.4`.
+_PYPI_NAME_TAG = "pypi_name"
+_PYPI_VERSION_TAG = "pypi_version"
+
+# The suffix of the metadata directory an installed wheel leaves beside its
+# modules, `<distribution>-<version>.dist-info`, which names the distribution
+# when the target does not: https://packaging.python.org/en/latest/specifications/binary-distribution-format/
+_DIST_INFO_SUFFIX = ".dist-info"
+
 def package_tag(name):
     """Generate a tag used to associate the target with a python package.
 
@@ -46,6 +57,50 @@ PyWheelPackageInfo = provider(
     },
 )
 
+PyWheelRequirementInfo = provider(
+    doc = "A provider describing a target installed from a package index, which wheels depending on it require.",
+    fields = {
+        "name": "str: The name of the distribution, as the `pypi_name=` tag of the target or its `.dist-info` directory records it.",
+        "version": "str: The version of the distribution, from the `pypi_version=` tag or the `.dist-info` directory, else empty.",
+    },
+)
+
+def _tag_values(tags, key):
+    """The values of the `key=value` tags among `tags`.
+
+    Args:
+        tags (list[str]): The tags of a target.
+        key (str): The key to look for.
+
+    Returns:
+        list[str]: The values, in the order of the tags.
+    """
+    prefix = key + "="
+    return [tag[len(prefix):] for tag in tags if tag.startswith(prefix)]
+
+def _requirement_from_dist_info(files):
+    """The distribution a target installed from a wheel stands for, read from its `.dist-info` directory.
+
+    The directory is named `<distribution>-<version>.dist-info`, with `-` in the
+    distribution replaced by `_`, so the first `-` separates the two.
+
+    Args:
+        files (list[File]): The files of the target, typically its `data`.
+
+    Returns:
+        PyWheelRequirementInfo: The distribution, or `None` if no `.dist-info` directory was found.
+    """
+    for file in files:
+        if file.basename != "METADATA":
+            continue
+        dirname = file.dirname.rpartition("/")[2]
+        if not dirname.endswith(_DIST_INFO_SUFFIX):
+            continue
+        name, _, version = dirname[:-len(_DIST_INFO_SUFFIX)].partition("-")
+        if name:
+            return PyWheelRequirementInfo(name = name, version = version)
+    return None
+
 def _is_dep_from_local_workspace(dep, current_workspace_name):
     if dep.label.workspace_name:
         return False
@@ -59,13 +114,25 @@ def _py_wheel_package_aspect_impl(target, ctx):
     if PyWheelPackageInfo in target:
         return []
 
-    package_names = []
-    for tag in ctx.rule.attr.tags:
-        if tag.startswith(_PY_PACKAGE_TAG):
-            _, _, package_name = tag.partition("=")
-            package_names.append(package_name)
+    package_names = _tag_values(ctx.rule.attr.tags, _PY_PACKAGE_TAG)
 
     if not package_names:
+        # A target of a distribution from a package index says which one with
+        # a tag, see `_PYPI_NAME_TAG`. Wheels depending on it require that.
+        pypi_names = _tag_values(ctx.rule.attr.tags, _PYPI_NAME_TAG)
+        if pypi_names:
+            pypi_versions = _tag_values(ctx.rule.attr.tags, _PYPI_VERSION_TAG)
+            return [PyWheelRequirementInfo(
+                name = pypi_names[0],
+                version = pypi_versions[0] if pypi_versions else "",
+            )]
+
+        # Without the tag, the `.dist-info` directory the wheel was installed
+        # with names the distribution. Wheel repositories of every version of
+        # `rules_req_compile` and `rules_python` carry it in their `data`.
+        requirement = _requirement_from_dist_info(getattr(ctx.rule.files, "data", []))
+        if requirement:
+            return [requirement]
         return []
 
     deps = []
@@ -77,6 +144,11 @@ def _py_wheel_package_aspect_impl(target, ctx):
 
     for dep in getattr(ctx.rule.attr, "deps", []):
         if PyWheelPackageInfo not in dep:
+            # A target from a package index is a requirement of the wheel.
+            if PyWheelRequirementInfo in dep:
+                deps.append(dep[PyWheelRequirementInfo].name)
+                continue
+
             # Missing workspace names suggest there's no `workspace(name = "{}")` call in
             # the WORKSPACE file so if this value is empty or it explicitly matches the
             # current workspace name then consider it first party.
@@ -88,8 +160,10 @@ def _py_wheel_package_aspect_impl(target, ctx):
                     "Please update {}".format(dep.label),
                 )
 
-            # External targets not tracked as a submodule are treated as deps.
-            deps.append(dep.label.name)
+            # Other external targets are assumed to be named after their distribution,
+            # less the `<hub>.` prefix a hub of `rules_req_compile` gives its targets:
+            # `@<hub>//<package>` resolves to `<hub>.<package>`.
+            deps.append(dep.label.name.rpartition(".")[2])
             continue
 
         # Account for the case where a local package is also published as a wheel.
@@ -384,6 +458,13 @@ def py_wheel_library(
         deps = [":submodule"],
     )
     ```
+
+    Dependencies which are not part of the package become its requirements (`Requires-Dist`),
+    with the constraints `constraints_file` has for them. A dependency tagged `pypi_name=<distribution>`,
+    as `rules_python` and `rules_req_compile` tag the targets of the wheels they fetch, requires that
+    distribution; failing the tag, the `<distribution>-<version>.dist-info` directory among the
+    dependency's data names it. A dependency from another repository with neither is assumed to be
+    named after its distribution.
 
     Targets created by this library:
 

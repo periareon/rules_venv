@@ -1,0 +1,26 @@
+Upgrade the pip and pip-tools used internally by rules_python to versions
+whose vendored certifi no longer trusts the compromised eMudhra (emSign) CA.
+See https://github.com/bazel-contrib/rules_python/issues/4299 and
+https://github.com/bazel-contrib/rules_python/pull/4310.
+
+diff --git a/python/private/pypi/deps.bzl b/python/private/pypi/deps.bzl
+--- a/python/private/pypi/deps.bzl
++++ b/python/private/pypi/deps.bzl
+@@ -61,13 +61,13 @@ _RULE_DEPS = [
+     ),
+     (
+         "pypi__pip",
+-        "https://files.pythonhosted.org/packages/8a/6a/19e9fe04fca059ccf770861c7d5721ab4c2aebc539889e97c7977528a53b/pip-24.0-py3-none-any.whl",
+-        "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
++        "https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl",
++        "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+     ),
+     (
+         "pypi__pip_tools",
+-        "https://files.pythonhosted.org/packages/0d/dc/38f4ce065e92c66f058ea7a368a9c5de4e702272b479c0992059f7693941/pip_tools-7.4.1-py3-none-any.whl",
+-        "4c690e5fbae2f21e87843e89c26191f0d9454f362d8acdbd695716493ec8b3a9",
++        "https://files.pythonhosted.org/packages/4b/68/f3bd09c53ed3159bb1349e1d5859ad1ea7755b8e4cd50174290e9e8cbb47/pip_tools-7.6.2-py3-none-any.whl",
++        "f37eb4b736859c2c30230e50977312c61918b7ef931071ff7811fd067715c25f",
+     ),
+     (
+         "pypi__pyproject_hooks",
