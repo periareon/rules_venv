@@ -95,7 +95,7 @@ py_ruff_toolchain = rule(
     },
 )
 
-def _current_py_ruff_toolchain_impl(ctx):
+def _py_ruff_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
     providers = [
@@ -125,8 +125,9 @@ def _current_py_ruff_toolchain_impl(ctx):
 
     return providers
 
-current_py_ruff_toolchain = rule(
+py_ruff_toolchain_alias = rule(
     doc = "A rule for exposing the current registered `py_ruff_toolchain`.",
-    implementation = _current_py_ruff_toolchain_impl,
+    implementation = _py_ruff_toolchain_alias_impl,
     toolchains = [TOOLCHAIN_TYPE],
+    provides = [PyInfo],
 )

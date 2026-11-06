@@ -73,15 +73,15 @@ py_venv_toolchain = rule(
     ],
 )
 
-def _current_py_venv_toolchain_impl(ctx):
+def _py_venv_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[Label("//python/venv:toolchain_type")]
 
     return [
         toolchain,
     ]
 
-current_py_venv_toolchain = rule(
+py_venv_toolchain_alias = rule(
     doc = "Access the `py_venv_toolchain` for the current configuration.",
-    implementation = _current_py_venv_toolchain_impl,
+    implementation = _py_venv_toolchain_alias_impl,
     toolchains = [str(Label("//python/venv:toolchain_type"))],
 )

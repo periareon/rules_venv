@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//python/black/private:black_toolchain.bzl", "current_py_black_toolchain")
+load("//python/black/private:black_toolchain.bzl", "py_black_toolchain_alias")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -21,7 +21,7 @@ toolchain_type(
     name = "toolchain_type",
 )
 
-current_py_black_toolchain(
+py_black_toolchain_alias(
     name = "current_py_black_toolchain",
     tags = ["manual"],
 )

@@ -37,7 +37,7 @@ py_pylint_toolchain = rule(
     },
 )
 
-def _current_py_pylint_toolchain_impl(ctx):
+def _py_pylint_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
     pylint_target = toolchain.pylint
@@ -58,8 +58,9 @@ def _current_py_pylint_toolchain_impl(ctx):
         pylint_target[InstrumentedFilesInfo],
     ]
 
-current_py_pylint_toolchain = rule(
+py_pylint_toolchain_alias = rule(
     doc = "A rule for exposing the current registered `py_pylint_toolchain`.",
-    implementation = _current_py_pylint_toolchain_impl,
+    implementation = _py_pylint_toolchain_alias_impl,
     toolchains = [TOOLCHAIN_TYPE],
+    provides = [PyInfo],
 )

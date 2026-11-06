@@ -56,28 +56,24 @@ def _is_ignored(ctx):
             return True
     return False
 
-def _dep_caches(ctx):
-    """Collect what a target's Python dependencies published.
+def _attr_targets(ctx):
+    """Every target named by any attribute of the rule.
 
     Every attribute is scanned, matching the edges the aspect propagates
-    along. A cache that is not collected here is a dependency whose
-    sources mypy finds and re-analyzes from scratch, and whose results
-    this target then republishes.
+    along. Label lists and dicts are as common as plain labels, and a
+    dict can be keyed either way round, so both halves are looked at.
 
-    Returns:
-        struct: `caches` and `covered`, the depsets this target inherits,
-        and `py_deps`, whether any attribute named a Python target at
-        all.
+    An aspect sees the attributes of the aspects it requires alongside
+    the rule's own, so on a Python target this includes the worker's
+    tools: the runner, the stdlib cache, the venv toolchain. Those are
+    what the action runs, not what it analyzes, and are left out.
     """
-    caches = []
-    covered = []
-    py_deps = False
-
+    targets = []
     for name in dir(ctx.rule.attr):
+        if name in _WORKER_ATTRS:
+            continue
         value = getattr(ctx.rule.attr, name)
 
-        # Label lists and dicts are as common as plain labels, and a dict
-        # can be keyed either way round, so both halves are looked at.
         if type(value) == "list":
             deps = value
         elif type(value) == "dict":
@@ -90,19 +86,40 @@ def _dep_caches(ctx):
             continue
 
         for dep in deps:
-            if type(dep) != "Target":
-                continue
-            if PyInfo in dep:
-                py_deps = True
-            if PyMypyCacheInfo in dep:
-                caches.append(dep[PyMypyCacheInfo].caches)
-                covered.append(dep[PyMypyCacheInfo].covered)
+            if type(dep) == "Target":
+                targets.append(dep)
+
+    return targets
+
+def _dep_caches(ctx):
+    """Collect what a target's Python dependencies published.
+
+    A cache that is not collected here is a dependency whose sources
+    mypy finds and re-analyzes from scratch, and whose results this
+    target then republishes.
+
+    Returns:
+        struct: `caches` and `covered`, the depsets this target inherits.
+    """
+    caches = []
+    covered = []
+
+    for dep in _attr_targets(ctx):
+        if PyMypyCacheInfo in dep:
+            caches.append(dep[PyMypyCacheInfo].caches)
+            covered.append(dep[PyMypyCacheInfo].covered)
 
     return struct(
         caches = depset(transitive = caches),
         covered = depset(transitive = covered),
-        py_deps = py_deps,
     )
+
+def _names_python(ctx):
+    """Whether any attribute of the rule names a Python target at all."""
+    for dep in _attr_targets(ctx):
+        if PyInfo in dep:
+            return True
+    return False
 
 def _module_key(file):
     """What a `.py` and the `.pyi` describing it have in common.
@@ -184,7 +201,7 @@ def _covered_files(ctx, analyzed):
 
     return covered.keys()
 
-def _prunable(ctx, covered, analyzed):
+def _prunable(runner_files, covered, analyzed):
     """The files this action can leave out, keyed by execution path.
 
     A file is prunable when some cache among the action's inputs stands
@@ -220,10 +237,7 @@ def _prunable(ctx, covered, analyzed):
 
     # The runner's runfiles already carry its transitive sources, so this
     # is the whole closure in one pass.
-    keep = {
-        file.path: None
-        for file in ctx.attr._runner[DefaultInfo].default_runfiles.files.to_list()
-    }
+    keep = {file.path: None for file in runner_files.to_list()}
     for file in analyzed:
         keep[file.path] = None
 
@@ -439,6 +453,16 @@ py_mypy_test = rule(
 # same attributes to build it from.
 _CACHE_RUNNER_ATTRS = _runner_attrs("exec")
 
+# What `py_mypy_worker_aspect` needs beyond the rule it is applied to.
+_WORKER_ATTRS = _CACHE_RUNNER_ATTRS | {
+    "_stdlib_cache": attr.label(
+        doc = "Type information for the standard library, inherited by every action.",
+        cfg = "target",
+        allow_single_file = True,
+        default = Label("//python/mypy:stdlib_cache"),
+    ),
+} | py_venv_common.create_venv_attrs()
+
 # Bounds on what a mypy action is allowed to ask for, in MB.
 #
 # The floor is what mypy costs before it has read anything of the target,
@@ -491,7 +515,7 @@ def _mypy_resource_set(_os_name, inputs):
         "memory": min(_MYPY_MAX_MEMORY, max(_MYPY_MIN_MEMORY, 0.05 * inputs)),
     }
 
-def _cache_venv(ctx, venv_toolchain, dep_info, name):
+def _cache_venv(ctx, venv_toolchain, dep_info, name, runner_main):
     """Build the venv a cache-producing mypy action runs in.
 
     Every action that publishes a cache has to build its venv the same
@@ -513,7 +537,7 @@ def _cache_venv(ctx, venv_toolchain, dep_info, name):
     py_info = py_venv_common.create_py_info(
         ctx = ctx,
         imports = [],
-        srcs = [ctx.file._runner_main],
+        srcs = [runner_main],
         dep_info = dep_info,
     )
 
@@ -521,7 +545,7 @@ def _cache_venv(ctx, venv_toolchain, dep_info, name):
         ctx = ctx,
         venv_toolchain = venv_toolchain,
         py_info = py_info,
-        main = ctx.file._runner_main,
+        main = runner_main,
         name = name,
         runfiles = dep_info.runfiles,
         use_runfiles_in_entrypoint = False,
@@ -529,19 +553,32 @@ def _cache_venv(ctx, venv_toolchain, dep_info, name):
         use_source_deps_in_place = False,
     )
 
-def _py_mypy_aspect_impl(target, ctx):
-    config = ctx.toolchains[TOOLCHAIN_TYPE].config
-    deps = _dep_caches(ctx)
+_MypyPlanInfo = provider(
+    doc = """\
+What `py_mypy_worker_aspect` worked out about a target, for
+`py_mypy_aspect` to act on.
 
-    inherited = [PyMypyCacheInfo(caches = deps.caches, covered = deps.covered)]
+The two aspects split one job. Everything that takes a toolchain or an
+implicit dependency to answer -- which runner and config, which
+interpreter the venv is built on, which of the target's files are
+analyzed -- is answered here, on Python targets only. Turning that into
+a venv and an action waits on the caches of the target's dependencies,
+which the other aspect carries, and so happens there.""",
+    fields = {
+        "cache_only": "bool: Whether the target is analyzed without being checked.",
+        "config": "File: The mypy config the toolchain names.",
+        "covered": "list[File]: What a consumer may leave out once it holds this target's cache.",
+        "dep_info": "struct: The runner and the target, as `py_venv_common.create_dep_info` returns them.",
+        "markers": "list[File]: The target's PEP 561 markers.",
+        "runner_files": "depset[File]: The runner's own closure, which no cache may stand in for.",
+        "runner_main": "File: The runner's entrypoint.",
+        "srcs": "list[File]: The files the action analyzes.",
+        "stdlib_cache": "File: Type information for the standard library.",
+        "venv_toolchain": "ToolchainInfo: The `py_venv_toolchain` the venv is built with.",
+    },
+)
 
-    if PyInfo not in target:
-        # Not a Python target, but it may still sit between two that are
-        # -- a toolchain rule forwarding a library, say. Keep the chain
-        # intact rather than stopping here, which would strand the
-        # caches on the far side.
-        return inherited
-
+def _py_mypy_worker_aspect_impl(target, ctx):
     # A target is checked only if it has first-party sources and has not
     # opted out. Everything else is still analyzed, so that consumers
     # have a cache to read instead of the sources, but its type errors
@@ -550,11 +587,11 @@ def _py_mypy_aspect_impl(target, ctx):
     cache_only = _is_ignored(ctx) or not checked
     srcs = _unchecked_srcs(ctx) if cache_only else checked
 
-    if not srcs and not deps.py_deps:
+    if not srcs and not _names_python(ctx):
         # The target publishes Python that none of its attributes
         # explains: it forwards a library it reached some other way,
         # which is what toolchain resolution produces and what the
-        # `current_py_*_toolchain` rules here are. The aspect cannot
+        # `py_*_toolchain_alias` rules here are. The aspect cannot
         # follow that edge, so this is the only place the library gets
         # analyzed once instead of in every consumer.
         #
@@ -567,24 +604,74 @@ def _py_mypy_aspect_impl(target, ctx):
         srcs = _pick_modules(target[PyInfo].transitive_sources.to_list())
 
     if not srcs:
+        return []
+
+    return [_MypyPlanInfo(
+        cache_only = cache_only,
+        config = ctx.toolchains[TOOLCHAIN_TYPE].config,
+        covered = _covered_files(ctx, srcs),
+        dep_info = py_venv_common.create_dep_info(
+            ctx = ctx,
+            deps = [ctx.attr._runner, target],
+        ),
+        markers = _typed_markers(ctx),
+        runner_files = ctx.attr._runner[DefaultInfo].default_runfiles.files,
+        runner_main = ctx.file._runner_main,
+        srcs = srcs,
+        stdlib_cache = ctx.file._stdlib_cache,
+        venv_toolchain = py_venv_common.get_toolchain(ctx, cfg = "exec"),
+    )]
+
+py_mypy_worker_aspect = aspect(
+    implementation = _py_mypy_worker_aspect_impl,
+    doc = """\
+The half of [py_mypy_aspect](#py_mypy_aspect) that needs a rule context.
+
+It is applied only to targets that advertise `PyInfo`. There it resolves
+the mypy and venv toolchains, decides which files are analyzed, and
+publishes the result for `py_mypy_aspect` to build the venv and the
+action from. It creates no actions of its own and is not meant to be
+requested on its own.""",
+    attrs = _WORKER_ATTRS,
+    attr_aspects = _ATTR_ASPECTS,
+    required_providers = [PyInfo],
+    toolchains = [TOOLCHAIN_TYPE],
+    requires = [target_sources_aspect],
+)
+
+def _py_mypy_aspect_impl(target, ctx):
+    if PyMypyCacheInfo in target:
+        # The rule publishes a cache of its own, as `py_mypy_stdlib_cache`
+        # does. The aspect is propagated along the worker's attributes as
+        # well as the rule's, which is how it arrives here, and a second
+        # copy of the provider would be an error.
+        return []
+
+    deps = _dep_caches(ctx)
+
+    inherited = [PyMypyCacheInfo(caches = deps.caches, covered = deps.covered)]
+
+    if _MypyPlanInfo not in target:
+        # Not a Python target, or one with nothing to analyze. It may
+        # still sit between two that are -- a rule forwarding a library
+        # without advertising it, say. Keep the chain intact rather than
+        # stopping here, which would strand the caches on the far side.
         return inherited
 
-    markers = _typed_markers(ctx)
-
-    venv_toolchain = py_venv_common.get_toolchain(ctx, cfg = "exec")
-
-    dep_info = py_venv_common.create_dep_info(
-        ctx = ctx,
-        deps = [ctx.attr._runner, target],
-    )
-
-    prunable = _prunable(ctx, deps.covered, srcs)
-    dep_info = _prune_dep_info(ctx, dep_info, prunable)
+    plan = target[_MypyPlanInfo]
+    prunable = _prunable(plan.runner_files, deps.covered, plan.srcs)
+    dep_info = _prune_dep_info(ctx, plan.dep_info, prunable)
 
     cache = ctx.actions.declare_file("{}.mypy.cache".format(target.label.name))
     aspect_name = "{}.mypy".format(target.label.name)
 
-    executable, runfiles = _cache_venv(ctx, venv_toolchain, dep_info, aspect_name)
+    executable, runfiles = _cache_venv(
+        ctx,
+        plan.venv_toolchain,
+        dep_info,
+        aspect_name,
+        plan.runner_main,
+    )
 
     args = ctx.actions.args()
 
@@ -594,7 +681,7 @@ def _py_mypy_aspect_impl(target, ctx):
     # Windows' and it is small enough that a modest target reaches it.
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
-    args.add("--config-file", config)
+    args.add("--config-file", plan.config)
     args.add("--workspace_name", ctx.workspace_name)
     args.add("--cache-out", cache)
 
@@ -604,19 +691,19 @@ def _py_mypy_aspect_impl(target, ctx):
     # the few directories some target asked to be searched, where this
     # would be every source in the closure, thousands of flags for a
     # target of any size.
-    src_paths = [_rlocationpath(file, ctx.workspace_name) for file in srcs]
+    src_paths = [_rlocationpath(file, ctx.workspace_name) for file in plan.srcs]
     args.add_all(src_paths, format_each = "--file=%s")
     args.add_all(
-        src_paths + [_rlocationpath(file, ctx.workspace_name) for file in markers],
+        src_paths + [_rlocationpath(file, ctx.workspace_name) for file in plan.markers],
         format_each = "--manifest=%s",
     )
 
-    args.add("--dep-cache", ctx.file._stdlib_cache)
+    args.add("--dep-cache", plan.stdlib_cache)
     args.add_all(deps.caches, format_each = "--dep-cache=%s")
 
     outputs = [cache]
     marker = None
-    if cache_only:
+    if plan.cache_only:
         args.add("--cache-only")
     else:
         marker = ctx.actions.declare_file("{}.mypy.ok".format(target.label.name))
@@ -627,7 +714,7 @@ def _py_mypy_aspect_impl(target, ctx):
     # differently -- one reports nothing and is not allowed to fail the
     # build -- so they are told apart in the profile and on the console
     # rather than sharing a name and leaving which is which to be guessed.
-    mnemonic = "PyMypyCache" if cache_only else "PyMypy"
+    mnemonic = "PyMypyCache" if plan.cache_only else "PyMypy"
 
     ctx.actions.run(
         mnemonic = mnemonic,
@@ -635,7 +722,7 @@ def _py_mypy_aspect_impl(target, ctx):
         progress_message = mnemonic + " %{label}",
         executable = executable,
         inputs = depset(
-            [config, ctx.file._stdlib_cache] + srcs + markers,
+            [plan.config, plan.stdlib_cache] + plan.srcs + plan.markers,
             transitive = [deps.caches],
         ),
         tools = runfiles.files,
@@ -648,7 +735,7 @@ def _py_mypy_aspect_impl(target, ctx):
     providers = [PyMypyCacheInfo(
         caches = depset([cache], transitive = [deps.caches]),
         covered = depset(
-            _covered_files(ctx, srcs),
+            plan.covered,
             transitive = [deps.covered],
         ),
     )]
@@ -661,29 +748,29 @@ py_mypy_aspect = aspect(
     doc = """\
 An aspect for running mypy on targets with Python sources.
 
-Every Python target the aspect reaches publishes a
+Every target the aspect reaches publishes a
 [PyMypyCacheInfo](#pymypycacheinfo), including the ones it does not
 check. Targets that opt out with a `no_mypy` tag, and third-party
 packages, are analyzed but not reported on.
 
-It travels every attribute rather than `deps` alone, since a rule is
-free to build its `PyInfo` from any of them. A library reached through
-a *toolchain* cannot be followed that way at all, so a target whose
-Python none of its attributes accounts for caches everything it
-publishes as one unit. That needs nothing of the rule but the `PyInfo`
-it already returns, so a toolchain defined outside this repository gets
-the same treatment without doing anything.""",
-    attrs = _CACHE_RUNNER_ATTRS | {
-        "_stdlib_cache": attr.label(
-            doc = "Type information for the standard library, inherited by every action.",
-            cfg = "target",
-            allow_single_file = True,
-            default = Label("//python/mypy:stdlib_cache"),
-        ),
-    } | py_venv_common.create_venv_attrs(),
+It travels every attribute of every target rather than the `deps` of
+Python ones, since a rule is free to build its `PyInfo` from any
+attribute, and a rule without `PyInfo` can sit between two that have
+it. Crossing a target is kept cheap so that this costs little: the
+aspect takes no toolchain and no attributes of its own, and leaves
+everything that needs either to `py_mypy_worker_aspect`, which it
+requires and which is applied only to targets advertising `PyInfo`.
+Advertising is the test, not returning: a rule that returns `PyInfo`
+without `provides = [PyInfo]` is crossed but not analyzed, and its
+consumers read its sources in place of a cache.
+
+A library reached through a *toolchain* cannot be followed at all, so a
+target whose Python none of its attributes accounts for caches
+everything it publishes as one unit. That needs nothing of the rule but
+the `PyInfo` it already returns, so a toolchain defined outside this
+repository gets the same treatment without doing anything.""",
     attr_aspects = _ATTR_ASPECTS,
-    toolchains = [TOOLCHAIN_TYPE],
-    requires = [target_sources_aspect],
+    requires = [py_mypy_worker_aspect],
 )
 
 def _py_mypy_stdlib_cache_impl(ctx):
@@ -702,6 +789,7 @@ def _py_mypy_stdlib_cache_impl(ctx):
         venv_toolchain,
         dep_info,
         "{}.mypy".format(ctx.label.name),
+        ctx.file._runner_main,
     )
 
     cache = ctx.actions.declare_file("{}.mypy.cache".format(ctx.label.name))

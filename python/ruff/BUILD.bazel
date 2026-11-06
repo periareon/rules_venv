@@ -1,6 +1,6 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//python/ruff/private:py_ruff_mode_flag.bzl", "py_ruff_mode_flag")
-load("//python/ruff/private:ruff_toolchain.bzl", "current_py_ruff_toolchain")
+load("//python/ruff/private:ruff_toolchain.bzl", "py_ruff_toolchain_alias")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -41,7 +41,7 @@ toolchain_type(
     name = "toolchain_type",
 )
 
-current_py_ruff_toolchain(
+py_ruff_toolchain_alias(
     name = "current_py_ruff_toolchain",
     tags = ["manual"],
 )

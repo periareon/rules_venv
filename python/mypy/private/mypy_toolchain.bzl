@@ -58,7 +58,7 @@ dependency the difference is seconds against half an hour.""",
     },
 )
 
-def _current_py_mypy_toolchain_impl(ctx):
+def _py_mypy_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
     mypy_target = toolchain.mypy
@@ -79,8 +79,9 @@ def _current_py_mypy_toolchain_impl(ctx):
         mypy_target[InstrumentedFilesInfo],
     ]
 
-current_py_mypy_toolchain = rule(
+py_mypy_toolchain_alias = rule(
     doc = "A rule for exposing the current registered `py_mypy_toolchain`.",
-    implementation = _current_py_mypy_toolchain_impl,
+    implementation = _py_mypy_toolchain_alias_impl,
     toolchains = [TOOLCHAIN_TYPE],
+    provides = [PyInfo],
 )

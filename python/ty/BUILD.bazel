@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("//python/ty/private:ty_toolchain.bzl", "current_py_ty_toolchain")
+load("//python/ty/private:ty_toolchain.bzl", "py_ty_toolchain_alias")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -21,7 +21,7 @@ toolchain_type(
     name = "toolchain_type",
 )
 
-current_py_ty_toolchain(
+py_ty_toolchain_alias(
     name = "current_py_ty_toolchain",
     tags = ["manual"],
 )

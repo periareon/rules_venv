@@ -301,7 +301,7 @@ toolchain(
     },
 )
 
-def _current_py_wheel_toolchain_for_twine_impl(ctx):
+def _py_wheel_toolchain_twine_alias_impl(ctx):
     toolchain = ctx.toolchains[_TOOLCHAIN_TYPE]
     if toolchain == None:
         return [PyInfo(
@@ -321,12 +321,13 @@ def _current_py_wheel_toolchain_for_twine_impl(ctx):
         default_info,
     ]
 
-current_py_wheel_toolchain_for_twine = rule(
+py_wheel_toolchain_twine_alias = rule(
     doc = "A rule for accessing the twine library provided to the current `py_wheel_toolchain`.",
-    implementation = _current_py_wheel_toolchain_for_twine_impl,
+    implementation = _py_wheel_toolchain_twine_alias_impl,
     toolchains = [
         config_common.toolchain_type(_TOOLCHAIN_TYPE, mandatory = False),
     ],
+    provides = [PyInfo],
 )
 
 def _rlocationpath(file, workspace_name):

@@ -381,7 +381,7 @@ toolchain(
     },
 )
 
-def _current_py_pytest_toolchain_impl(ctx):
+def _py_pytest_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[str(Label("//python/pytest:toolchain_type"))]
 
     pytest_target = toolchain.pytest
@@ -402,12 +402,13 @@ def _current_py_pytest_toolchain_impl(ctx):
         pytest_target[InstrumentedFilesInfo],
     ]
 
-current_py_pytest_toolchain = rule(
+py_pytest_toolchain_alias = rule(
     doc = "A rule for exposing the current registered `py_pytest_toolchain`.",
-    implementation = _current_py_pytest_toolchain_impl,
+    implementation = _py_pytest_toolchain_alias_impl,
     toolchains = [
         str(Label("//python/pytest:toolchain_type")),
     ],
+    provides = [PyInfo],
 )
 
 def py_pytest_test_suite(

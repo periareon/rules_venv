@@ -1,6 +1,6 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//python:defs.bzl", "py_binary")
-load(":wheel.bzl", "current_py_wheel_toolchain_for_twine")
+load(":wheel.bzl", "py_wheel_toolchain_twine_alias")
 
 py_binary(
     name = "requires_parser",
@@ -8,7 +8,7 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-current_py_wheel_toolchain_for_twine(
+py_wheel_toolchain_twine_alias(
     name = "current_py_wheel_toolchain_for_twine",
 )
 

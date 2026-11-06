@@ -37,7 +37,7 @@ py_black_toolchain = rule(
     },
 )
 
-def _current_py_black_toolchain_impl(ctx):
+def _py_black_toolchain_alias_impl(ctx):
     toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
 
     black_target = toolchain.black
@@ -58,8 +58,9 @@ def _current_py_black_toolchain_impl(ctx):
         black_target[InstrumentedFilesInfo],
     ]
 
-current_py_black_toolchain = rule(
+py_black_toolchain_alias = rule(
     doc = "A rule for exposing the current registered `py_black_toolchain`.",
-    implementation = _current_py_black_toolchain_impl,
+    implementation = _py_black_toolchain_alias_impl,
     toolchains = [TOOLCHAIN_TYPE],
+    provides = [PyInfo],
 )
