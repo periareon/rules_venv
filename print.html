@@ -934,17 +934,25 @@ load("@rules_venv//python/mypy:defs.bzl", "py_mypy_aspect")
 py_mypy_aspect()
 </pre>
 <p>An aspect for running mypy on targets with Python sources.</p>
-<p>Every Python target the aspect reaches publishes a
+<p>Every target the aspect reaches publishes a
 <a href="mypy.html#pymypycacheinfo">PyMypyCacheInfo</a>, including the ones it does not
 check. Targets that opt out with a <code>no_mypy</code> tag, and third-party
 packages, are analyzed but not reported on.</p>
-<p>It travels every attribute rather than <code>deps</code> alone, since a rule is
-free to build its <code>PyInfo</code> from any of them. A library reached through
-a <em>toolchain</em> cannot be followed that way at all, so a target whose
-Python none of its attributes accounts for caches everything it
-publishes as one unit. That needs nothing of the rule but the <code>PyInfo</code>
-it already returns, so a toolchain defined outside this repository gets
-the same treatment without doing anything.</p>
+<p>It travels every attribute of every target rather than the <code>deps</code> of
+Python ones, since a rule is free to build its <code>PyInfo</code> from any
+attribute, and a rule without <code>PyInfo</code> can sit between two that have
+it. Crossing a target is kept cheap so that this costs little: the
+aspect takes no toolchain and no attributes of its own, and leaves
+everything that needs either to <code>py_mypy_worker_aspect</code>, which it
+requires and which is applied only to targets advertising <code>PyInfo</code>.
+Advertising is the test, not returning: a rule that returns <code>PyInfo</code>
+without <code>provides = [PyInfo]</code> is crossed but not analyzed, and its
+consumers read its sources in place of a cache.</p>
+<p>A library reached through a <em>toolchain</em> cannot be followed at all, so a
+target whose Python none of its attributes accounts for caches
+everything it publishes as one unit. That needs nothing of the rule but
+the <code>PyInfo</code> it already returns, so a toolchain defined outside this
+repository gets the same treatment without doing anything.</p>
 <p><strong>ASPECT ATTRIBUTES</strong></p>
 <p><strong>ATTRIBUTES</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated with Stardoc: http://skydoc.bazel.build -->
@@ -1038,7 +1046,6 @@ build --output_groups=+py_pylint_checks
 <p>Bazel rules for the python test framework <a href="https://docs.pytest.org/en/stable/">Pytest</a>.</p>
 <h2 id="rules-5"><a class="header" href="#rules-5">Rules</a></h2>
 <ul>
-<li><a href="pytest.html#current_py_pytest_toolchain">current_py_pytest_toolchain</a></li>
 <li><a href="pytest.html#py_pytest_test">py_pytest_test</a></li>
 <li><a href="pytest.html#py_pytest_toolchain">py_pytest_toolchain</a></li>
 </ul>
@@ -1046,19 +1053,6 @@ build --output_groups=+py_pylint_checks
 <ul>
 <li><a href="pytest.html#py_pytest_test_suite">py_pytest_test_suite</a></li>
 </ul>
-<p><a id="current_py_pytest_toolchain"></a></p>
-<h2 id="current_py_pytest_toolchain"><a class="header" href="#current_py_pytest_toolchain">current_py_pytest_toolchain</a></h2>
-<pre>
-load("@rules_venv//python/pytest:defs.bzl", "current_py_pytest_toolchain")
-
-current_py_pytest_toolchain(<a href="pytest.html#current_py_pytest_toolchain-name">name</a>)
-</pre>
-<p>A rule for exposing the current registered <code>py_pytest_toolchain</code>.</p>
-<p><strong>ATTRIBUTES</strong></p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="current_py_pytest_toolchain-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-</tbody></table>
-</div>
 <p><a id="py_pytest_test"></a></p>
 <h2 id="py_pytest_test"><a class="header" href="#py_pytest_test">py_pytest_test</a></h2>
 <pre>
