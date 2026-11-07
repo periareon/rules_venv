@@ -42,7 +42,7 @@ _MYPY_SOURCE_EXTENSIONS = ["py", "pyi"]
 # attribute that puts Python in the venv an action builds. An ordinary
 # `py_library` is indeed reached through `deps` alone, but a rule is free
 # to assemble its `PyInfo` from anywhere -- the rules here build theirs
-# from the `_runner` holding a process wrapper, and `py_mypy_test` from
+# from the `_mypy_runner` holding a process wrapper, and `py_mypy_test` from
 # its `target` -- and a library that arrives by such an edge is staged
 # like any other. Enumerating the attributes instead would mean a list
 # that has to know every rule in the build, including rules outside this
@@ -334,12 +334,12 @@ def _runner_attrs(cfg):
     tool of the action.
     """
     return {
-        "_runner": attr.label(
+        "_mypy_runner": attr.label(
             doc = "The process wrapper for running mypy.",
             cfg = cfg,
             default = Label("//python/mypy/private:mypy_runner"),
         ),
-        "_runner_main": attr.label(
+        "_mypy_runner_main": attr.label(
             doc = "The main entrypoint for the mypy runner.",
             cfg = cfg,
             allow_single_file = True,
@@ -358,13 +358,13 @@ def _py_mypy_test_impl(ctx):
 
     dep_info = py_venv_common.create_dep_info(
         ctx = ctx,
-        deps = [ctx.attr._runner, ctx.attr.target],
+        deps = [ctx.attr._mypy_runner, ctx.attr.target],
     )
 
     py_info = py_venv_common.create_py_info(
         ctx = ctx,
         imports = [],
-        srcs = [ctx.file._runner_main],
+        srcs = [ctx.file._mypy_runner_main],
         dep_info = dep_info,
     )
 
@@ -372,7 +372,7 @@ def _py_mypy_test_impl(ctx):
         ctx = ctx,
         venv_toolchain = venv_toolchain,
         py_info = py_info,
-        main = ctx.file._runner_main,
+        main = ctx.file._mypy_runner_main,
         runfiles = dep_info.runfiles,
     )
 
@@ -612,11 +612,11 @@ def _py_mypy_worker_aspect_impl(target, ctx):
         covered = _covered_files(ctx, srcs),
         dep_info = py_venv_common.create_dep_info(
             ctx = ctx,
-            deps = [ctx.attr._runner, target],
+            deps = [ctx.attr._mypy_runner, target],
         ),
         markers = _typed_markers(ctx),
-        runner_files = ctx.attr._runner[DefaultInfo].default_runfiles.files,
-        runner_main = ctx.file._runner_main,
+        runner_files = ctx.attr._mypy_runner[DefaultInfo].default_runfiles.files,
+        runner_main = ctx.file._mypy_runner_main,
         srcs = srcs,
         stdlib_cache = ctx.file._stdlib_cache,
         venv_toolchain = py_venv_common.get_toolchain(ctx, cfg = "exec"),
@@ -779,7 +779,7 @@ def _py_mypy_stdlib_cache_impl(ctx):
 
     dep_info = py_venv_common.create_dep_info(
         ctx = ctx,
-        deps = [ctx.attr._runner],
+        deps = [ctx.attr._mypy_runner],
     )
 
     # Every other mypy action inherits this cache, so typeshed has to be
@@ -789,7 +789,7 @@ def _py_mypy_stdlib_cache_impl(ctx):
         venv_toolchain,
         dep_info,
         "{}.mypy".format(ctx.label.name),
-        ctx.file._runner_main,
+        ctx.file._mypy_runner_main,
     )
 
     cache = ctx.actions.declare_file("{}.mypy.cache".format(ctx.label.name))
