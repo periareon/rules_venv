@@ -7,7 +7,6 @@ exports_files([
     "venv_runfiles.py",
     "venv_zipapp_maker.py",
     "venv_zipapp_main.py",
-    "runfiles.sh",
 ])
 
 venv_entrypoint(

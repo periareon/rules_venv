@@ -93,7 +93,7 @@ venv_entrypoint = rule(
             doc = "The runfiles library for shell.",
             cfg = "target",
             allow_single_file = [".sh"],
-            default = Label("//python/venv/private:runfiles.sh"),
+            default = Label("@rules_venv_shell_runfiles//:runfiles.sh"),
         ),
     },
     toolchains = [

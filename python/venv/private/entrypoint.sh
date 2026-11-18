@@ -41,15 +41,28 @@ if [ "{USE_RUNFILES}" = "1" ]; then
 
     runfiles_export_envvars
 
+    # The paths below are canonical, so a populated runfiles tree answers
+    # them directly. The library consults the manifest first whenever one
+    # exists, and `runfiles_export_envvars` names the tree's own, but the
+    # manifest resolves to files outside the tree and the venv is built
+    # around files inside it.
+    __rules_venv_rlocation() {
+        if [ -e "${RUNFILES_DIR:-/dev/null}/$1" ]; then
+            printf '%s\n' "${RUNFILES_DIR}/$1"
+        else
+            rlocation "$1"
+        fi
+    }
+
     if [ -n "{VENV_RUNFILES_COLLECTION}" ]; then
-        export RULES_VENV_RUNFILES_COLLECTION="$(rlocation "{VENV_RUNFILES_COLLECTION}")"
+        export RULES_VENV_RUNFILES_COLLECTION="$(__rules_venv_rlocation "{VENV_RUNFILES_COLLECTION}")"
     fi
 
     exec \
-        "$(rlocation "{PY_RUNTIME}")" \
-        "$(rlocation "{VENV_PROCESS_WRAPPER}")" \
-        "$(rlocation "{VENV_CONFIG}")" \
-        "$(rlocation "{MAIN}")" \
+        "$(__rules_venv_rlocation "{PY_RUNTIME}")" \
+        "$(__rules_venv_rlocation "{VENV_PROCESS_WRAPPER}")" \
+        "$(__rules_venv_rlocation "{VENV_CONFIG}")" \
+        "$(__rules_venv_rlocation "{MAIN}")" \
         "$@"
 
 else
