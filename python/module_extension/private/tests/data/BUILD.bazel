@@ -1,0 +1,28 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//python:defs.bzl", "py_test")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+
+cc_library(
+    name = "greeting",
+    srcs = ["greeting.cc"],
+    hdrs = ["greeting.h"],
+    data = ["dep_data.txt"],
+)
+
+py_cc_extension(
+    name = "with_data",
+    srcs = ["with_data.cc"],
+    data = ["extension_data.txt"],
+    deps = [":greeting"],
+)
+
+# The data files are deliberately not listed on the test: they have to
+# arrive through the extension's runfiles.
+py_test(
+    name = "data_test",
+    srcs = ["data_test.py"],
+    deps = [
+        ":with_data",
+        "//python/runfiles",
+    ],
+)

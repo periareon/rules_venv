@@ -1,0 +1,14 @@
+load("//python:defs.bzl", "py_test")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+
+py_cc_extension(
+    name = "string_sum_stripped",
+    srcs = ["string_sum_stripped.cc"],
+    stripped = True,
+)
+
+py_test(
+    name = "string_sum_stripped_test",
+    srcs = ["string_sum_stripped_test.py"],
+    deps = [":string_sum_stripped"],
+)

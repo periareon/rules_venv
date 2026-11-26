@@ -1,0 +1,52 @@
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_shared_library.bzl", "cc_shared_library")
+load("//python:defs.bzl", "py_test")
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+
+cc_library(
+    name = "counter",
+    srcs = ["counter.cc"],
+    hdrs = ["counter.h"],
+)
+
+cc_shared_library(
+    name = "counter_shared",
+    # `counter.h` carries no `__declspec(dllexport)`, so MSVC has to be told
+    # to export the library's symbols.
+    features = ["windows_export_all_symbols"],
+    deps = [":counter"],
+)
+
+expand_template(
+    name = "increment_second_src",
+    out = "increment_second.cc",
+    substitutions = {
+        "PyInit_increment_first": "PyInit_increment_second",
+    },
+    template = "increment_first.cc",
+)
+
+# Two extensions that would each carry their own copy of `counter` if it
+# were linked statically.
+[
+    py_cc_extension(
+        name = "increment_{}".format(ordinal),
+        srcs = ["increment_{}.cc".format(ordinal)],
+        dynamic_deps = [":counter_shared"],
+        deps = [":counter"],
+    )
+    for ordinal in [
+        "first",
+        "second",
+    ]
+]
+
+py_test(
+    name = "dynamic_deps_test",
+    srcs = ["dynamic_deps_test.py"],
+    deps = [
+        ":increment_first",
+        ":increment_second",
+    ],
+)

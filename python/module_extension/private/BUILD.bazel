@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":cc_extension.bzl", "py_cc_extension_libs")
 
 bzl_library(
     name = "bzl_lib",
@@ -9,4 +10,10 @@ bzl_library(
         "@bazel_skylib//lib:paths",
         "@rules_cc//cc:core_rules",
     ],
+)
+
+py_cc_extension_libs(
+    name = "current_py_cc_libs",
+    libs = "@rules_python//python/cc:current_py_cc_libs",
+    visibility = ["//visibility:public"],
 )

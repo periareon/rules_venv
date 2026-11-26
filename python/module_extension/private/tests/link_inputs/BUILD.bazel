@@ -1,0 +1,9 @@
+load("//python/module_extension:defs.bzl", "py_cc_extension")
+load(":link_inputs_test.bzl", "link_inputs_test_suite")
+
+py_cc_extension(
+    name = "link_inputs",
+    srcs = ["link_inputs.cc"],
+)
+
+link_inputs_test_suite(name = "link_inputs_test_suite")
